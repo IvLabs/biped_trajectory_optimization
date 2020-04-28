@@ -83,17 +83,17 @@ namespace ifopt{
     class myConstraint : public ConstraintSet{
     public:
 
-        MatrixXd dynamic(MatrixXd x)
+        VectorXd dynamic(VectorXd x)
         {
-            MatrixXd x_dot(4,N);
-            for (int i=0; i<N; i++)
+            VectorXd x_dot(4*N);
+            for (int i=0; i<4*N; i++)
             {
                 
-                x_dot(0,i) = x(2,i);
-                x_dot(1,i) = x(3,i);
-                x_dot(2,i) = (l*m2*sin(x(1,i))*pow(x(3,i),2) + x(4,i) + m2*g*cos(x(1,i))*sin(x(1,i)))/(m1 + m2*pow(sin(x(1,i)),2));
-                x_dot(3,i) = l*m2*cos(x(1,i))*sin(x(3,i))*pow(x(4,i),2) + x(4,i)*cos(x(1,i)) +(m1+m2)*g*sin(x(1,i));
-                x_dot(3,i) = -x_dot(3,i)/(l*m1 + l*m2*pow(sin(x(1,i)),2));
+                x_dot(i) = x(2*N+i);
+                x_dot(N+i) = x(3*N+i);
+                x_dot(2*N+i) = (l*m2*sin(x(N+i))*pow(x(3*N+i),2) + x(4*N+i) + m2*g*cos(x(N+i))*sin(x(N+i)))/(m1 + m2*pow(sin(x(N+i)),2));
+                x_dot(3*N+i) = l*m2*cos(x(N+i))*sin(x(3*N+i))*pow(x(4*N+i),2) + x(4*N+i)*cos(x(N+i)) +(m1+m2)*g*sin(x(N+i));
+                x_dot(3*N+i) = -x_dot(3*N+i)/(l*m1 + l*m2*pow(sin(x(N+i)),2));
             }    
             return x_dot;
         }
@@ -104,23 +104,23 @@ namespace ifopt{
         myConstraint(const std::string& name) : ConstraintSet(2, name) {}
 
         // The constraint value minus the constant value "1", moved to bounds.
-        MatrixXd GetValues()
+        VectorXd GetValues()
         {
             int number = ((4*2)+(2*N));//total number of constraints
-            MatrixXd c(4,2);
-            MatrixXd dummy(4,N);
-            MatrixXd x = GetVariables()->GetComponent("var_set2")->GetValues();
+            VectorXd c(8);
+            VectorXd dummy(4*N);
+            VectorXd x = GetVariables()->GetComponent("var_set2")->GetValues();
             // constraint for dynamics
             dummy = dynamic(x);
             // constraint for initial and final state
-            c(1,1) = x(1,1);
-            c(2,1) = x(2,1);
-            c(3,1) = x(3,1);
-            c(4,1) = x(4,1);
-            c(1,2) = x(1,N-1) - 5;
-            c(2,2) = x(2,N-1) - pi;
-            c(3,2) = x(3,N-1);
-            c(4,2) = x(4,N-1);
+            c(1) = x(0);
+            c(2) = x(N);
+            c(3) = x(2*N);
+            c(4) = x(3*N);
+            c(5) = x(N-1) - 5;
+            c(6) = x(2*N-1) - pi;
+            c(7) = x(3*N-1);
+            c(8) = x(4*N-1);
             
             return c;
         }
@@ -157,12 +157,12 @@ namespace ifopt{
         myCost(const std::string& name) : CostTerm(name) {}
         double GetCost() const override
         {
-            MatrixXd x = GetVariables()->GetComponent("var_set2")->GetValues();
+            VecotrXd x = GetVariables()->GetComponent("var_set2")->GetValues();
             double h = T/(N-1);
             double result=0;
             for(int i=0 ; i <N-1 ; i++)
             {
-                result = result + (h/2)*(pow(x(4,i),2)+pow(x(4,i+1),2));
+                result = result + (h/2)*(pow(x(4*N+i),2)+pow(x(4*N+(i+1)),2));
             } 
             return result;
         };
