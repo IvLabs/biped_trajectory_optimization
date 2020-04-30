@@ -1,8 +1,9 @@
 #include <iostream>
 #include <ifopt/ipopt_solver.h>
-#include "cart.h"
+#include "cartpole/cart.h"
 
 using namespace ifopt;
+using namespace cartpole;
 
 int main()
 {
@@ -16,7 +17,8 @@ int main()
     // 2. choose solver and options
     IpoptSolver ipopt;
     ipopt.SetOption("linear_solver", "mumps");
-    ipopt.SetOption("jacobian_approximation", "true");
+    ipopt.SetOption("jacobian_approximation", "finite-difference-values");
+    ipopt.SetOption("fixed_variable_treatment","relax_bounds");
     
     // 3 . solve
     ipopt.Solve(nlp);
