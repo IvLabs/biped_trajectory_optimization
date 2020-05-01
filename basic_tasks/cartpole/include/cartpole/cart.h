@@ -1,7 +1,7 @@
 #ifndef CART_H
 #define CART_H
 
-#define N 20
+#define N 10
 #define d 10.0
 #define pi 3.14159265
 #define l 0.5
@@ -9,6 +9,7 @@
 #define m2 0.5
 #define g -9.81
 #define T 5.0
+#define h T/(N-1.0)
 
 #include <iostream>
 #include "ifopt/variable_set.h"
@@ -44,13 +45,14 @@ namespace cartpole{
                 c += 1;
                 x_(1,i) = (double)(i/(N-1.0))*pi;
                 c += 1;// x_dot
-                x_(2,i) = d/(N-1.0);
+                x_(2,i) = 0.0;
                 c += 1;
-                x_(3,i) = pi/(N-1.0);
+                x_(3,i) = 0.0;
                 c += 1;//control force: u
-                x_(4,i) = 0;
+                x_(4,i) = 0.0;
                 c += 1;
-            } 
+            }
+            cout<<x_<<endl; 
             // cout<<"number of variables"<<c<<endl;
         }
         //here is where you start transforming Eigen::Vector into whatever
@@ -70,7 +72,8 @@ namespace cartpole{
         VectorXd GetValues() const override
         {   
             Eigen::Map<const VectorXd> v1(x_.data(), x_.size());
-            // cout<<"size of vector"<<v1.size()<<endl;
+            // cout<<x_<<endl<<"Vector";
+            // cout<<v1<<endl;
             return v1;            
         };
         
@@ -79,11 +82,11 @@ namespace cartpole{
         {
             VecBound bounds(5*N);
             for (int i = 0; i < N;i++){
-                bounds.at(i)= Bounds(0.0,10.0);  
+                bounds.at(i)= Bounds(-10.0,10.0);  
                 bounds.at(i+1)= Bounds(-pi,pi);  
-                bounds.at(i+2)= NoBound;
-                bounds.at(i+3)= NoBound;
-                bounds.at(i+4)= Bounds(-250.0, 250.0);
+                bounds.at(i+2)= Bounds(-20.0, 20.0);
+                bounds.at(i+3)= Bounds(-20.0, 20.0);
+                bounds.at(i+4)= Bounds(-200.0, 200.0);
             }
             // cout<<"size of vector"<<bounds.size()<<endl; 
             return bounds;
@@ -123,26 +126,34 @@ namespace cartpole{
         {
             // int number = ((4*2)+(2*N));//total number of constraints
             VectorXd c(8);
-            MatrixXd dump(4,N);
+            VectorXd dump(4*N);
+            // VectorXd dumpv(4*(N-1));
             VectorXd x1 = GetVariables()->GetComponent("var_set2")->GetValues();
             Eigen::Map<MatrixXd> x(x1.data(),5,N); //easier to compute
             // constraint for dynamics
             dump = dynamic(x);
-            
+            for (int i = 0; i < N-1; i++){
+                // cout<<"Not Worked \n";
+                dump(i) = (x(0,i+1) - x(0,i)) - (h*(dump(i+4) - dump(i)/2.0));
+                dump(1+i) = (x(1,i+1) - x(1,i)) - (h*(dump(i+4+1) - dump(1+i)/2.0));
+                dump(2+i) = (x(2,i+1) - x(2,i)) - (h*(dump(i+4+1) - dump(2+i)/2.0));
+                dump(3+i) = (x(3,i+1) - x(3,i)) - (h*(dump(i+4+1) - dump(3+i)/2.0));
+                // cout<<"Worked \n";
+            }
             // constraint for initial and final state
-            c(0) = x(1,1);
-            c(1) = x(2,1);
-            c(2) = x(3,1);
-            c(3) = x(4,1);
-            c(4) = x(1,N-1) - d;
-            c(5) = x(2,N-1) - pi;
-            c(6) = x(3,N-1);
-            c(7) = x(4,N-1);
+            c(0) = x(0,1);
+            c(1) = x(1,1);
+            c(2) = x(2,1);
+            c(3) = x(3,1);
+            c(4) = x(0,N-1) - d;
+            c(5) = x(1,N-1) - pi;
+            c(6) = x(2,N-1);
+            c(7) = x(3,N-1);
             
-            Eigen::Map<VectorXd> dummy(dump.data(),dump.size());
+            // Eigen::Map<VectorXd> dumpv(dump.data(), dump.size());
 
-            VectorXd final(dummy.size()+c.size());
-            final << dummy , c;
+            VectorXd final(dump.size()+c.size());
+            final << dump , c;
             // cout<<"final size "<<final.size()<<" c + dump "<<c.size()+dump.size()<<endl;
             return final;
         };
@@ -185,12 +196,13 @@ namespace cartpole{
         double GetCost() const override
         {
             VectorXd x = GetVariables()->GetComponent("var_set2")->GetValues();
-            double h = T/(N-1.0);
+            
             double result=0;
-            for(int i=4 ; i < 5*(N - 1); i+=5)
+            for(int i=0 ; i < N; i+=1)
             {
-                result = result + (h/2)*(pow(x(i),2)+pow(x(i+1),2));
+                result = result + (h/2)*(pow(x(i+4),2)+pow(x(i+4+5),2));
             } 
+            cout<<"result : "<<result<<endl;
             return result;
         };
                     

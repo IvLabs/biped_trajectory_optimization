@@ -18,10 +18,13 @@ int main()
     IpoptSolver ipopt;
     ipopt.SetOption("linear_solver", "mumps");
     ipopt.SetOption("jacobian_approximation", "finite-difference-values");
-    ipopt.SetOption("fixed_variable_treatment","relax_bounds");
+    // ipopt.SetOption("fixed_variable_treatment","relax_bounds");
+    ipopt.SetOption("hessian_approximation","limited-memory");
     
     // 3 . solve
     ipopt.Solve(nlp);
     Eigen::VectorXd x = nlp.GetOptVariables()->GetValues();
-    std::cout << x.transpose() << std::endl;
+    Eigen::Map<MatrixXd> x_(x.data(),5,N);
+    std::cout << x_ << std::endl;
+    // std::cout << x.transpose() << std::endl;
 }
