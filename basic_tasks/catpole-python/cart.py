@@ -156,28 +156,30 @@ for i in range(len(pos)):
 
 out.release()
 
-name = ['pos', 'ang', 'u']
+name = ['position : x', 'angle : theta', 'controlForce : u']
 
 plt.subplot(322)
+plt.title('Optimised Solution')
 plt.plot(time,pos)
-plt.ylabel(name[0])
+
 
 plt.subplot(321)
+plt.title('Initial Guess')
 plt.plot(time,ini.initial[:,0],'r')
+plt.ylabel(name[0])
 
 plt.subplot(324)
 plt.plot(time,ang)
-plt.ylabel(name[1])
 
 plt.subplot(323)
 plt.plot(time,ini.initial[:,1],'r')
+plt.ylabel(name[1])
 
 plt.subplot(326)
 plt.plot(time,u)
-plt.ylabel(name[2])
-
 plt.subplot(325)
 plt.plot(time,ini.initial[:,4],'r')
+plt.ylabel(name[2])
 
 plt.suptitle('CartPole')
 plt.show()
