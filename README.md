@@ -1,5 +1,6 @@
 # Biped Trajectory Optimization
-
+## Gait Generation for single step
+![](https://github.com/hubble-02/biped_trajectory_optimization/blob/master/five-link-gait-generation/animation2.gif)
 ## Trajectory Optimization on some basic systems
 ### [cartpole on python using CasADi](https://github.com/hubble-02/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/cart.py)
 ![](https://github.com/hubble-02/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/Graph.png) ![](https://github.com/hubble-02/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/cartpole.gif)
