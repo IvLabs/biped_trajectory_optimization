@@ -1,8 +1,8 @@
 import casadi as ca
 import numpy as np
 from matplotlib import pyplot as plt
-import cv2
-from PIL import Image
+# import cv2
+# from PIL import Image
 
 class walker():
     def __init__(self):
