@@ -1,11 +1,8 @@
 import casadi as ca
 import numpy as np
-from matplotlib import pyplot as plt
-# import cv2
-# from PIL import Image
 
 class walker():
-    def __init__(self):
+    def __init__(self,start):
         # set our parameters of optimization
         self.opti = ca.Opti()
         self.N = 100; self.T = 0.1
@@ -17,7 +14,7 @@ class walker():
         self.i = [self.i1,self.i2,self.i3,self.i2,self.i1]
         self.g = -9.81
         self.h = self.T/self.N
-        goali = [-0.3,0.7,0.0,-0.5,-0.3]; goalf = goali[::-1]
+        goali = start; goalf = goali[::-1]
         self.goal = [goali,goalf]
         #set our optimization variables
         self.state = []
@@ -250,132 +247,3 @@ class nlp(walker):
                     walker.opti.bounded(-walker.tauMax,u[2],walker.tauMax),
                     walker.opti.bounded(-walker.tauMax,u[3],walker.tauMax)])
         return c
-
-me = walker()
-n1 = nlp(me)
-
-sol1 = me.opti.solve()
-
-q = []; dq = []; u = []; pos = []
-for j in range(5):
-    tempq = [];tempdq = [];tempu = [];temp = []
-    for i in range(me.N):
-        tempq.append(sol1.value(me.state[i][0][j]))    
-        tempdq.append(sol1.value(me.state[i][1][j]))
-        temp.append([sol1.value(me.pos[i][j][0]),sol1.value(me.pos[i][j][1])]) 
-        if j < 4:
-            tempu.append(sol1.value(me.u[i][0][j]))
-    q.append(tempq);pos.append(temp)        
-    dq.append(tempdq)        
-    u.append(tempu)        
-time = np.arange(0.0, me.T, me.h)
-
-from matplotlib import animation
-from celluloid import Camera
-
-fig = plt.figure()
-camera = Camera(fig)
-for i in range(me.N):
-    p1 = [pos[0][i][1],pos[0][i][0]]
-    p2 = [pos[1][i][1],pos[1][i][0]]
-    p3 = [pos[2][i][1],pos[2][i][0]]
-    p4 = [pos[3][i][1],pos[3][i][0]]
-    p5 = [pos[4][i][1],pos[4][i][0]]
-    # plt.axes(xlim=(-2, 2), ylim=(-2, 2))
-    plt.axes(xlim=(-2, 2), ylim=(-2, 2))
-    # plt.plot([0,-p1[1]], [0,p1[0]],'r',[-p1[1],-p2[1]], [p1[0],p2[0]],'b',
-    #     [-p2[1],-p3[1]], [p2[0],p3[0]],'c',
-    #     [-p2[1],p4[1] - 2*p2[1]], [p2[0],2*p2[0]-p4[0]],'b',
-    #     [p4[1] - 2*p2[1],p5[1]], [2*p2[0]-p4[0],(p5[0] - 2*p2[0])],'r')
-    plt.plot([0,p1[1]], [0,p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'b',
-            [p2[1],p3[1]], [p2[0],p3[0]],'c', [p2[1],p4[1]], [p2[0],p4[0]],'b',
-            [p4[1],p5[1]], [p4[0],p5[0]],'r')
-    
-    plt.plot([-2,2],[0,0],'g')    
-    # if cv2.waitKey(0) & 0xFF == ord("q"):
-    # #     break
-    camera.snap()
-animation = camera.animate(interval=60)
-animation.save('animation3.mp4')
-plt.show()
-plt.close()
-
-name = ['q','dq','u']
-
-plt.subplot(322)
-plt.title('Optimised Solution')
-plt.plot(time,q[:][0],'r',time,q[:][1],'g',time,q[:][2],'b',
-        time,q[:][3],'y',time,q[:][4],'c')
-
-plt.subplot(321)
-plt.title('Initial Guess')
-iniq = n1.initial[0]
-plt.plot(time,iniq[:][0],'r',time,iniq[:][1],'g',time,iniq[:][2],'b',
-        time,iniq[:][3],'y',time,iniq[:][4],'c')
-plt.ylabel(name[0])
-
-plt.subplot(324)
-plt.plot(time,dq[:][0],'r',time,dq[:][1],'g',time,dq[:][2],'b',
-        time,dq[:][3],'y',time,dq[:][4],'c')
-
-plt.subplot(323)
-inidq = n1.initial[1]
-plt.plot(time,inidq[:][0],'r',time,inidq[:][1],'g',time,inidq[:][2],'b',
-        time,inidq[:][3],'y',time,inidq[:][4],'c')
-plt.ylabel(name[1])
-
-plt.subplot(326)
-plt.plot(time,u[:][0],'g',time,u[:][1],'b',time,u[:][2],'y',
-        time,u[:][3],'c')
-
-plt.subplot(325)
-iniu = n1.initial[2]
-plt.plot(time,iniu[:][0],'r',time,iniu[:][1],'g',time,iniu[:][2],'b',
-        time,iniu[:][3],'y')
-plt.ylabel(name[2])
-
-plt.suptitle('Five-Link')
-plt.show()
-
-
-
-
-# print(pos)
-# femur = 3
-# tibia = 1
-# torso = 2
-# d = {1: (255,175,0), #BGR format
-#      2: (0,255,0),
-#      3: (0,0,255)}
-# SIZE = 300
-# # fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
-# # out = cv2.VideoWriter('cartpole.mp4', fourcc, 60.0, (300, 300))
-# for i in range(me.N):
-#     env = np.ones((SIZE,SIZE,3),  dtype=np.uint8)
-
-#     p1 = [pos[0][i][0]*50,pos[0][i][1]*50];p1 = list(map(np.int, p1)) 
-#     p2 = [pos[1][i][0]*50,pos[1][i][1]*50];p2 = list(map(np.int, p2))
-#     p3 = [pos[2][i][0]*50,pos[2][i][1]*50];p3 = list(map(np.int, p3))
-#     p4 = [pos[3][i][0]*50,pos[3][i][1]*50];p4 = list(map(np.int, p4))
-#     p5 = [pos[4][i][0]*50,pos[4][i][1]*50];p5 = list(map(np.int, p5))
-#     # print([p5[0]-p4[0],p5[1]-p4[1]])
-#     # ax= mycart.l*np.sin(ang[i])*100
-#     # ay = mycart.l*np.cos(ang[i])*100
-#     # ax = -ax.astype(np.int)
-#     # ay = ay.astype(np.int)
-#     # # print(ang[i])
-#     stance1 = cv2.line(env, (SIZE//2,SIZE//2), (-p1[1] + SIZE//2,-p1[0] + SIZE//2), d[femur], 1)   
-#     stance2 = cv2.line(stance1, (-p1[1]+SIZE//2,-p1[0]+SIZE//2), (-p2[1]+SIZE//2,-p2[0]+SIZE//2), d[tibia], 1)   
-#     tor = cv2.line(stance2, (-p2[1]+SIZE//2,-p2[0]+SIZE//2), (-p3[1]+SIZE//2,-p3[0]+SIZE//2), d[torso], 1)   
-#     swing1 = cv2.line(tor, (-p2[1]+SIZE//2,-p2[0]+SIZE//2), (-p4[1]+SIZE//2,-p4[0]+SIZE//2), d[tibia], 1)   
-#     swing2 = cv2.line(swing1, (-p4[1]+SIZE//2,-p4[0]+SIZE//2), (-p5[1]+SIZE//2,-p5[0]+SIZE//2), d[femur], 1)      
-    
-#     img = Image.fromarray(swing2, "RGB")
-#     # img = img.resize((300,300))
-#     cv2.imshow("", np.array(img))
-#     # out.write(image2)
-    
-#     # status = cv2.imwrite(f'/home/shitwalker/PycharmProjects/Biped/animate/image-{i}.png', image2)
-#     # print(status)
-#     if cv2.waitKey(50) & 0xFF == ord("q"):
-#         break
