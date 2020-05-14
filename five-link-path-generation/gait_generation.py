@@ -2,11 +2,11 @@ import casadi as ca
 import numpy as np
 
 class walker():
-    def __init__(self,start):
+    def __init__(self,start,start_pos):
         # set our parameters of optimization
         self.opti = ca.Opti()
         self.N = 100; self.T = 0.1
-        self.step_max = 1; self.tauMax = 1.5
+        self.step_max = 1.5; self.tauMax = 1.5
         self.pi = np.pi; 
         self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.6
         self.m = [0.5,0.5,0.5,0.5,0.5]#; self.m2 = 0.5; self.m3 = 0.5
@@ -16,6 +16,7 @@ class walker():
         self.h = self.T/self.N
         goali = start; goalf = goali[::-1]
         self.goal = [goali,goalf]
+        self.p0 = start_pos
         #set our optimization variables
         self.state = []
         self.u = []
@@ -41,6 +42,7 @@ class walker():
         q = state[0]
         dq = state[1]
         u = u[0]
+        p0 = [self.p0[0],self.p0[1]]
         p,dp,g,dc = self.getKinematics(q,dq)
     
         ddc10,ddc11 = ca.jtimes(dc[0][0],dq,dq) , ca.jtimes(dc[0][1],dq,dq)
@@ -51,7 +53,7 @@ class walker():
         ddc = [[ddc10,ddc11],[ddc20,ddc21],[ddc30,ddc31],[ddc40,ddc41],[ddc50,ddc51]]
         s = [0,0,0,0,0]
         for i in range(5):
-            s[0] += (((g[i][0])*self.m[i]*self.g)) + (((g[i][0])*self.m[i]*ddc[i][1])-((g[i][1])*self.m[i]*ddc[i][0]))
+            s[0] += (((g[i][0]-p0[0])*self.m[i]*self.g)) + (((g[i][0]-p0[0])*self.m[i]*ddc[i][1])-((g[i][1])*self.m[i]*ddc[i][0]))
             if i > 0:
                 s[1] += (((g[i][0]-p[0][0])*self.m[i]*self.g)) + (((g[i][0]-p[0][0])*self.m[i]*ddc[i][1])-((g[i][1]-p[0][1])*self.m[i]*ddc[i][0]))
                 if i > 1:    
@@ -82,9 +84,9 @@ class walker():
         p50 = ca.MX.sym('p50',1); c50 = ca.MX.sym('g50',1)
         p51 = ca.MX.sym('p51',1); c51 = ca.MX.sym('g51',1)
         
-        p0 = [0,0]
+        p0 = [self.p0[0],self.p0[1]]
         
-        p10,p11 = -self.l1*ca.sin(q[0]) + p0[0],self.l1*ca.cos(q[0]) + p0[0]
+        p10,p11 = -self.l1*ca.sin(q[0]) + p0[0],self.l1*ca.cos(q[0]) + p0[1]
         p20,p21 = -self.l2*ca.sin(q[1]) + p10,self.l2*ca.cos(q[1]) + p11
         p30,p31 = self.l3*ca.sin(q[2]) + p20,self.l3*ca.cos(q[2]) + p21
         p40,p41 = (self.l2*ca.sin(q[3])) + p20,(-self.l2*ca.cos(q[3])) + p21
@@ -122,10 +124,11 @@ class walker():
         dpi = [dp[4],dp[3],dp[2],dp[1],dp[0]]
         gi = [g[4],g[3],g[2],g[1],g[0]]
         dgi = [dg[4],dg[3],dg[2],dg[1],dg[0]]
+        p0 = [self.p0[0],self.p0[1]]
         s = [0,0,0,0,0]
         for i in range(5):
             s[0] += ((self.m[i]*(((g[i][0] - p[4][0])*dg[i][1])-((g[i][1] - p[4][1])*dg[i][0]))) + (self.i[i]*dq[i])
-                    - (self.m[i]*(((gi[i][0] - pi[0][0])*dgi[i][1])-((gi[i][1] - pi[0][1])*dgi[i][0]))))
+                    - (self.m[i]*(((gi[i][0] - p0[0])*dgi[i][1])-((gi[i][1] - p0[1])*dgi[i][0]))))
             if i < 4:
                 s[1] += ((self.m[i]*(((g[i][0] - p[3][0])*dg[i][1])-((g[i][1] - p[3][1])*dg[i][0]))) + (self.i[i]*dq[i])
                         - (self.m[i]*(((gi[i][0] - pi[1][0])*dgi[i][1])-((gi[i][1] - pi[1][1])*dgi[i][0]))))
@@ -205,10 +208,11 @@ class nlp(walker):
         ceq.extend(self.getBoundaryConstrainsts(q0,dq0,qf,walker.goal,walker.impactmap))
         ceq.extend([(walker.dp0[4][1] > 0),(walker.dpN[4][1] < 0)])
         for i in range(walker.N):
-            ceq.extend([((walker.pos[i][4][0]) <= walker.step_max)])
-            ceq.extend([((walker.pos[i][4][0]) >= -walker.step_max)])
-            ceq.extend([((walker.pos[i][4][1]) > 0)])
-            # ceq.extend([((walker.pos[i][4][1]) <= 0.1)])
+            ceq.extend([((walker.pos[i][4][0]) <= (walker.step_max + walker.p0[0]))])
+            ceq.extend([((walker.pos[i][4][0]) >= -(walker.step_max + walker.p0[0]))])
+            ceq.extend([((walker.pos[i][4][1]) >= 0)])
+            if i == 0:
+                ceq.extend([((walker.pos[i][4][1]) == walker.p0[1])])
         return ceq
 
     def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,h):

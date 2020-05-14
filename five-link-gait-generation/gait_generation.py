@@ -295,8 +295,8 @@ for i in range(me.N):
     # if cv2.waitKey(0) & 0xFF == ord("q"):
     # #     break
     camera.snap()
-animation = camera.animate(interval=60)
-animation.save('animation3.mp4')
+animation = camera.animate(interval=1)
+# animation.save('animation3.mp4')
 plt.show()
 plt.close()
 
