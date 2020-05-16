@@ -4,7 +4,7 @@ from gait_generation import *
 start = [-0.3,0.7,0.0,-0.5,-0.3]
 start_pos = [[0,0]]
 q = []; dq = []; u = []; pos = []; time = []
-f = 5
+f = 1
 for k in range(f):
     me = walker(start,start_pos[k])
     n1 = nlp(me)
@@ -31,9 +31,12 @@ for k in range(f):
             dq.append(tempdq)
             pos.append(temp)   
             u.append(tempu)
+
     start = [q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]]
     start_pos.append([pos[4][-1][0],pos[4][-1][1]])
-    print(len(q[0]))
+
+    if k > 1:
+        print(start_pos[k][1])
 
 time = np.arange(0.0, f*me.T, me.h)
 
@@ -51,7 +54,7 @@ for i in range(f*me.N):
     p4 = [pos[3][i][1],pos[3][i][0]]
     p5 = [pos[4][i][1],pos[4][i][0]]
     # plt.axes(xlim=(-2, 2), ylim=(-2, 2))
-    plt.axes(xlim=(-2, 6), ylim=(-2, 2))
+#     plt.axes(xlim=(-2, 6), ylim=(-2, 2))
     # plt.plot([0,-p1[1]], [0,p1[0]],'r',[-p1[1],-p2[1]], [p1[0],p2[0]],'b',
     #     [-p2[1],-p3[1]], [p2[0],p3[0]],'c',
     #     [-p2[1],p4[1] - 2*p2[1]], [p2[0],2*p2[0]-p4[0]],'b',
@@ -60,6 +63,7 @@ for i in range(f*me.N):
             p0 = start_pos[k]
             print(p0)
             k += 1 
+
     plt.plot([p0[0],p1[1]], [p0[1],p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'b',
             [p2[1],p3[1]], [p2[0],p3[0]],'c', [p2[1],p4[1]], [p2[0],p4[0]],'b',
             [p4[1],p5[1]], [p4[0],p5[0]],'r')
@@ -68,8 +72,8 @@ for i in range(f*me.N):
     # if cv2.waitKey(0) & 0xFF == ord("q"):
     # #     break
     camera.snap()
-animation = camera.animate(interval=40)
-animation.save('path1.mp4')
+animation = camera.animate(interval=1)
+# animation.save('path1.mp4')
 plt.show()
 plt.close()
 

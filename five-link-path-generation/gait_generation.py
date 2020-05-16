@@ -6,7 +6,7 @@ class walker():
         # set our parameters of optimization
         self.opti = ca.Opti()
         self.N = 100; self.T = 0.1
-        self.step_max = 1.5; self.tauMax = 1.5
+        self.step_max = 1.5; self.tauMax = 1.0
         self.pi = np.pi; 
         self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.6
         self.m = [0.5,0.5,0.5,0.5,0.5]#; self.m2 = 0.5; self.m3 = 0.5
@@ -14,6 +14,7 @@ class walker():
         self.i = [self.i1,self.i2,self.i3,self.i2,self.i1]
         self.g = -9.81
         self.h = self.T/self.N
+        self.comh = 0.1
         goali = start; goalf = goali[::-1]
         self.goal = [goali,goalf]
         self.p0 = start_pos
@@ -205,14 +206,25 @@ class nlp(walker):
         q0 = (walker.state[0][0])
         dq0 = (walker.state[0][1])
         qf = (walker.state[-1][0])
+        dqf = (walker.state[-1][1])
         ceq.extend(self.getBoundaryConstrainsts(q0,dq0,qf,walker.goal,walker.impactmap))
         ceq.extend([(walker.dp0[4][1] > 0),(walker.dpN[4][1] < 0)])
         for i in range(walker.N):
             ceq.extend([((walker.pos[i][4][0]) <= (walker.step_max + walker.p0[0]))])
             ceq.extend([((walker.pos[i][4][0]) >= -(walker.step_max + walker.p0[0]))])
-            ceq.extend([((walker.pos[i][4][1]) >= 0)])
+            ceq.extend([((walker.pos[i][4][1]) >= walker.p0[1])])
+            ceq.extend([((walker.pos[i][3][1] - walker.p0[1]) >= walker.comh)])
+            # ceq.extend([((walker.pos[i][0][1] - walker.p0[1]) >= walker.comh)])
+            # ceq.extend([((walker.pos[i][1][1] - walker.p0[1]) >= walker.comh)])
+            # ceq.extend([((walker.pos[i][2][1] - walker.p0[1]) >= walker.comh)])
             if i == 0:
                 ceq.extend([((walker.pos[i][4][1]) == walker.p0[1])])
+        # ceq.extend([walker.pos[-1][4][1] == walker.p0[1]])
+            comy = 0
+            for j in range(4):
+                comy += walker.com[i][j][1]
+            ceq.extend([comy - walker.p0[1] >= walker.comh])
+
         return ceq
 
     def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,h):
@@ -224,13 +236,15 @@ class nlp(walker):
 
     def getBoundaryConstrainsts(self,state1,dstate1,state2,goal,impact):
         c = []
-        for i in range(4): c.extend([(state1[i] - impact[0][i] == 0),(dstate1[i] - impact[1][i] == 0)
+        for i in range(4): 
+            c.extend([(state1[i] - impact[0][i] == 0),(dstate1[i] - impact[1][i] == 0)
                                     ,((state2[i] - goal[1][i]) ==0)]) 
+
         return c
     
     def getBounds(self,walker):
         c = []
-        f = 20
+        f = 15
         for i in range(walker.N):
             q = (walker.state[i][0])
             dq = (walker.state[i][1])
