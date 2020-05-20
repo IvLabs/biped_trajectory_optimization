@@ -1,6 +1,8 @@
 # Biped Trajectory Optimization
 ## NOTE : This project is still in developement
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
+  * [Path Generation on flat terrain](#path-generation-on-flat-terrain)
+    + [using CasADi library in python](#using-casadi-library-in-python)
   * [Gait Generation for single step](#gait-generation-for-single-step)
     + [using CasADi library in python](#using-casadi-library-in-python)
   * [Trajectory Optimization on some basic systems](#trajectory-optimization-on-some-basic-systems)
@@ -9,6 +11,9 @@
     + [cartpole on C++](#cartpole-on-c)
   * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
 
+## Path Generation on flat terrain
+### using CasADi library in python
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/path1.gif)
 ## Gait Generation for single step
 ### using CasADi library in python
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/animation2.gif) 
