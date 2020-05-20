@@ -9,7 +9,7 @@
     + [cartpole on C++](#cartpole-on-c)
   * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
 
-## [Gait Generation for single step]
+## Gait Generation for single step
 ### using CasADi library in python
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/animation2.gif) 
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/graph.png)
