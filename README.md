@@ -1,5 +1,5 @@
 # Biped Trajectory Optimization
-
+## NOTE : This project is still in developement
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
   * [Gait Generation for single step](#gait-generation-for-single-step)
     + [using CasADi library in python](#using-casadi-library-in-python)
