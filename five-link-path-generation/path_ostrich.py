@@ -1,5 +1,5 @@
 from matplotlib import pyplot as plt
-from gait_generation import *
+from gait_ostrich import *
 
 start = [-0.3,0.7,0.0,-0.5,-0.3]
 start_pos = [[0,0]]
@@ -75,42 +75,42 @@ for i in range(f*me.N):
     # #     break
     camera.snap()
 animation = camera.animate(interval=20)
-animation.save('path1.mp4')
+# animation.save('path1.mp4')
 # plt.show()
 plt.close()
 
 name = ['q','dq','u']
 
-plt.subplot(322)
+plt.subplot(311)
 plt.title('Optimised Solution')
 plt.plot(time,q[:][0],'r',time,q[:][1],'g',time,q[:][2],'b',
         time,q[:][3],'y',time,q[:][4],'c')
 
-plt.subplot(321)
-plt.title('Initial Guess')
-iniq = n1.initial[0]
-plt.plot(time,np.append(iniq[:][0],iniq[:][0]),'r',time,np.append(iniq[:][1],iniq[:][1]),'g',time,np.append(iniq[:][2],iniq[:][2]),'b',
-        time,np.append(iniq[:][3],iniq[:][3]),'y',time,np.append(iniq[:][4],iniq[:][4]),'c')
+# plt.subplot(321)
+# plt.title('Initial Guess')
+# iniq = n1.initial[0]
+# plt.plot(time,np.append(iniq[:][0],iniq[:][0]),'r',time,np.append(iniq[:][1],iniq[:][1]),'g',time,np.append(iniq[:][2],iniq[:][2]),'b',
+#         time,np.append(iniq[:][3],iniq[:][3]),'y',time,np.append(iniq[:][4],iniq[:][4]),'c')
 plt.ylabel(name[0])
 
-plt.subplot(324)
+plt.subplot(312)
 plt.plot(time,dq[:][0],'r',time,dq[:][1],'g',time,dq[:][2],'b',
         time,dq[:][3],'y',time,dq[:][4],'c')
 
-plt.subplot(323)
-inidq = n1.initial[1]
-plt.plot(time,np.append(inidq[:][0],inidq[:][0]),'r',time,np.append(inidq[:][1],inidq[:][1]),'g',time,np.append(inidq[:][2],inidq[:][2]),'b',
-        time,np.append(inidq[:][3],inidq[:][3]),'y',time,np.append(inidq[:][4],inidq[:][4]),'c')
+# plt.subplot(323)
+# inidq = n1.initial[1]
+# plt.plot(time,np.append(inidq[:][0],inidq[:][0]),'r',time,np.append(inidq[:][1],inidq[:][1]),'g',time,np.append(inidq[:][2],inidq[:][2]),'b',
+#         time,np.append(inidq[:][3],inidq[:][3]),'y',time,np.append(inidq[:][4],inidq[:][4]),'c')
 plt.ylabel(name[1])
 
-plt.subplot(326)
+plt.subplot(313)
 plt.plot(time,u[:][0],'g',time,u[:][1],'b',time,u[:][2],'y',
         time,u[:][3],'c')
 
-plt.subplot(325)
-iniu = n1.initial[2]
-plt.plot(time,np.append(iniu[:][0],iniu[:][0]),'r',time,np.append(iniu[:][1],iniu[:][1]),'g',time,np.append(iniu[:][2],iniu[:][2]),'b',
-        time,np.append(iniu[:][3],iniu[:][3]),'y',time,np.append(iniu[:][4],iniu[:][4]),'c')
+# plt.subplot(325)
+# iniu = n1.initial[2]
+# plt.plot(time,np.append(iniu[:][0],iniu[:][0]),'r',time,np.append(iniu[:][1],iniu[:][1]),'g',time,np.append(iniu[:][2],iniu[:][2]),'b',
+#         time,np.append(iniu[:][3],iniu[:][3]),'y',time,np.append(iniu[:][4],iniu[:][4]),'c')
 plt.ylabel(name[2])
 
 plt.suptitle('Five-Link')
