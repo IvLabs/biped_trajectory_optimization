@@ -12,7 +12,7 @@
   * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
 
 ## Path Generation on flat terrain
-### using CasADi library in python
+### Ostrich gait
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/path1.gif)
 ## Gait Generation for single step
 ### using CasADi library in python
