@@ -2,7 +2,7 @@
 ## NOTE : This project is still in developement
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
   * [Path Generation on flat terrain](#path-generation-on-flat-terrain)
-    + [using CasADi library in python](#using-casadi-library-in-python)
+    + [Ostrich gait](#ostrich-gait)
   * [Gait Generation for single step](#gait-generation-for-single-step)
     + [using CasADi library in python](#using-casadi-library-in-python)
   * [Trajectory Optimization on some basic systems](#trajectory-optimization-on-some-basic-systems)
