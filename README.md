@@ -9,13 +9,13 @@
     + [cartpole on C++](#cartpole-on-c)
   * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
 
-## Gait Generation for single step
-### [using CasADi library in python](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/gait_generation.py) 
+## [Gait Generation for single step]
+### using CasADi library in python
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/animation2.gif) 
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/graph.png)
 
 ## Trajectory Optimization on some basic systems
-### [cartpole on python using CasADi](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/cart.py)
+### cartpole on python using CasADi
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/cartpole.gif) ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/Graph.png)
 
 ### [simple pendulum](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/simple_pendulum.m)
