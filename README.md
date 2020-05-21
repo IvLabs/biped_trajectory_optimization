@@ -1,11 +1,27 @@
 # Biped Trajectory Optimization
+## NOTE : This project is still in developement
+- [Biped Trajectory Optimization](#biped-trajectory-optimization)
+  * [Path Generation on flat terrain](#path-generation-on-flat-terrain)
+    + [Ostrich gait](#ostrich-gait)
+  * [Gait Generation for single step](#gait-generation-for-single-step)
+    + [using CasADi library in python](#using-casadi-library-in-python)
+  * [Trajectory Optimization on some basic systems](#trajectory-optimization-on-some-basic-systems)
+    + [cartpole on python using CasADi](#cartpole-on-python-using-casadi)
+    + [simple pendulum](#simple-pendulum)
+    + [cartpole on C++](#cartpole-on-c)
+  * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
+
+## Path Generation on flat terrain
+### Ostrich gait
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich.png)
 ## Gait Generation for single step
-### [using CasADi library in python](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/gait_generation.py) 
+### using CasADi library in python
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/animation2.gif) 
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/graph.png)
 
 ## Trajectory Optimization on some basic systems
-### [cartpole on python using CasADi](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/cart.py)
+### cartpole on python using CasADi
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/cartpole.gif) ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/Graph.png)
 
 ### [simple pendulum](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/simple_pendulum.m)
