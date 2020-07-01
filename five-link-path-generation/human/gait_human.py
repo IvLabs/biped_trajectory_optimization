@@ -5,7 +5,7 @@ class walker():
     def __init__(self,start,start_pos):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.N = 50; self.T = 0.1
+        self.N = 40; self.T = 0.1
         self.step_max = 1.; self.tauMax = 1.0
         self.pi = np.pi; 
         self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.5
