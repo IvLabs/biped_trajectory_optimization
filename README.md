@@ -13,8 +13,8 @@
 
 ## Path Generation on flat terrain
 ### Ostrich gait
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich.png)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich/ostrich.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich/ostrich.png)
 ## Gait Generation for single step
 ### using CasADi library in python
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/animation2.gif) 

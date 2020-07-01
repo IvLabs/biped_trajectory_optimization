@@ -6,7 +6,7 @@ class walker():
         # set our parameters of optimization
         self.opti = ca.Opti()
         self.N = 50; self.T = 0.1
-        self.step_max = 1; self.tauMax = 1.0
+        self.step_max = 1.; self.tauMax = 1.0
         self.pi = np.pi; 
         self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.5
         self.m = [0.5,0.5,0.5,0.5,0.5]#; self.m2 = 0.5; self.m3 = 0.5
@@ -34,11 +34,11 @@ class walker():
             p,dp,g,dg,ddq = self.getModel(self.state[i],self.u[i])
             self.pos.append(p); self.com.append(g);self.ddq.append(ddq)
             if i == 0:
-                # self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
+                self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
                 self.dp0 = dp
             if i == self.N - 1:
                 self.dpN = dp
-                self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
+                # self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
         
     def getModel(self,state,u):
         q = state[0]
@@ -243,9 +243,10 @@ class nlp(walker):
 
     def getBoundaryConstrainsts(self,state1,dstate1,state2,dstate2,goal,impact):
         c = []
-        for i in range(5): 
-            c.extend([(state1[i] - impact[0][i] == 0)#,
-            # (dstate1[i] - impact[1][i] == 0)
+        # print(dstate1, impact[1][0])
+        for i in range(4): 
+            c.extend([(state1[i] - impact[0][i] == 0),
+            (dstate1[i] - impact[1][i+4] == 0),
             #   (state2[i] - goal[1][i] == 0) 
               ]) 
         return c

@@ -79,42 +79,42 @@ animation = camera.animate(interval=1)
 plt.show()
 plt.close()
 
-name = ['q','dq','u']
+# name = ['q','dq','u']
 
-plt.subplot(322)
-plt.title('Optimised Solution')
-plt.plot(time,q[:][0],'r',time,q[:][1],'g',time,q[:][2],'b',
-        time,q[:][3],'y',time,q[:][4],'c')
+# plt.subplot(322)
+# plt.title('Optimised Solution')
+# plt.plot(time,q[:][0],'r',time,q[:][1],'g',time,q[:][2],'b',
+#         time,q[:][3],'y',time,q[:][4],'c')
 
-plt.subplot(321)
-plt.title('Initial Guess')
-iniq = n1.initial[0]
-plt.plot(time,iniq[:][0],'r',time,iniq[:][1],'g',time,iniq[:][2],'b',
-        time,iniq[:][3],'y',time,iniq[:][4],'c')
-plt.ylabel(name[0])
+# plt.subplot(321)
+# plt.title('Initial Guess')
+# iniq = n1.initial[0]
+# plt.plot(time,iniq[:][0],'r',time,iniq[:][1],'g',time,iniq[:][2],'b',
+#         time,iniq[:][3],'y',time,iniq[:][4],'c')
+# plt.ylabel(name[0])
 
-plt.subplot(324)
-plt.plot(time,dq[:][0],'r',time,dq[:][1],'g',time,dq[:][2],'b',
-        time,dq[:][3],'y',time,dq[:][4],'c')
+# plt.subplot(324)
+# plt.plot(time,dq[:][0],'r',time,dq[:][1],'g',time,dq[:][2],'b',
+#         time,dq[:][3],'y',time,dq[:][4],'c')
 
-plt.subplot(323)
-inidq = n1.initial[1]
-plt.plot(time,inidq[:][0],'r',time,inidq[:][1],'g',time,inidq[:][2],'b',
-        time,inidq[:][3],'y',time,inidq[:][4],'c')
-plt.ylabel(name[1])
+# plt.subplot(323)
+# inidq = n1.initial[1]
+# plt.plot(time,inidq[:][0],'r',time,inidq[:][1],'g',time,inidq[:][2],'b',
+#         time,inidq[:][3],'y',time,inidq[:][4],'c')
+# plt.ylabel(name[1])
 
-plt.subplot(326)
-plt.plot(time,u[:][0],'g',time,u[:][1],'b',time,u[:][2],'y',
-        time,u[:][3],'c')
+# plt.subplot(326)
+# plt.plot(time,u[:][0],'g',time,u[:][1],'b',time,u[:][2],'y',
+#         time,u[:][3],'c')
 
-plt.subplot(325)
-iniu = n1.initial[2]
-plt.plot(time,iniu[:][0],'r',time,iniu[:][1],'g',time,iniu[:][2],'b',
-        time,iniu[:][3],'y')
-plt.ylabel(name[2])
+# plt.subplot(325)
+# iniu = n1.initial[2]
+# plt.plot(time,iniu[:][0],'r',time,iniu[:][1],'g',time,iniu[:][2],'b',
+#         time,iniu[:][3],'y')
+# plt.ylabel(name[2])
 
-plt.suptitle('Five-Link')
-plt.show()
+# plt.suptitle('Five-Link')
+# plt.show()
 
 
 
