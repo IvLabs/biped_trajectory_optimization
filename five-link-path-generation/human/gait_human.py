@@ -44,7 +44,84 @@ class walker():
             if i == self.N - 1:
                 self.dpN = dp
                 # self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
-        
+
+    def getDynamics(self, state, u):
+        q = state[0, 0:5:1]
+        dq = state[0, 5:10:1]
+        f = u[0, :]
+        p0 = 0.
+
+        p1 = self.l[0]*ca.sin(q[0, 0])
+        p2 = self.l[1]*ca.sin(q[0, 1]) + p1
+        p3 = self.l[2]*ca.sin(q[0, 2]) + p2
+        p4 = self.l[3]*ca.sin(q[0, 3]) + p2
+        p5 = self.l[4]*ca.sin(q[0, 4]) + p4
+
+        c1 = self.l[0]*ca.sin(q[0, 0])/2
+        c2 = self.l[1]*ca.sin(q[0, 1])/2 + p1
+        c3 = self.l[2]*ca.sin(q[0, 2])/2 + p2
+        c4 = self.l[3]*ca.sin(q[0, 3])/2 + p2
+        c5 = self.l[4]*ca.sin(q[0, 4])/2 + p4
+
+
+        dc1 = self.l[0]*ca.cos(q[0, 0])*dq[0, 0]/2
+        dc2 = self.l[1]*ca.cos(q[0, 1])*dq[0, 1]/2 + self.l[0]*ca.cos(q[0, 0])*dq[0, 0]
+        dc3 = self.l[2]*ca.cos(q[0, 2])*dq[0, 2]/2 + self.l[1]*ca.cos(q[0, 1])*dq[0, 1] + self.l[0]*ca.cos(q[0, 0])*dq[0, 0]
+        dc4 = self.l[3]*ca.cos(q[0, 3])*dq[0, 3]/2 + self.l[1]*ca.cos(q[0, 1])*dq[0, 1] + self.l[0]*ca.cos(q[0, 0])*dq[0, 0]
+        dc5 = (self.l[4]*ca.cos(q[0, 4])*dq[0, 4]/2 + self.l[3]*ca.cos(q[0, 3])*dq[0, 3] 
+                + self.l[1]*ca.cos(q[0, 1])*dq[0, 1] + self.l[0]*ca.cos(q[0, 0])*dq[0, 0])
+
+
+        ddc1 = (self.l[0]*ca.sin(q[0, 0])*(-dq[0, 0]**2)/2) 
+        ddc2 = (self.l[1]*ca.sin(q[0, 1])*(-dq[0, 1]**2)/2) + (self.l[0]*ca.sin(q[0, 0])*(-dq[0, 0]**2))
+        ddc3 = ((self.l[2]*ca.sin(q[0, 2])*(-dq[0, 2]**2)/2) + (self.l[1]*ca.sin(q[0, 1])*(-dq[0, 1]**2)) 
+                + (self.l[0]*ca.sin(q[0, 0])*(-dq[0, 0]**2)))
+        ddc4 = ((self.l[3]*ca.sin(q[0, 3])*(-dq[0, 3]**2)/2) + (self.l[1]*ca.sin(q[0, 1])*(-dq[0, 1]**2)) 
+                + (self.l[0]*ca.sin(q[0, 0])*(-dq[0, 0]**2)))
+        ddc5 = ((self.l[0]*ca.sin(q[0, 0])*(-dq[0, 4]**2)/2) + (self.l[3]*ca.sin(q[0, 3])*(-dq[0, 3]**2)) 
+                + (self.l[1]*ca.sin(q[0, 1])*(-dq[0, 1]**2)) + (self.l[0]*ca.sin(q[0, 0])*(-dq[0, 0]**2)))
+
+        P = ca.MX.zeros(5, 5)
+        P[0, :] = p0
+        P[1, 1:4:1] = p1
+        P[2, 2:4:1] = p2
+        P[3, 3:4:1] = p3
+        P[4, 4:4:1] = p4
+        # print(P.shape)
+
+        G = ca.MX.zeros(5, 5)
+        G[0, :] = c1
+        G[1, 1:4:1] = c2
+        G[2, 2:4:1] = c3
+        G[3, 3:4:1] = c4
+        G[4, 4:4:1] = c5
+        # print(G.shape)
+
+        ddC = ca.MX(5, 1)
+        ddC[0, :] = ddc1
+        ddC[1, :] = ddc2
+        ddC[2, :] = ddc3
+        ddC[3, :] = ddc4
+        ddC[4, :] = ddc5
+        # print(ddC.shape)
+
+        U = ca.hcat([0, f]).T
+        # print(U.shape)
+
+        M = ca.MX(m.reshape(5, 1))
+        # print(M)
+
+        I = ca.DM([
+            [i[0], i[1], i[2], i[3], i[4]],
+            [0.00, i[1], i[2], i[3], i[4]],
+            [0.00, 0.00, i[2], i[3], i[4]],
+            [0.00, 0.00, 0.00, i[3], i[4]],
+            [0.00, 0.00, 0.00, 0.00, i[4]]
+            ])
+        # print(I)
+        iI = ca.inv(I)
+        # print(iI) 
+       
     def getModel(self,state,u):
         q = state[0]
         dq = state[1]
