@@ -4,7 +4,7 @@ import numpy as np
 class walker():
     def __init__(self,start,start_pos):
         # Optimization hyper-parameters
-        self.N = 50; self.T = 0.1
+        self.N = 2; self.T = 0.1
         self.step_max = 1. ; self.tauMax = 1.
         self.h = self.T/self.N
         self.max_comy = 0.4
@@ -31,14 +31,14 @@ class walker():
             for j in range(4):
                 ttu = (ca.Opti().variable())
                 tu = ca.hcat([tu, ttu])
-            self.state = ca.vcat([state, x])
-            self.u = ca.vcat([u, tu])
+            self.state = ca.vcat([self.state, x])
+            self.u = ca.vcat([self.u, tu])
 
-        self.pos = [];self.com_vel = [];self.ddq = []
+        self.pos = [];self.com_vel = [];self.dstate = []
         for i in range(self.N):
-            p,dp,g,dg,ddq = self.getModel(self.state[i], self.u[i])
-            p, dg, ddq = self.getDynamics(self.statex[i, 0:5:1], self.statev[i, 5:10:1], self.u[i, :])
-            self.pos.append(p); self.com_vel.append(dg);self.ddq.append(ddq)
+            # p,dp,g,dg,ddq = self.getModel(self.state[i], self.u[i])
+            p, dg, ddq = self.getDynamics(self.state[i, 0:5:1], self.state[i, 5:10:1], self.u[i, :])
+            self.pos.append(p); self.com_vel.append(dg);self.dstate.append(ddq)
 
             # if i == 0:
             #     self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
@@ -51,7 +51,7 @@ class walker():
         q = q
         dq = dq
         f = u
-        p0 = 0.
+        p0 = self.p0[0, 0]
 
         p1 = self.l[0]*ca.sin(q[0, 0])
         p2 = self.l[1]*ca.sin(q[0, 1]) + p1
@@ -110,20 +110,20 @@ class walker():
         U = ca.hcat([0, f]).T
         # print(U.shape)
 
-        M = ca.MX(m.reshape(5, 1))
+        M = ca.MX(self.m.reshape(5, 1))
         # print(M)
 
         I = ca.DM([
-            [i[0], i[1], i[2], i[3], i[4]],
-            [0.00, i[1], i[2], i[3], i[4]],
-            [0.00, 0.00, i[2], i[3], i[4]],
-            [0.00, 0.00, 0.00, i[3], i[4]],
-            [0.00, 0.00, 0.00, 0.00, i[4]]
+            [self.i[0], self.i[1], self.i[2], self.i[3], self.i[4]],
+            [       0., self.i[1], self.i[2], self.i[3], self.i[4]],
+            [       0.,        0., self.i[2], self.i[3], self.i[4]],
+            [       0.,        0.,        0., self.i[3], self.i[4]],
+            [       0.,        0.,        0.,        0., self.i[4]]
             ])
         # print(I)
         iI = ca.inv(I)
         # print(iI) 
-        Q = U + ca.mtimes((G - P), M*(g - ddC))
+        Q = U + ca.mtimes((G - P), M*(self.g - ddC))
         ddq = ca.mtimes(ca.MX(iI), Q)
         return np.array([p1, p2, p3, p4, p5]), np.array([dc1, dc2, dc3, dc4, dc5]), ddq   
     
