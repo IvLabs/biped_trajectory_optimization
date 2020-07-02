@@ -34,21 +34,23 @@ class walker():
             self.state = ca.vcat([state, x])
             self.u = ca.vcat([u, tu])
 
-        self.pos = [];self.com = [];self.ddq = []
+        self.pos = [];self.com_vel = [];self.ddq = []
         for i in range(self.N):
-            p,dp,g,dg,ddq = self.getModel(self.state[i],self.u[i])
-            self.pos.append(p); self.com.append(g);self.ddq.append(ddq)
-            if i == 0:
-                self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
-                self.dp0 = dp
-            if i == self.N - 1:
-                self.dpN = dp
-                # self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
+            p,dp,g,dg,ddq = self.getModel(self.state[i], self.u[i])
+            p, dg, ddq = self.getDynamics(self.statex[i, 0:5:1], self.statev[i, 5:10:1], self.u[i, :])
+            self.pos.append(p); self.com_vel.append(dg);self.ddq.append(ddq)
 
-    def getDynamics(self, state, u):
-        q = state[0, 0:5:1]
-        dq = state[0, 5:10:1]
-        f = u[0, :]
+            # if i == 0:
+            #     self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
+            #     self.dp0 = dp
+            # if i == self.N - 1:
+            #     self.dpN = dp
+            #     # self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
+
+    def getDynamics(self, q, dq, u):
+        q = q
+        dq = dq
+        f = u
         p0 = 0.
 
         p1 = self.l[0]*ca.sin(q[0, 0])
@@ -123,7 +125,7 @@ class walker():
         # print(iI) 
         Q = U + ca.mtimes((G - P), M*(g - ddC))
         ddq = ca.mtimes(ca.MX(iI), Q)
-        return ddq   
+        return np.array([p1, p2, p3, p4, p5]), np.array([dc1, dc2, dc3, dc4, dc5]), ddq   
     
     def getModel(self,state,u):
         q = state[0]
