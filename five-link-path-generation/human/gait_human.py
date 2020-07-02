@@ -3,22 +3,23 @@ import numpy as np
 
 class walker():
     def __init__(self,start,start_pos):
-        # set our parameters of optimization
-        self.opti = ca.Opti()
+        # Optimization hyper-parameters
         self.N = 50; self.T = 0.1
-        self.step_max = 1.; self.tauMax = 1.0
-        self.pi = np.pi; 
-        self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.5
-        self.m = [0.5,0.5,0.5,0.5,0.5]#; self.m2 = 0.5; self.m3 = 0.5
-        self.i1 = self.m[0]*(self.l1**2)/12; self.i2 = self.m[1]*(self.l2**2)/12; self.i3 = self.m[2]*(self.l3**2)/12
-        self.i = [self.i1,self.i2,self.i3,self.i2,self.i1]
-        self.g = -9.81
+        self.step_max = 1. ; self.tauMax = 1.
         self.h = self.T/self.N
-        self.comh = 0.4
-        goali = start; goalf = goali[::-1]
-        self.goal = [goali,goalf]
-        self.p0 = start_pos
-        #set our optimization variables
+        self.max_comy = 0.4
+        goali = np.array(start); goalf = goali[::-1]
+        self.goal = np.array([goali,goalf]).reshape(2,5)
+        self.p0 = np.array(start_pos).reshape(2,1)
+        
+        # Model Parameters
+        self.m = np.array([0.5,0.5,0.5,0.5,0.5])
+        self.l = np.array([0.5,0.5,0.5,0.5,0.5])
+        self.I = self.m*(self.l**2)/12
+        self.g = -9.81
+
+        #set our optimization decision variables/parameters
+        self.opti = ca.Opti()
         self.state = []
         self.u = []
         for i in range(self.N): 
@@ -28,7 +29,7 @@ class walker():
             rowu.append(self.opti.variable(4))
             self.state.append(rowq)
             self.u.append(rowu)
-
+        
         self.pos = [];self.com = [];self.ddq = []
         for i in range(self.N):
             p,dp,g,dg,ddq = self.getModel(self.state[i],self.u[i])
