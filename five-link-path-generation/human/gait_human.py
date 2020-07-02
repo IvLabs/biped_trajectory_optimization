@@ -15,21 +15,25 @@ class walker():
         # Model Parameters
         self.m = np.array([0.5,0.5,0.5,0.5,0.5])
         self.l = np.array([0.5,0.5,0.5,0.5,0.5])
-        self.I = self.m*(self.l**2)/12
+        self.i = self.m*(self.l**2)/12
         self.g = -9.81
 
         #set our optimization decision variables/parameters
         self.opti = ca.Opti()
         self.state = []
         self.u = []
-        for i in range(self.N): 
-            rowu = []; rowq = []
-            rowq.append(self.opti.variable(5))    
-            rowq.append(self.opti.variable(5))
-            rowu.append(self.opti.variable(4))
-            self.state.append(rowq)
-            self.u.append(rowu)
-        
+        for i in range(self.N):
+            x = []
+            tu = []
+            for j in range(10):
+                tx = (ca.Opti().variable())
+                x = ca.hcat([x, tx])
+            for j in range(4):
+                ttu = (ca.Opti().variable())
+                tu = ca.hcat([tu, ttu])
+            self.state = ca.vcat([state, x])
+            self.u = ca.vcat([u, tu])
+
         self.pos = [];self.com = [];self.ddq = []
         for i in range(self.N):
             p,dp,g,dg,ddq = self.getModel(self.state[i],self.u[i])
