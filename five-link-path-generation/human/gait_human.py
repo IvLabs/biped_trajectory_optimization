@@ -121,7 +121,10 @@ class walker():
         # print(I)
         iI = ca.inv(I)
         # print(iI) 
-       
+        Q = U + ca.mtimes((G - P), M*(g - ddC))
+        ddq = ca.mtimes(ca.MX(iI), Q)
+        return ddq   
+    
     def getModel(self,state,u):
         q = state[0]
         dq = state[1]
