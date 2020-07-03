@@ -4,7 +4,7 @@ import numpy as np
 class walker():
     def __init__(self, start,start_pos):
         # Optimization hyper-parameters
-        self.N = 1; self.T = 0.1
+        self.N = 5; self.T = 0.1
         self.step_max = 1. ; self.tauMax = 1.
         self.h = self.T/self.N
         self.max_comy = 0.4
@@ -312,18 +312,18 @@ class nlp(walker):
         iniq = np.zeros((5,walker.N))
         inidq = np.zeros((5,walker.N))
         iniu = np.zeros((4,walker.N))
-        for j in range(5):
-            for i in range(walker.N):
-                walker.opti.set_initial(walker.state[i][0][j],
+        for i in range(walker.N):
+            for j in range(5):
+                walker.opti.set_initial(walker.state[i, j],
                             (walker.goal[0][j] + (i/(walker.N - 1))*(walker.goal[1][j] - walker.goal[0][j])))
                 iniq[j,i] = (walker.goal[0][j] + (i/(walker.N - 1))*(walker.goal[1][j] - walker.goal[0][j]))
                 
-                walker.opti.set_initial(walker.state[i][1][j],
+                walker.opti.set_initial(walker.state[i, j+5],
                             (walker.goal[1][j] - walker.goal[0][j])/(walker.N-1))
                 inidq[j,i] = (walker.goal[1][j] - walker.goal[0][j])/(walker.N-1)                
                 
                 if j < 4:
-                    walker.opti.set_initial(walker.u[i][0][j],0)
+                    walker.opti.set_initial(walker.u[i, j],0)
                 
         return [iniq,inidq,iniu]
 
