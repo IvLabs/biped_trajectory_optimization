@@ -392,12 +392,20 @@ class nlp(walker):
 
     def getBoundaryConstrainsts(self,state1,dstate1,state2,dstate2,goal,impact):
         c = []
+        state1 = ca.reshape(state1, 5, 1)
+        dstate1 = ca.reshape(dstate1, 5, 1)
+        state2 = ca.reshape(state2, 5, 1)
+        dstate2 = ca.reshape(dstate2, 5, 1)
+        goal = goal.T # shape = (5, 2)
+        for i in range(4):
+            c.extend([(state1[i, 0] - goal[i, 0] == 0)])
+            c.extend([(state2[i, 0] - goal[i, 1] == 0)])
         # print(dstate1, impact[1][0])
-        for i in range(4): 
-            c.extend([(state1[i] - impact[0][i] == 0),
-            (dstate1[i] - impact[1][i+4] == 0),
-            #   (state2[i] - goal[1][i] == 0) 
-              ]) 
+        # for i in range(4): 
+        #     c.extend([(state1[i] - impact[0][i] == 0),
+        #     (dstate1[i] - impact[1][i+4] == 0),
+        #     #   (state2[i] - goal[1][i] == 0) 
+        #       ]) 
         return c
     
     def getBounds(self,walker):
