@@ -308,7 +308,7 @@ class nlp(walker):
         self.initial = self.initalGuess(walker)
         # print(walker.opti.debug.value)
 
-    def initalGuess(self,walker):
+    def initalGuess(self, walker):
         iniq = np.zeros((5,walker.N))
         inidq = np.zeros((5,walker.N))
         iniu = np.zeros((4,walker.N))
@@ -327,23 +327,23 @@ class nlp(walker):
                 
         return [iniq,inidq,iniu]
 
-    def getCost(self,u,N,h,walker):
+    def getCost(self, u, N, h, walker):
         result = 0
         for i in range(N-1): 
             for j in range(4):
-                result += (h/2)*(u[i][0][j]**2 + u[i+1][0][j]**2)
+                result += (h/2)*(u[i, j]**2 + u[i+1, j]**2)
         # print(walker.opti.debug.value)
         return result
 
     def getConstraints(self,walker):
         ceq = []
         for i in range(walker.N-1):
-            q1 = (walker.state[i][0])
-            q2 = (walker.state[i+1][0])
-            dq1 = (walker.state[i][1])
-            dq2 = (walker.state[i+1][1])
-            ddq1 = walker.ddq[i]
-            ddq2 = walker.ddq[i+1]
+            q1 = (walker.state[i, 0:5:1])
+            q2 = (walker.state[i+1, 0:5:1])
+            dq1 = (walker.state[i, 5:10:1])
+            dq2 = (walker.state[i+1, 5:10:1])
+            ddq1 = walker.dstate[i]
+            ddq2 = walker.dstate[i+1]
             ceq.extend(self.getCollocation(q1,q2,
                                         dq1,dq2,ddq1,ddq2,
                                         walker.h))
@@ -378,9 +378,16 @@ class nlp(walker):
 
     def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,h):
         cc = []
+        q1 = ca.reshape(q1, 5, 1)
+        q2 = ca.reshape(q2, 5, 1)
+        dq1 = ca.reshape(dq1, 5, 1)
+        dq2 = ca.reshape(dq2, 5, 1)
+        ddq1 = ca.reshape(ddq1, 5, 1)
+        ddq1 = ca.reshape(ddq1, 5, 1)
+
         for i in range(5):
-            cc.extend([(((h/2)*(ddq2[i] + ddq1[i])) - (dq2[i] - dq1[i])==0)])
-            cc.extend([(((h/2)*(dq2[i] + dq1[i])) - (q2[i] - q1[i])==0)])
+            cc.extend([(((h/2)*(ddq2[i, 0] + ddq1[i, 0])) - (dq2[i, 0] - dq1[i, 0])==0)])
+            cc.extend([(((h/2)*(dq2[i, 0] + dq1[i, 0])) - (q2[i, 0] - q1[i, 0])==0)])
         return cc
 
     def getBoundaryConstrainsts(self,state1,dstate1,state2,dstate2,goal,impact):
