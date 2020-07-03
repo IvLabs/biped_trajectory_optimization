@@ -39,7 +39,7 @@ class walker():
             # p,dp,g,dg,ddq = self.getModel(self.state[i], self.u[i])
             p, g, dg, ddq = self.getDynamics(self.state[i, 0:5:1], self.state[i, 5:10:1], self.u[i, :])
             self.pos.append(p); self.com.append(g);self.com_vel.append(dg);self.dstate.append(ddq)
-            self.getImpact(self.state[i, 0:5:1], self.state[i, 5:10:1], p, g, dg)
+            # self.getImpact(self.state[i, 0:5:1], self.state[i, 5:10:1], p, g, dg)
             # if i == 0:
             #     self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
             #     self.dp0 = dp
@@ -178,8 +178,9 @@ class walker():
             - ca.mtimes((G - P_plus), M*dg)
 
         dq_plus = ca.mtimes(iI, Q)
-
         # print(dq_plus)
+
+        return q_plus, dq_plus
 
     def getModel(self,state,u):
         q = state[0]
@@ -416,4 +417,4 @@ class nlp(walker):
                     walker.opti.bounded(-walker.tauMax,u[3],walker.tauMax)])
         return c
 
-model = walker([-0.3,0.7,0.0,-0.5,-0.6], [[0,0]])
+# model = walker([-0.3,0.7,0.0,-0.5,-0.6], [[0,0]])
