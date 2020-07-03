@@ -412,24 +412,24 @@ class nlp(walker):
         c = []
         f = 10
         for i in range(walker.N):
-            q = (walker.state[i][0])
-            dq = (walker.state[i][1])
-            u = (walker.u[i][0])
-            c.extend([walker.opti.bounded(-walker.pi,q[0],walker.pi),
-                    walker.opti.bounded(-walker.pi,q[1],walker.pi),
-                    walker.opti.bounded(-walker.pi,q[2],walker.pi),
-                    walker.opti.bounded(-walker.pi,q[3],walker.pi),
-                    walker.opti.bounded(-walker.pi,q[4],walker.pi),
-                    walker.opti.bounded(-f*walker.pi,dq[0],f*walker.pi),
-                    walker.opti.bounded(-f*walker.pi,dq[1],f*walker.pi),
-                    walker.opti.bounded(-f*walker.pi,dq[2],f*walker.pi),
-                    walker.opti.bounded(-f*walker.pi,dq[3],f*walker.pi),
-                    walker.opti.bounded(-f*walker.pi,dq[4],f*walker.pi),
+            q = ca.reshape(walker.state[i, 0:5:1], 5, 1)
+            dq = ca.reshape(walker.state[i, 5:10:1], 5, 1)
+            u = ca.reshape(walker.u[i, :], 4, 1)
+            c.extend([walker.opti.bounded(-walker.pi,q[0, 0],walker.pi),
+                      walker.opti.bounded(-walker.pi,q[1, 0],walker.pi),
+                      walker.opti.bounded(-walker.pi,q[2, 0],walker.pi),
+                      walker.opti.bounded(-walker.pi,q[3, 0],walker.pi),
+                      walker.opti.bounded(-walker.pi,q[4, 0],walker.pi),
+                      walker.opti.bounded(-f*walker.pi,dq[0, 0],f*walker.pi),
+                      walker.opti.bounded(-f*walker.pi,dq[1, 0],f*walker.pi),
+                      walker.opti.bounded(-f*walker.pi,dq[2, 0],f*walker.pi),
+                      walker.opti.bounded(-f*walker.pi,dq[3, 0],f*walker.pi),
+                      walker.opti.bounded(-f*walker.pi,dq[4, 0],f*walker.pi),
                     # walker.opti.bounded(0,u[0],0),
-                    walker.opti.bounded(-walker.tauMax,u[0],walker.tauMax),
-                    walker.opti.bounded(-walker.tauMax,u[1],walker.tauMax),
-                    walker.opti.bounded(-walker.tauMax,u[2],walker.tauMax),
-                    walker.opti.bounded(-walker.tauMax,u[3],walker.tauMax)])
+                      walker.opti.bounded(-walker.tauMax,u[0, 0],walker.tauMax),
+                      walker.opti.bounded(-walker.tauMax,u[1, 0],walker.tauMax),
+                      walker.opti.bounded(-walker.tauMax,u[2, 0],walker.tauMax),
+                      walker.opti.bounded(-walker.tauMax,u[3, 0],walker.tauMax)])
         return c
 
 # model = walker([-0.3,0.7,0.0,-0.5,-0.6], [[0,0]])
