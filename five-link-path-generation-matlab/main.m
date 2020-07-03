@@ -38,7 +38,7 @@ xf= zeros(15,11);
   options = optimoptions('fmincon','MaxFunctionEvaluations',5000,'Display','iter-detailed','PlotFcn',@optimplotconstrviolation);
     x = fmincon(@callme,x,[],[],[],[],lb,ub,@colons,options);%function handle is paper wala f(x)
     xf=xf+x;
-  for i = 1:1:3
+  for i = 1:1:9 %steps
     options = optimoptions('fmincon','MaxFunctionEvaluations',5000,'Display','iter-detailed','PlotFcn',@optimplotconstrviolation);
     x = fmincon(@callme,x,[],[],[],[],lb,ub,@colons,options);%function handle is paper wala f(x)
 %    if (i==1 || 1==3)
