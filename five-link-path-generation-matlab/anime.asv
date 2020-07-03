@@ -6,7 +6,7 @@ r23=r12+[l3*sin(xf(3,:));l3*cos(xf(3,:))];
 r24=r12+[l4*sin(xf(4,:));-l4*cos(xf(4,:))];
 r45=r24+[l5*sin(xf(5,:));-l5*cos(xf(5,:))];
 ground = line([-2 4],[0 0],'Color','m');
-origin=0;
+origin=[0, 0];
 for i = 1:length(t)
     if (rem(i, step_time)==1) && (i~=1)
         origin=origin+r24(1,i-1);
