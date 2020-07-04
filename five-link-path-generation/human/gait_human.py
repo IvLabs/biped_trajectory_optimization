@@ -329,10 +329,12 @@ class nlp(walker):
 
     def getCost(self, u, N, h, walker):
         result = 0
+        print(u.is_symbolic())
         for i in range(N-1): 
             for j in range(4):
                 result += (h/2)*(u[i, j]**2 + u[i+1, j]**2)
         # print(walker.opti.debug.value)
+        print(result)
         return result
 
     def getConstraints(self,walker):
@@ -432,4 +434,5 @@ class nlp(walker):
                       walker.opti.bounded(-walker.tauMax,u[3, 0],walker.tauMax)])
         return c
 
-# model = walker([-0.3,0.7,0.0,-0.5,-0.6], [[0,0]])
+model = walker([-0.3,0.7,0.0,-0.5,-0.6], [[0,0]])
+prob = nlp(model)
