@@ -3,7 +3,8 @@ import numpy as np
 
 class walker():
     def __init__(self):
-        
+        # super().__init__()
+
         #################################
         # Optimization hyper-parameters #
         #################################
@@ -35,7 +36,7 @@ class walker():
         q4 = ca.SX.sym('q4')
         q5 = ca.SX.sym('q5')
         self.q = ca.vertcat(q1, q2, q3, q4, q5)
-        
+
         dq1 = ca.SX.sym('dq1')
         dq2 = ca.SX.sym('dq2')
         dq3 = ca.SX.sym('dq3')
@@ -161,20 +162,81 @@ class walker():
         # Fixed step Runge-Kutta 4 integrator
         M = 4 # RK4 steps per interval
         dt = self.T/self.N/M
-        f = ca.Function('f', [self.x, self.u], [self.xdot, self.J])
+        self.f = ca.Function('f', [self.x, self.u], [self.xdot, self.J])
         X0 = ca.SX.sym('X0', 10, 1)
         U = ca.SX.sym('U', 4, 1)
         X = X0
-        J = 0
+        Q = 0
         for j in range(M):
-            k1, k1_q = f(X, U)
-            k2, k2_q = f(X + dt/2 * k1, U)
-            k3, k3_q = f(X + dt/2 * k2, U)
-            k4, k4_q = f(X + dt * k3, U)
+            k1, k1_q = self.f(X, U)
+            k2, k2_q = self.f(X + dt/2 * k1, U)
+            k3, k3_q = self.f(X + dt/2 * k2, U)
+            k4, k4_q = self.f(X + dt * k3, U)
             X = X + dt/6*(k1 +2*k2 +2*k3 +k4)
-            J = J + dt/6*(k1_q + 2*k2_q + 2*k3_q + k4_q)
-        self.F = ca.Function('F', [X0, U], [X, J],['x0','u'],['xf','j'])
+            Q = Q + dt/6*(k1_q + 2*k2_q + 2*k3_q + k4_q)
+        self.F = ca.Function('F', [X0, U], [X, Q],['x0','u'],['xf','j'])
+
+class nlp(walker):
+    def __init__(self, walker):
+        # super().__init__()
+
+        # Start with an empty NLP
+        self.w=[]
+        self.w0 = []
+        self.lbw = []
+        self.ubw = []
+        self.J = 0
+        self.g=[]
+        self.lbg = []
+        self.ubg = []
+
+        #####################
+        # Formulate the NLP #
+        #####################
+
+        self.formulateNLP(walker)
+
+        ########################
+        # Create an NLP solver #
+        ########################
+
+        self.prob = {'f': self.J, 'x': ca.vertcat(*self.w), 'g': ca.vertcat(*self.g)}
+        self.solver = ca.nlpsol('solver', 'sqpmethod', self.prob)
+
+    def formulateNLP(self, walker):
+        Xk = ca.SX([-0.3, 0.7, 0.0, -0.5, -0.6, 0., 0., 0., 0., 0.])
+        Xk = ca.reshape(Xk, 10, 1)
+
+        for k in range(walker.N):
+            if k < walker.N - 1:
+                Xk = ca.SX([-0.6, -0.5, 0.0, 0.7, -0.3, 0., 0., 0., 0., 0.])
+                Xk = ca.reshape(Xk, 10, 1)
+
+            # New NLP variable for the control
+            Uk = ca.SX.sym('U_' + str(k), 4, 1)
+            self.w += [Uk]
+            self.lbw += [-walker.tau_max]
+            self.ubw += [walker.tau_max]
+            self.w0 += [0]
+
+            # Integrate till the end of the interval
+            Fk = walker.F(x0=Xk, u=Uk)
+            Xk = Fk['xf']
+            self.J = self.J + Fk['j']
+
+            # Add inequality constraint
+            self.g += [Xk[0], Xk[1], Xk[2], Xk[3], Xk[4]]
+            self.lbg += [-np.pi/2]*5
+            self.ubg += [np.pi/2]*5
 
 
+
+# Create biped and NLP 
 biped = walker()
+problem = nlp(biped)
+
+# Solve the NLP
+sol = ca.solver(x0=problem.w0, lbx=problem.lbw, ubx=problem.ubw, lbg=problem.lbg, ubg=problem.ubg)
+w_opt = sol['x']
+
 # print(biped.ddq)        
