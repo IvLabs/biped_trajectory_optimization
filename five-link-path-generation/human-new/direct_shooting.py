@@ -9,9 +9,9 @@ class walker():
         # Optimization hyper-parameters #
         #################################
         
-        self.T = 1. # Time Horizon
+        self.T = 0.2 # Time Horizon
         self.N = 50 # Number of Control Intervals
-        self.tau_max = 1. # Max effort
+        self.tau_max = 1.5 # Max effort
         self.h = self.T/self.N
         gl = np.array([-0.3,0.7,0.0,-0.5,-0.6]).reshape(5, 1)
         self.goal = np.array([gl, gl[::-1]]).reshape(5, 2) # Goal list
@@ -30,26 +30,26 @@ class walker():
         # Model variables #
         ###################
 
-        q1 = ca.SX.sym('q1')
-        q2 = ca.SX.sym('q2')
-        q3 = ca.SX.sym('q3')
-        q4 = ca.SX.sym('q4')
-        q5 = ca.SX.sym('q5')
+        q1 = ca.MX.sym('q1')
+        q2 = ca.MX.sym('q2')
+        q3 = ca.MX.sym('q3')
+        q4 = ca.MX.sym('q4')
+        q5 = ca.MX.sym('q5')
         self.q = ca.vertcat(q1, q2, q3, q4, q5)
 
-        dq1 = ca.SX.sym('dq1')
-        dq2 = ca.SX.sym('dq2')
-        dq3 = ca.SX.sym('dq3')
-        dq4 = ca.SX.sym('dq4')
-        dq5 = ca.SX.sym('dq5')
+        dq1 = ca.MX.sym('dq1')
+        dq2 = ca.MX.sym('dq2')
+        dq3 = ca.MX.sym('dq3')
+        dq4 = ca.MX.sym('dq4')
+        dq5 = ca.MX.sym('dq5')
         self.dq = ca.vertcat(dq1, dq2, dq3, dq4, dq5)
         
         self.x = ca.vertcat(self.q, self.dq)
 
-        u1 = ca.SX.sym('u1')
-        u2 = ca.SX.sym('u2')
-        u3 = ca.SX.sym('u3')
-        u4 = ca.SX.sym('u4')
+        u1 = ca.MX.sym('u1')
+        u2 = ca.MX.sym('u2')
+        u3 = ca.MX.sym('u3')
+        u4 = ca.MX.sym('u4')
         self.u = ca.vertcat(u1, u2, u3, u4)
 
         ###################
@@ -63,7 +63,7 @@ class walker():
         # Objective Function #
         ######################
 
-        self.J = self.u**2 
+        self.J = ca.sumsqr(self.u) 
 
         ####################################
         # Formulate Discrete Time Dynamics #
@@ -78,14 +78,14 @@ class walker():
         print('##############')
         print('# Test Point #')
         print('##############')
-        Fk = self.F(x0=[-0.3,0.7,0.0,-0.5,-0.6,0.1,0.1,0.1,0.1,0.1],u=[0.,0.,0.,0.])
+        Fk = self.F(x0=[-0.3,0.7,0.0,-0.5,-0.6,0.1,0.1,0.1,0.1,0.1], u=[0., 0., 0., 0.])
         print(Fk['xf'])
         print(Fk['j'])
 
     def getModel(self, q, dq, u):
         q = ca.reshape(q, 5, 1)
         dq = ca.reshape(dq, 5, 1)
-        p0 = ca.SX(self.p0[0, 0])
+        p0 = ca.MX(self.p0[0, 0])
 
         p1 = self.l[0, 0]*ca.sin(q[0, 0]) + p0
         p2 = self.l[1, 0]*ca.sin(q[1, 0]) + p1
@@ -118,7 +118,7 @@ class walker():
         ddc5 = ((self.l[4, 0]*ca.sin(q[0, 0])*(-dq[4, 0]**2)/2) + (self.l[3, 0]*ca.sin(q[3, 0])*(-dq[3, 0]**2)) 
                 + (self.l[1, 0]*ca.sin(q[1, 0])*(-dq[1, 0]**2)) + (self.l[0, 0]*ca.sin(q[0, 0])*(-dq[0, 0]**2)))
 
-        P = ca.SX(5, 5)
+        P = ca.MX(5, 5)
         P[0, :] = p0
         P[1, 1:4:1] = p1
         P[2, 2:4:1] = p2
@@ -126,7 +126,7 @@ class walker():
         P[4, 4:4:1] = p4
         # print(P.shape)
 
-        G = ca.SX(5, 5)
+        G = ca.MX(5, 5)
         G[0, 0] = c1
         G[0:1:1, 1] = c2
         G[0:2:1, 2] = c3
@@ -140,7 +140,7 @@ class walker():
         U = ca.reshape(ca.vertcat(0., self.u), 5, 1)
         # print(U.shape)
 
-        M = ca.SX(self.m.reshape(5, 1))
+        M = ca.MX(self.m.reshape(5, 1))
         # print(M)
 
         I = ca.DM([
@@ -154,7 +154,7 @@ class walker():
         iI = ca.inv(I)
         # print(iI) 
         Q = U + ca.mtimes((G - P), M*(self.gravity - ddC))
-        ddq = ca.mtimes(ca.SX(iI), Q)
+        ddq = ca.mtimes(ca.MX(iI), Q)
         # print(ddq)
         return [p0, p1, p2, p3, p4, p5], [c1, c2, c3, c4, c5], dC, ddq   
 
@@ -163,8 +163,8 @@ class walker():
         M = 4 # RK4 steps per interval
         dt = self.T/self.N/M
         self.f = ca.Function('f', [self.x, self.u], [self.xdot, self.J])
-        X0 = ca.SX.sym('X0', 10, 1)
-        U = ca.SX.sym('U', 4, 1)
+        X0 = ca.MX.sym('X0', 10, 1)
+        U = ca.MX.sym('U', 4, 1)
         X = X0
         Q = 0
         for j in range(M):
@@ -185,58 +185,125 @@ class nlp(walker):
         self.w0 = []
         self.lbw = []
         self.ubw = []
-        self.J = 0
+        self.J = 0.
         self.g=[]
         self.lbg = []
         self.ubg = []
+
+        self.opti = ca.Opti()
 
         #####################
         # Formulate the NLP #
         #####################
 
-        self.formulateNLP(walker)
+        ## choose a any one
+
+        # self.formulateNLP(walker)
+        self.formulateOptiStack(walker)
 
         ########################
         # Create an NLP solver #
         ########################
 
-        self.prob = {'f': self.J, 'x': ca.vertcat(*self.w), 'g': ca.vertcat(*self.g)}
-        self.solver = ca.nlpsol('solver', 'sqpmethod', self.prob)
+        # print(self.w.is_symbolic())
+        # self.prob = {'f': self.J, 'x': ca.vertcat(*self.w), 'g': ca.vertcat(*self.g)}
+        # options = {'ignore_check_vec': True}
+        # self.solver = ca.nlpsol('solver', 'ipopt', self.prob, options)
 
     def formulateNLP(self, walker):
-        Xk = ca.SX([-0.3, 0.7, 0.0, -0.5, -0.6, 0., 0., 0., 0., 0.])
+        Xk = ca.MX([-0.3, 0.7, 0.0, -0.5, -0.6, 0., 0., 0., 0., 0.])
         Xk = ca.reshape(Xk, 10, 1)
+        self.g += [Xk]
+        self.lbg += [-np.pi/2]*10
+        self.ubg += [np.pi/2]*10
 
         for k in range(walker.N):
-            if k < walker.N - 1:
-                Xk = ca.SX([-0.6, -0.5, 0.0, 0.7, -0.3, 0., 0., 0., 0., 0.])
+            if k == walker.N - 1:
+                Xk = ca.MX([-0.6, -0.5, 0.0, 0.7, -0.3, 0., 0., 0., 0., 0.])
                 Xk = ca.reshape(Xk, 10, 1)
+                self.g += [Xk]
+                self.lbg += [-np.pi/2]*10
+                self.ubg += [np.pi/2]*10
 
             # New NLP variable for the control
-            Uk = ca.SX.sym('U_' + str(k), 4, 1)
+            Uk = ca.MX.sym('U_' + str(k), 4, 1)
+            # Uk = ca.MX([0.])
             self.w += [Uk]
-            self.lbw += [-walker.tau_max]
-            self.ubw += [walker.tau_max]
-            self.w0 += [0]
+            self.lbw += [-walker.tau_max]*4
+            self.ubw += [walker.tau_max]*4
+            self.w0 += [0.]*4
 
             # Integrate till the end of the interval
             Fk = walker.F(x0=Xk, u=Uk)
             Xk = Fk['xf']
             self.J = self.J + Fk['j']
-
+            # print(Xk)
+            # print(Fk['j'])
             # Add inequality constraint
-            self.g += [Xk[0], Xk[1], Xk[2], Xk[3], Xk[4]]
-            self.lbg += [-np.pi/2]*5
-            self.ubg += [np.pi/2]*5
+            # self.g += [Xk]
+            # self.lbg += [-np.pi/2]*10
+            # self.ubg += [np.pi/2]*10
 
+    def formulateOptiStack(self, walker):
+        Xk = ca.MX([-0.3, 0.7, 0.0, -0.5, -0.6, 0., 0., 0., 0., 0.])
 
+        tau_bound = ca.MX([walker.tau_max, walker.tau_max, walker.tau_max, walker.tau_max])
+
+        J = 0
+
+        for k in range(walker.N):
+            Uk = self.opti.variable(4, 1)
+            self.opti.subject_to(self.opti.bounded(-tau_bound, Uk, tau_bound))
+            Fk = walker.F(x0=Xk, u=Uk)
+            Xk = Fk['xf']
+            J += Fk['j']
+
+            # self.opti.subject_to() 
+
+        self.opti.minimize(J)
+        self.opti.solver('ipopt')
 
 # Create biped and NLP 
 biped = walker()
 problem = nlp(biped)
+sol = problem.opti.solve()
+# # Solve the NLP
+# sol = problem.solver(x0=problem.w0, lbx=problem.lbw, ubx=problem.ubw, lbg=problem.lbg, ubg=problem.ubg)
+# w_opt = sol['x']
 
-# Solve the NLP
-sol = ca.solver(x0=problem.w0, lbx=problem.lbw, ubx=problem.ubw, lbg=problem.lbg, ubg=problem.ubg)
-w_opt = sol['x']
+# # Plot the solution
+# u_opt = w_opt
 
-# print(biped.ddq)        
+x_opt = [[-0.3, 0.7, 0.0, -0.5, -0.6, 0, 0, 0, 0, 0]]
+for k in range(biped.N):
+    Fk = biped.F(x0=x_opt[-1], u=u_opt[k])
+    x_opt += [Fk['xf'].full()]
+x1_opt = [r[0] for r in x_opt]
+x2_opt = [r[1] for r in x_opt]
+x3_opt = [r[2] for r in x_opt]
+x4_opt = [r[3] for r in x_opt]
+x5_opt = [r[4] for r in x_opt]
+
+tgrid = [biped.T/(biped.N)*k for k in range(biped.N+1)]
+import matplotlib.pyplot as plt
+plt.figure(1)
+plt.clf()
+plt.subplot(221)
+plt.plot(tgrid, x1_opt, '-')
+plt.plot(tgrid, x2_opt, '-')
+plt.plot(tgrid, x3_opt, '-')
+plt.plot(tgrid, x4_opt, '-')
+plt.plot(tgrid, x5_opt, '-')
+# plt.legend(['x1','x2','x3','x4','x5'])
+plt.xlabel('t')
+plt.ylabel('q')
+
+plt.subplot(222)
+plt.plot(tgrid, ca.vertcat(ca.DM.nan(1), u_opt[0:u_opt.numel():4]), '-'
+        ,tgrid, ca.vertcat(ca.DM.nan(1), u_opt[1:u_opt.numel():4]), '-'
+        ,tgrid, ca.vertcat(ca.DM.nan(1), u_opt[2:u_opt.numel():4]), '-'
+        ,tgrid, ca.vertcat(ca.DM.nan(1), u_opt[3:u_opt.numel():4]), '-')
+plt.xlabel('t')
+plt.ylabel('u')
+# plt.legend(['u1','u2','u3','u4',])
+plt.show()  

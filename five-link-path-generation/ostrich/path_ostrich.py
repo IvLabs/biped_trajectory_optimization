@@ -74,9 +74,9 @@ for i in range(f*me.N):
     # if cv2.waitKey(0) & 0xFF == ord("q"):
     # #     break
     camera.snap()
-animation = camera.animate(interval=20)
+animation = camera.animate(interval=1)
 # animation.save('path1.mp4')
-# plt.show()
+plt.show()
 plt.close()
 
 name = ['q','dq','u']
