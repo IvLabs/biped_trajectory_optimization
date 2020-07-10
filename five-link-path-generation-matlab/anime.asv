@@ -15,7 +15,7 @@ for i = 1:length(t)
     stance_f = line([origin+r01(1,i) origin+r12(1,i)],[r01(2,i) r12(2,i)],'Color','blue');
     torso = line([origin+r12(1,i) origin+r23(1,i)],[r12(2,i) r23(2,i)],'Color','green');
     swing_f = line([origin+r12(1,i) origin+r24(1,i)],[r12(2,i) r24(2,i)],'Color','yellow');
-    swing_t = line([origin+r24(1,i) origin+r45(1,i)],[r24(2,i) r45(2,i)],'Color','black');
+    swing_t = line([origin+r24(1,i) origin+r45(1,i)],[r24(2,i) r45(2,i)],'Color','bla');
     
     pause(0.3)
     delete(stance_t)
