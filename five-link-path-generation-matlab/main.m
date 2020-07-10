@@ -6,7 +6,7 @@ tic
 T = 1;
 
 dmax = 20;
-umax = 200;
+umax = 10;
 d = 1;
 h = T/(N);
 t = 0:h:T;
@@ -41,27 +41,31 @@ xf= zeros(15,11);
   for i = 1:1:9 %steps
     options = optimoptions('fmincon','MaxFunctionEvaluations',5000,'Display','iter-detailed','PlotFcn',@optimplotconstrviolation);
     x = fmincon(@callme,x,[],[],[],[],lb,ub,@colons,options);%function handle is paper wala f(x)
-%    if (i==1 || 1==3)
-%         g=x(1,:);
-%         x(1,:)=x(5,:);
-%         x(5,:)=g;
-%         g=x(2,:);
-%         x(2,:)=x(4,:);
-%         x(4,:)=g;
-%         g=x(6,:);
-%         x(6,:)=x(10,:);
-%         x(10,:)=g;
-%         g=x(7,:);
-%         x(7,:)=x(9,:);
-%         x(9,:)=g;
-%         g=x(11,:);
-%         x(11,:)=x(15,:);
-%         x(15,:)=g;
-%         g=x(12,:);
-%         x(12,:)=x(14,:);
-%         x(14,:)=g;
-%   end 
-    xf=[xf,x];
+    xn=[x(1:5,end);x(6:10,end)];
+    xp=[x(1:5,end-1);x(6:10,end-1)];
+    xt = impact(xn,xp);
+    x(6:10,end) = xt;
+    
+%          xt = x;   
+%          g=x(1,:);
+%          x(1,:)=x(5,:);
+%          x(5,:)=g;
+%          g=x(2,:);
+%          x(2,:)=x(4,:);
+%          x(4,:)=g;
+%          g=x(6,:);
+%          x(6,:)=x(10,:);
+%          x(10,:)=g;
+%          g=x(7,:);
+%          x(7,:)=x(9,:);
+%          x(9,:)=g;
+%          g=x(11,:);
+%          x(11,:)=x(15,:);
+%          x(15,:)=g;
+%          g=x(12,:);
+%          x(12,:)=x(14,:);
+%          x(14,:)=g;
+          xf=[xf,x];
     t=[t,(i+t0)];
   end
 toc
