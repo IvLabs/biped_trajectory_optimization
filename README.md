@@ -16,22 +16,20 @@
 
 ### Human gait
 
-<p> <img src= "https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human.gif" 
-   alt="path" 
-   align="left"> 
- <img src= "(https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human_terminal.gif)" 
-   alt="terminal" 
-   align="right">  </p>
-<!-- ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human_terminal.gif) -->
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human_terminal.gif)
 
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/graph.png) 
 
 ### Ostrich gait
+
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich/ostrich.gif)
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich/ostrich.png)
+
+
 ## Gait Generation for single step
 ### using CasADi library in python
+
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/animation2.gif) 
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-gait-generation/graph.png)
 
