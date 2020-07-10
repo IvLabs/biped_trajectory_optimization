@@ -1,4 +1,4 @@
-    function [xn,flag] = impact(x,xp)
+    function [xn] = impact(x,xp)
 
 global N m1 m2 m3 m4 m5 l1 l2 l4 l3 l5 timer T
 %    xp = xp.';
