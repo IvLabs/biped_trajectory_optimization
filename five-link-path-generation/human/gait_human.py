@@ -1,50 +1,45 @@
-import casadi as ca
 import numpy as np
+import casadi as ca
 
 class walker():
     def __init__(self,start,start_pos):
-        # Optimization hyper-parameters
-        self.N = 50; self.T = 0.1
-        self.step_max = 1. ; self.tauMax = 1.
-        self.h = self.T/self.N
-        self.max_comy = 0.4
-        goali = np.array(start); goalf = goali[::-1]
-        self.goal = np.array([goali,goalf]).reshape(2,5)
-        self.p0 = np.array(start_pos).reshape(2,1)
-        
-        # Model Parameters
-        self.m = np.array([0.5,0.5,0.5,0.5,0.5])
-        self.l = np.array([0.5,0.5,0.5,0.5,0.5])
-        self.i = self.m*(self.l**2)/12
-        self.g = -9.81
-
-        #set our optimization decision variables/parameters
+        # set our parameters of optimization
         self.opti = ca.Opti()
+        self.N = 50; self.T = 0.1
+        self.step_max = 0.5; self.tauMax = 10.
+        self.pi = np.pi; 
+        self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.5
+        self.m = [0.5,0.5,0.5,0.5,0.5]#; self.m2 = 0.5; self.m3 = 0.5
+        self.i1 = self.m[0]*(self.l1**2)/12; self.i2 = self.m[1]*(self.l2**2)/12; self.i3 = self.m[2]*(self.l3**2)/12
+        self.i = [self.i1,self.i2,self.i3,self.i2,self.i1]
+        self.g = 9.81
+        self.h = self.T/self.N
+        self.comh = 0.4
+        goali = start; goalf = goali[::-1]
+        self.goal = [goali,goalf]
+        self.p0 = start_pos
+        #set our optimization variables
         self.state = []
         self.u = []
-        for i in range(self.N):
-            x = []
-            tu = []
-            for j in range(10):
-                tx = (ca.Opti().variable())
-                x = ca.hcat([x, tx])
-            for j in range(4):
-                ttu = (ca.Opti().variable())
-                tu = ca.hcat([tu, ttu])
-            self.state = ca.vcat([state, x])
-            self.u = ca.vcat([u, tu])
+        for i in range(self.N): 
+            rowu = []; rowq = []
+            rowq.append(self.opti.variable(5))    
+            rowq.append(self.opti.variable(5))
+            rowu.append(self.opti.variable(4))
+            self.state.append(rowq)
+            self.u.append(rowu)
 
         self.pos = [];self.com = [];self.ddq = []
         for i in range(self.N):
             p,dp,g,dg,ddq = self.getModel(self.state[i],self.u[i])
             self.pos.append(p); self.com.append(g);self.ddq.append(ddq)
             if i == 0:
-                self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
+                # self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
                 self.dp0 = dp
             if i == self.N - 1:
                 self.dpN = dp
-                # self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
-        
+                self.impactmap = self.heelStrike(self.state[i][0],self.state[i][1],p,dp,g,dg)
+
     def getModel(self,state,u):
         q = state[0]
         dq = state[1]
@@ -78,7 +73,7 @@ class walker():
         ddq = [ddq1,ddq2,ddq3,ddq4,ddq5]
                 
         return p,dp,g,dc,ddq
-        
+
     def getKinematics(self,q,dq):    
         p10 = ca.MX.sym('p10',1); c10 = ca.MX.sym('g10',1)
         p11 = ca.MX.sym('p11',1); c11 = ca.MX.sym('g11',1)
@@ -135,7 +130,7 @@ class walker():
         s = [0,0,0,0,0]
         for i in range(5):
             s[0] += ((self.m[i]*(((g[i][0] - p[4][0])*dg[i][1])-((g[i][1] - p[4][1])*dg[i][0]))) + (self.i[i]*dq[i])
-                    - (self.m[i]*(((gi[i][0] - pi[1][0])*dgi[i][1])-((gi[i][1] - p0[1])*dgi[i][0]))))
+                    - (self.m[i]*(((gi[i][0] - p0[0])*dgi[i][1])-((gi[i][1] - p0[1])*dgi[i][0]))))
             if i < 4:
                 s[1] += ((self.m[i]*(((g[i][0] - p[3][0])*dg[i][1])-((g[i][1] - p[3][1])*dg[i][0]))) + (self.i[i]*dq[i])
                         - (self.m[i]*(((gi[i][0] - pi[1][0])*dgi[i][1])-((gi[i][1] - pi[1][1])*dgi[i][0]))))
@@ -152,24 +147,23 @@ class walker():
         dqi[4] = s[4] / self.i[4]
         dqi[3] = s[3] - s[4] / self.i[3]
         dqi[2] = s[2] - s[3] / self.i[2]
-        dqi[1] = s[1] - s[2] / self.i[1]
+        dqi[1] = s[1] - s[2]/ self.i[1]
         dqi[0] = s[0] - s[1] / self.i[0]
 
         return [qi,dqi]
 
 class nlp(walker):
     def __init__(self, walker):
-        self.cost = self.getCost(walker.u,walker.N,walker.h,walker)
+        self.cost = self.getCost(walker.u,walker.N,walker.h)
         walker.opti.minimize(self.cost)
         self.ceq = self.getConstraints(walker)
         walker.opti.subject_to(self.ceq)
         self.bounds = self.getBounds(walker)
         walker.opti.subject_to(self.bounds)
-        p_opts = {"expand":False}#,"ipopt.print_level" : 1
+        p_opts = {"expand":True}
         s_opts = {"max_iter": 1000}
         walker.opti.solver("ipopt",p_opts,s_opts)
         self.initial = self.initalGuess(walker)
-        # print(walker.opti.debug.value)
 
     def initalGuess(self,walker):
         iniq = np.zeros((5,walker.N))
@@ -190,12 +184,11 @@ class nlp(walker):
                 
         return [iniq,inidq,iniu]
 
-    def getCost(self,u,N,h,walker):
+    def getCost(self,u,N,h):
         result = 0
         for i in range(N-1): 
             for j in range(4):
                 result += (h/2)*(u[i][0][j]**2 + u[i+1][0][j]**2)
-        # print(walker.opti.debug.value)
         return result
 
     def getConstraints(self,walker):
@@ -215,50 +208,55 @@ class nlp(walker):
         dq0 = (walker.state[0][1])
         qf = (walker.state[-1][0])
         dqf = (walker.state[-1][1])
-        ceq.extend(self.getBoundaryConstrainsts(q0,dq0,qf,dqf,walker.goal,walker.impactmap))
+        ceq.extend(self.getBoundaryConstrainsts(q0,dq0,qf,walker.goal,walker.impactmap))
         ceq.extend([(walker.dp0[4][1] > 0),(walker.dpN[4][1] < 0)])
-        for i in range(walker.N):
+        for i in range(1, walker.N - 1):
             ceq.extend([((walker.pos[i][4][0]) <= (walker.step_max + walker.p0[0]))])
             ceq.extend([((walker.pos[i][4][0]) >= -(walker.step_max + walker.p0[0]))])
-            ceq.extend([((walker.pos[i][4][1]) > walker.p0[1])])
-            ceq.extend([((walker.pos[i][4][1]) <= walker.comh + walker.p0[1])])
-            # ceq.extend([((walker.state[i][0][4] - walker.state[i][0][3]) >= 0)])
-            # ceq.extend([((walker.state[i][0][4] - walker.state[i][0][3]) <= walker.pi/2)])
-            # ceq.extend([((walker.pos[i][3][1] - walker.p0[1]) >= walker.comh)])
+            ceq.extend([((walker.pos[i][4][1]) >= walker.p0[1])])
+            ceq.extend([((walker.pos[i][3][1] - walker.p0[1]) >= walker.comh)])
+            ceq.extend([((walker.state[i][0][0, 0] + walker.state[i][0][1, 0]) < 0)])
+            ceq.extend([((walker.state[i][0][4, 0] + walker.state[i][0][3, 0]) < 0)])
+            ceq.extend([(walker.state[i][0][2, 0] <= walker.pi/15)])
+            ceq.extend([(walker.state[i][0][2, 0] >= -walker.pi/15)])
+
+            # ceq.extend([((walker.state[i][0][4, 0] - walker.state[i][0][3]) <= walker.pi/2)])
+
             # ceq.extend([((walker.pos[i][0][1] - walker.p0[1]) >= walker.comh)])
             # ceq.extend([((walker.pos[i][1][1] - walker.p0[1]) >= walker.comh)])
             # ceq.extend([((walker.pos[i][2][1] - walker.p0[1]) >= walker.comh)])
-            # comy = 0
-            # for j in range(4):
-            #     comy += walker.com[i][j][1]
-            # ceq.extend([comy - walker.p0[1] >= walker.comh])
+            if i == 0:
+                ceq.extend([((walker.pos[i][4][1]) == walker.p0[1])])
+            comy = 0
+            for j in range(4):
+                comy += walker.com[i][j][1]
+            ceq.extend([comy - walker.p0[1] >= walker.comh])
 
-        ceq.extend([walker.pos[0][4][1] == walker.p0[1]])
-        # # ceq.extend([walker.pos[0][4][0] == -(walker.p0[0] + walker.step_max)])
         ceq.extend([walker.pos[-1][4][1] == walker.p0[1]])
-        # ceq.extend([walker.pos[-1][4][0] == walker.step_max + walker.p0[0]])
+        ceq.extend([walker.pos[-1][4][0] == walker.step_max + walker.p0[0]])
         return ceq
 
     def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,h):
         cc = []
-        for i in range(5):
+        for i in range(4):
             cc.extend([(((h/2)*(ddq2[i] + ddq1[i])) - (dq2[i] - dq1[i])==0)])
-            cc.extend([(((h/2)*(dq2[i] + dq1[i])) - (q2[i] - q1[i])==0)])
+        cc.extend([(((h/2)*(dq2 + dq1)) - (q2 - q1)==0)])
         return cc
 
-    def getBoundaryConstrainsts(self,state1,dstate1,state2,dstate2,goal,impact):
+    def getBoundaryConstrainsts(self,state1,dstate1,state2,goal,impact):
         c = []
-        # print(dstate1, impact[1][0])
-        for i in range(4): 
-            c.extend([(state1[i] - impact[0][i] == 0),
-            (dstate1[i] - impact[1][i+4] == 0),
-            #   (state2[i] - goal[1][i] == 0) 
-              ]) 
+        print(goal, state1.shape)
+        for i in range(0, 5): 
+            c.extend([(state1[i, 0] - impact[0][i] == 0)
+                        ,(dstate1[i, 0] - impact[1][i] == 0)
+                        # ,(state2[i] - goal[1][i] == 0)
+                        ]) 
+
         return c
     
     def getBounds(self,walker):
         c = []
-        f = 10
+        f = 5
         for i in range(walker.N):
             q = (walker.state[i][0])
             dq = (walker.state[i][1])
@@ -279,3 +277,4 @@ class nlp(walker):
                     walker.opti.bounded(-walker.tauMax,u[2],walker.tauMax),
                     walker.opti.bounded(-walker.tauMax,u[3],walker.tauMax)])
         return c
+

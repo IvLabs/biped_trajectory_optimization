@@ -215,6 +215,7 @@ class nlp(walker):
             ceq.extend([((walker.pos[i][4][0]) >= -(walker.step_max + walker.p0[0]))])
             ceq.extend([((walker.pos[i][4][1]) >= walker.p0[1])])
             ceq.extend([((walker.pos[i][3][1] - walker.p0[1]) >= walker.comh)])
+            
             # ceq.extend([((walker.pos[i][0][1] - walker.p0[1]) >= walker.comh)])
             # ceq.extend([((walker.pos[i][1][1] - walker.p0[1]) >= walker.comh)])
             # ceq.extend([((walker.pos[i][2][1] - walker.p0[1]) >= walker.comh)])

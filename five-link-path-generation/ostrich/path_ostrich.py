@@ -1,10 +1,10 @@
 from matplotlib import pyplot as plt
 from gait_ostrich import *
 
-start = [-0.3,0.7,0.0,-0.5,-0.3]
+start = [-0.6,0.7,0.0,-0.5,-0.3]
 start_pos = [[0,0]]
 q = []; dq = []; u = []; pos = []; time = []
-f = 8
+f = 2
 for k in range(f):
     me = walker(start,start_pos[k])
     n1 = nlp(me)
@@ -74,9 +74,9 @@ for i in range(f*me.N):
     # if cv2.waitKey(0) & 0xFF == ord("q"):
     # #     break
     camera.snap()
-animation = camera.animate(interval=20)
+animation = camera.animate(interval=1)
 # animation.save('path1.mp4')
-# plt.show()
+plt.show()
 plt.close()
 
 name = ['q','dq','u']
