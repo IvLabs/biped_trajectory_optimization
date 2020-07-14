@@ -2,21 +2,22 @@ import numpy as np
 import casadi as ca
 
 class walker():
-    def __init__(self,start,start_pos):
+    def __init__(self,start,start_pos, start_vel=[0.,0.,0.,0.,0.]):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.N = 50; self.T = 0.1
-        self.step_max = 0.5; self.tauMax = 10.
+        self.N = 40; self.T = 0.1
+        self.step_max = 0.25; self.tauMax = 1.5
         self.pi = np.pi; 
-        self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.5
-        self.m = [0.5,0.5,0.5,0.5,0.5]#; self.m2 = 0.5; self.m3 = 0.5
+        self.l1 = 0.25; self.l2 = 0.25; self.l3 = 0.25
+        self.m = [0.25,0.25,0.25,0.25,0.25]#; self.m2 = 0.5; self.m3 = 0.5
         self.i1 = self.m[0]*(self.l1**2)/12; self.i2 = self.m[1]*(self.l2**2)/12; self.i3 = self.m[2]*(self.l3**2)/12
         self.i = [self.i1,self.i2,self.i3,self.i2,self.i1]
         self.g = 9.81
         self.h = self.T/self.N
-        self.comh = 0.4
+        self.comh = 0.05
         goali = start; goalf = goali[::-1]
         self.goal = [goali,goalf]
+        self.goal_vel = [start_vel, start_vel[::-1]]
         self.p0 = start_pos
         #set our optimization variables
         self.state = []
