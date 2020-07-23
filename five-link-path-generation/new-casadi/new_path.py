@@ -2,16 +2,16 @@ from new_gait import *
 from matplotlib import pyplot as plt
 
 # start_angles = ca.MX([-0.3,0.3,0.2,-0.3,0.3])
-# start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5])
+# start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5]) # ostrich 2
 # start_angles = ca.MX.zeros(5)
-
-start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45])
+# start_angles = ca.MX([-0.6,0.7,0.0,-0.5,0.9]) # ostrich
+start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45]) # human
 
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
 
-f = 6
+f = 1
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
