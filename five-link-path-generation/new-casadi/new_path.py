@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 # start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5])
 # start_angles = ca.MX.zeros(5)
 
-start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.5])
+start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45])
 
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
@@ -13,10 +13,12 @@ q = []; dq = []; u = []; pos = []; time = []
 
 f = 2
 for k in range(f):
+    # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
     problem = nlp(model)
     sol = model.opti.solve()
-
+    # except:
+    #     pass
     # p = [0, 0, 0, 0, 0]
     for j in range(5):
         # tq = []; tdq = []; tu = []; tpos = []
@@ -60,7 +62,7 @@ for k in range(f):
             u.append(tempu)
 
     # start = [q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]]
-    # print(-sol.value(model.x_impact))
+    print(-sol.value(model.x_impact))
     start_angles, start_angular_vel = ca.MX(-sol.value(model.x_impact)), ca.MX(-sol.value(model.xdot_impact))
     # start_angles = ca.MX([q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]])
     # start_angular_vel = ca.MX([dq[4][-1],dq[3][-1],dq[2][-1],dq[1][-1],dq[0][-1]])
