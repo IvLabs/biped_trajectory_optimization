@@ -119,7 +119,7 @@ for i in range(f*model.N):
     # #     break
     camodelra.snap()
 animation = camodelra.animate(interval=60)
-animation.save('path_uneven_best.mp4')
+# animation.save('path_uneven_best.mp4')
 plt.show()
 plt.close()
 

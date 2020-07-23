@@ -14,12 +14,11 @@ class walker():
         self.inertia = self.mass * (self.length**2) /12
         self.gravity = 9.81
         self.h = self.T/self.N
-        self.comh = 0.05
         self.goal = [start_angles, start_angular_vel]
         self.ini_goal = self.goal[0].to_DM()
         self.fin_goal = ca.DM([self.ini_goal[4],self.ini_goal[3],self.ini_goal[2],self.ini_goal[1],self.ini_goal[0]])
         self.p0 = ca.MX(start_pos)     
-        
+        self.comh = self.length[0]*0.5
         #set our optimization variables
         self.x = []
         self.xdot = []
@@ -289,6 +288,7 @@ class nlp(walker):
                         # (walker.pos[i][4, 0] <=  walker.step_max + walker.p0[0, 0]),
                         # (walker.pos[i][4, 0] >= -walker.step_max - walker.p0[0, 0]),
                         (walker.pos[i][4, 1] >= walker.heightMap(walker.pos[i][4, 0])),
+                        (walker.pos[i][4, 1] <= walker.heightMap(walker.pos[i][4, 0]) + walker.comh),
                         # (walker.pos[i][3, 1] > walker.heightMap(walker.pos[i][3, 0])),
                         # (walker.pos[i][2, 1] > walker.heightMap(walker.pos[i][2, 0])),
                         # (walker.pos[i][1, 1] > walker.heightMap(walker.pos[i][1, 0])),
@@ -302,10 +302,13 @@ class nlp(walker):
                         # (walker.pos[i][1, 1] - walker.heightMap(walker.pos[i][1, 0]) >= walker.comh),
                         # (walker.pos[i][0, 1] - walker.heightMap(walker.pos[i][0, 0]) >= walker.comh)
                         ])
-            # ceq.extend([((walker.x[i][0, 0] + walker.x[i][1, 0]) > 0)])
+            # ceq.extend([((walker.x[i][0, 0] + walker.x[i][1, 0]) < 0)])
             # ceq.extend([((walker.x[i][4, 0] + walker.x[i][3, 0]) < 0)])
             ceq.extend([(walker.x[i][2, 0] <= walker.pi/5)])
             ceq.extend([(walker.x[i][2, 0] >= -walker.pi/5)])
+            # ceq.extend([(walker.x[i][1, 0] >= 0 )])
+            # ceq.extend([(walker.x[i][1, 0] >= 0 )])
+
 
             # ceq.extend([((walker.state[i][0][4, 0] - walker.state[i][0][3]) <= walker.pi/2)])
 
