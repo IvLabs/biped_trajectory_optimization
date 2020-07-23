@@ -11,7 +11,7 @@ start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
 
-f = 2
+f = 6
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -119,7 +119,7 @@ for i in range(f*model.N):
     # #     break
     camodelra.snap()
 animation = camodelra.animate(interval=60)
-# animation.save('path_uneven.mp4')
+animation.save('path_uneven_best.mp4')
 plt.show()
 plt.close()
 

@@ -5,7 +5,7 @@ class walker():
     def __init__(self, start_angles, start_angular_vel, start_pos):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.terrain_factor = 0.
+        self.terrain_factor = 0.1
         self.N = 40; self.T = 0.3
         self.step_max = 0.5; self.tauMax = 1000
         self.pi = np.pi; 
@@ -272,10 +272,10 @@ class nlp(walker):
         # ceq.extend([walker.pos[0][4, 0] <= walker.p0[0]])
         # ceq.extend([walker.pos[0][4, 1] == walker.heightMap(walker.pos[0][4, 0])])
 
-        # ceq.extend([
-        #             (ca.dot(walker.dpos[0][4,:].T, walker.heightMapNormalVector(walker.pos[0][4, 0])) > 0.),
-        #             (ca.dot(walker.dpos[-1][4,:].T, walker.heightMapNormalVector(walker.pos[-1][4, 0])) < 0.)
-        #             ])
+        ceq.extend([    
+                    (ca.dot(walker.dpos[0][4,:].T, walker.heightMapNormalVector(walker.pos[0][4, 0])) > 0.),
+                    (ca.dot(walker.dpos[-1][4,:].T, walker.heightMapNormalVector(walker.pos[-1][4, 0])) < 0.)
+                    ])
 
         # ceq.extend([
         #             (walker.dpos[0][4, 1]*ca.sin(walker.heightMapNormal(walker.pos[0][4, 0], walker.pos[0][4, 1])) > 0),
@@ -293,9 +293,9 @@ class nlp(walker):
                         # (walker.pos[i][2, 1] > walker.heightMap(walker.pos[i][2, 0])),
                         # (walker.pos[i][1, 1] > walker.heightMap(walker.pos[i][1, 0])),
                         # (walker.pos[i][0, 1] > walker.heightMap(walker.pos[i][0, 0])),
-                        # (walker.pos[i][3, 1] < walker.pos[i][1, 1]),
+                        (walker.pos[i][4, 1] < walker.pos[i][3, 1]),
                         # (walker.pos[i][1, 1] < walker.pos[i][2, 1]),
-                        # (walker.pos[i][0, 1] < walker.pos[i][1, 1]),
+                        (walker.pos[i][4, 1] < walker.pos[i][0, 1]),
                         # (walker.pos[i][4, 1] - walker.heightMap(walker.pos[i][4, 0] + walker.p0[0, 0]) > 0),
                         # (walker.pos[i][3, 1] - walker.heightMap(walker.pos[i][3, 0]) >= walker.comh),
                         # (walker.pos[i][2, 1] - walker.heightMap(walker.pos[i][2, 0]) >= walker.comh),
@@ -304,8 +304,8 @@ class nlp(walker):
                         ])
             # ceq.extend([((walker.x[i][0, 0] + walker.x[i][1, 0]) > 0)])
             # ceq.extend([((walker.x[i][4, 0] + walker.x[i][3, 0]) < 0)])
-            # ceq.extend([(walker.x[i][2, 0] <= walker.pi/5)])
-            # ceq.extend([(walker.x[i][2, 0] >= -walker.pi/5)])
+            ceq.extend([(walker.x[i][2, 0] <= walker.pi/5)])
+            ceq.extend([(walker.x[i][2, 0] >= -walker.pi/5)])
 
             # ceq.extend([((walker.state[i][0][4, 0] - walker.state[i][0][3]) <= walker.pi/2)])
 
@@ -335,11 +335,11 @@ class nlp(walker):
         c = []
         c.extend([  
                     # (q0 == q_plus),
-                    # (dq0 == dq_plus),
+                    (dq0 == dq_plus),
                     (q0 - goal[0] == 0),
-                    (dq0 - goal[1] == 0),
-                    (qf - q_plus == 0),
-                    (dqf - dq_plus == 0)
+                    # (dq0 - goal[1] == 0),
+                    # (qf - q_plus == 0),
+                    # (dqf - dq_plus == 0)
         ])
         return c
     
