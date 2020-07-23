@@ -1,17 +1,17 @@
 from new_gait import *
 from matplotlib import pyplot as plt
 
-start_angles = ca.MX([-0.3,0.3,0.2,-0.3,0.3])
-start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5])
-start_angles = ca.MX.zeros(5)
+# start_angles = ca.MX([-0.3,0.3,0.2,-0.3,0.3])
+# start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5])
+# start_angles = ca.MX.zeros(5)
 
-# start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.5])
+start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.5])
 
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
 
-f = 1
+f = 2
 for k in range(f):
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
     problem = nlp(model)
@@ -60,9 +60,15 @@ for k in range(f):
             u.append(tempu)
 
     # start = [q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]]
-    start_angles, start_angular_vel = ca.MX(sol.value(model.x_impact)), ca.MX(sol.value(model.xdot_impact))
+    # print(-sol.value(model.x_impact))
+    start_angles, start_angular_vel = ca.MX(-sol.value(model.x_impact)), ca.MX(-sol.value(model.xdot_impact))
     # start_angles = ca.MX([q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]])
     # start_angular_vel = ca.MX([dq[4][-1],dq[3][-1],dq[2][-1],dq[1][-1],dq[0][-1]])
+    # start_angles = ca.MX([q[0][-1],q[1][-1],q[2][-1],q[3][-1],q[4][-1]])
+    # start_angular_vel = ca.MX([dq[0][-1],dq[1][-1],dq[2][-1],dq[3][-1],dq[4][-1]])
+    # start_angles = ca.MX(sol.value(model.x[-1])[::-1])
+    # start_angular_vel = ca.MX(sol.value(model.xdot[-1])[::-1])
+
     start_pos.append([pos[4][-1][0], pos[4][-1][1]])
 
 #     if k > 1:
@@ -74,6 +80,8 @@ from matplotlib import animation
 from celluloid import Camera
 # print(len(pos[0]))
 fig = plt.figure()
+ax = fig.add_subplot(111, autoscale_on=True, xlim=(-2., 2.*f/2), ylim=(-0.1, 3))
+ax.grid()
 camodelra = Camera(fig)
 k = 0
 terrain = np.linspace(-2,6,100)
@@ -86,7 +94,7 @@ for i in range(f*model.N):
     p4 = [pos[3][i][0],pos[3][i][1]]
     p5 = [pos[4][i][0],pos[4][i][1]]
     # plt.axes(xlim=(-2, 2), ylim=(-2, 2))
-    plt.axes(xlim=(-2., 2.), ylim=(-0.1, 3))
+    # plt.axes(xlim=(-2., 2.), ylim=(-0.1, 3))
     # plt.plot([0,-p1[1]], [0,p1[0]],'r',[-p1[1],-p2[1]], [p1[0],p2[0]],'b',
     #     [-p2[1],-p3[1]], [p2[0],p3[0]],'c',
     #     [-p2[1],p4[1] - 2*p2[1]], [p2[0],2*p2[0]-p4[0]],'b',
@@ -99,19 +107,21 @@ for i in range(f*model.N):
     # plt.plot([p0[0],p1[1]], [p0[1],p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'g',
     #         [p2[1],p3[1]], [p2[0],p3[0]],'b', [p2[1],p4[1]], [p2[0],p4[0]],'y',
     #         [p4[1],p5[1]], [p4[0],p5[0]],'c')
-    plt.plot([p0[0],p1[0]], [p0[1],p1[1]],'r',[p1[0],p2[0]], [p1[1],p2[1]],'g',
+    ax.plot([p0[0],p1[0]], [p0[1],p1[1]],'r',[p1[0],p2[0]], [p1[1],p2[1]],'g',
         [p2[0],p3[0]], [p2[1],p3[1]],'b', [p2[0],p4[0]], [p2[1],p4[1]],'y',
         [p4[0],p5[0]], [p4[1],p5[1]],'c')
     # plt.plot([-2,6],[0,0],'g')  
-    plt.plot(terrain,model.terrain_factor*np.sin(terrain),'g')    
+    ax.plot(terrain,model.terrain_factor*np.sin(terrain),'g')    
   
     # if cv2.waitKey(0) & 0xFF == ord("q"):
     # #     break
     camodelra.snap()
 animation = camodelra.animate(interval=60)
-# animation.save('path_.mp4')
+# animation.save('path_uneven.mp4')
 plt.show()
 plt.close()
+
+# print(model.heightMapNormalVector(model.pos[0][0, 0], model.pos[0][1, 0]))
 
 namodel = ['q','dq','u']
 
