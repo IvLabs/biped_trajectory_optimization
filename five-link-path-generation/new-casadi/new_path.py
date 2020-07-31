@@ -2,16 +2,16 @@ from new_gait import *
 from matplotlib import pyplot as plt
 from time import sleep
 # start_angles = ca.MX([-0.3,0.3,0.2,-0.3,0.3])
-start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5]) # ostrich 2
+# start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5]) # ostrich 2
 # start_angles = ca.MX([-0.6,0.2,0.0,-0.7,0.9]) # ostrich 3
-# start_angles = ca.MX.zeros(5)
+start_angles = ca.MX.zeros(5)
 # start_angles = ca.MX([-0.6,0.7,0.0,-0.5,0.9]) # ostrich
 # start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45]) # human
 
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 2
+f = 20
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -179,8 +179,8 @@ ax.grid()
 camodelra = Camera(fig)
 k = 0
 terrain = np.linspace(-2,f*6,int(f*100/2))
-# ax.set_xlim([-2., (f/2)*2])
-# ax.set_ylim([-2, 2])
+ax.set_xlim([-1., 11])
+ax.set_ylim([-2, 4])
 
 for i in range(f*model.N):
     # print(i)    
@@ -203,8 +203,8 @@ for i in range(f*model.N):
     # plt.plot([p0[0],p1[1]], [p0[1],p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'g',
     #         [p2[1],p3[1]], [p2[0],p3[0]],'b', [p2[1],p4[1]], [p2[0],p4[0]],'y',
     #         [p4[1],p5[1]], [p4[0],p5[0]],'c')
-    ax.set_xlim([-2.+p2[0], 2.+p2[0]])
-    ax.set_ylim([-2+p2[1], 2+p2[1]])
+    # ax.set_xlim([-2.+p2[0], 2.+p2[0]])
+    # ax.set_ylim([-2+p2[1], 2+p2[1]])
     ax.plot([p0[0],p1[0]], [p0[1],p1[1]],'r',[p1[0],p2[0]], [p1[1],p2[1]],'g',
         [p2[0],p3[0]], [p2[1],p3[1]],'b', [p2[0],p4[0]], [p2[1],p4[1]],'y',
         [p4[0],p5[0]], [p4[1],p5[1]],'c')
@@ -216,15 +216,13 @@ for i in range(f*model.N):
     if model.terrain == 'wedge':
         ax.plot(terrain, model.terrain_factor*(terrain),'black')   # wedge 
 
-    # camodelra.snap()
+    camodelra.snap()
     ax.grid()
 
-    plt.draw() 
-    plt.pause(1e-5) 
-    # if cv2.waitKey(0) & 0xFF == ord("q"):
-    # #     break
-    ax.cla()
-# animation = camodelra.animate(interval=30)
+    # plt.draw() 
+    # plt.pause(1e-5)
+    # ax.cla()
+animation = camodelra.animate(interval=30)
 # animation.save('path_test_ostrich.mp4')
 plt.show()
 
