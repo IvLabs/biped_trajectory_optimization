@@ -5,7 +5,7 @@ class walker():
     def __init__(self, start_angles, start_angular_vel, start_pos):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.terrain_factor = 0.1
+        self.terrain_factor = 0.
         self.N = 40; self.T = 0.3
         self.step_max = 0.5; self.tauMax = 20
         self.pi = np.pi; 
@@ -356,19 +356,20 @@ class nlp(walker):
 
     def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,h):
         cc = []
-        cc.extend([(((h/2)*(ddq2 + ddq1)) - (dq2 - dq1)==0)])
         cc.extend([(((h/2)*(dq2 + dq1)) - (q2 - q1)==0)])
+        cc.extend([(((h/2)*(ddq2 + ddq1)) - (dq2 - dq1)==0)])
+
         return cc
 
     def getBoundaryConstrainsts(self, q0, dq0, qf, dqf, goal, q_plus, dq_plus):
         c = []
         c.extend([  
                     # (q0 == q_plus),
-                    (dq0 == dq_plus),
+                    # (dq0 == dq_plus),
                     (q0 - goal[0] == 0),
-                    # (dq0 - goal[1] == 0),
-                    # (qf - q_plus == 0),
-                    # (dqf - dq_plus == 0)
+                    (dq0 - goal[1] == 0),
+                    (qf - q_plus == 0),
+                    (dqf - dq_plus == 0)
         ])
         return c
     

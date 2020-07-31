@@ -3,8 +3,8 @@ from matplotlib import pyplot as plt
 from time import sleep
 # start_angles = ca.MX([-0.3,0.3,0.2,-0.3,0.3])
 # start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5]) # ostrich 2
-start_angles = ca.MX([-0.6,0.2,0.0,-0.7,0.9]) # ostrich 3
-# start_angles = ca.MX.zeros(5)
+# start_angles = ca.MX([-0.6,0.2,0.0,-0.7,0.9]) # ostrich 3
+start_angles = ca.MX.zeros(5)
 # start_angles = ca.MX([-0.6,0.7,0.0,-0.5,0.9]) # ostrich
 # start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45]) # human
 
@@ -12,7 +12,7 @@ start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
 
-f = 6
+f = 1
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -26,7 +26,7 @@ for k in range(f):
         tempq = [];tempdq = [];tempu = [];temp = []
         for i in range(model.N):
             tempq.append(sol.value(model.x[i][j]))    
-            tempdq.append(sol.value(model.x[i][j]))
+            tempdq.append(sol.value(model.xdot[i][j]))
             temp.append([sol.value(model.pos[i][j, 0]),sol.value(model.pos[i][j, 1])]) 
 
             # if k != 0:
@@ -64,11 +64,14 @@ for k in range(f):
 
     # start = [q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]]
     # print(-sol.value(model.x_impact))
-    start_angles, start_angular_vel = ca.MX(-sol.value(model.x_impact)), ca.MX(-sol.value(model.xdot_impact))
+    # start_angles, start_angular_vel = ca.MX(-sol.value(model.x_impact)), ca.MX(-sol.value(model.xdot_impact))
+    
     # start_angles = ca.MX([q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]])
     # start_angular_vel = ca.MX([dq[4][-1],dq[3][-1],dq[2][-1],dq[1][-1],dq[0][-1]])
+    
     # start_angles = ca.MX([q[0][-1],q[1][-1],q[2][-1],q[3][-1],q[4][-1]])
     # start_angular_vel = ca.MX([dq[0][-1],dq[1][-1],dq[2][-1],dq[3][-1],dq[4][-1]])
+    
     # start_angles = ca.MX(sol.value(model.x[-1])[::-1])
     # start_angular_vel = ca.MX(sol.value(model.xdot[-1])[::-1])
 
@@ -214,9 +217,9 @@ for i in range(f*model.N):
     # #     break
     # ax.cla()
 animation = camodelra.animate(interval=30)
-# animation.save('path_test_human_2.mp4')
+# animation.save('path_test_ostrich.mp4')
 plt.show()
-plt.close()
+
 
 # print(model.heightMapNormalVector(model.pos[0][0, 0], model.pos[0][1, 0]))
 
