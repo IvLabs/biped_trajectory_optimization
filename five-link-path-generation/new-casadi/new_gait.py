@@ -5,14 +5,15 @@ class walker():
     def __init__(self, start_angles, start_angular_vel, start_pos):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.terrain_factor = 0.
-        self.N = 40; self.T = 0.3
-        self.step_max = 0.5; self.tauMax = 20
+        self.terrain_factor = 0.5
+        self.terrain = ['sin','wedge'][1]
+        self.N = 80; self.T = .3
+        self.step_max = 0.5; self.tauMax = 50
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
         self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
         self.inertia = self.mass * (self.length**2) /12
-        self.gravity = 9.81
+        self.gravity = 10
         self.h = self.T/self.N
         self.goal = [start_angles, start_angular_vel]
         self.ini_goal = self.goal[0].to_DM()
@@ -197,15 +198,26 @@ class walker():
         return (a[0]*b[1]) - (b[1]*a[1])
 
     def heightMap(self, x):
-        return self.terrain_factor*ca.sin(x)
+        if self.terrain == 'sin':
+            return self.terrain_factor*ca.sin(x)
+        if self.terrain == 'wedge':
+            return self.terrain_factor*x
 
     def heightMapNormalVector(self, x):
-        tangent_vector = ca.MX.ones(2, 1)
-        tangent_vector[1, 0] = self.terrain_factor*ca.cos(x)
-        normal_vector = ca.MX.ones(2, 1)
-        normal_vector[0, 0] = -tangent_vector[1, 0]
-        normal_vector = normal_vector/ca.norm_2(normal_vector)
-        return normal_vector    
+        if self.terrain == 'sin':
+            tangent_vector = ca.MX.ones(2, 1)
+            tangent_vector[1, 0] = self.terrain_factor*ca.cos(x)
+            normal_vector = ca.MX.ones(2, 1)
+            normal_vector[0, 0] = -tangent_vector[1, 0]
+            normal_vector = normal_vector/ca.norm_2(normal_vector)
+            return normal_vector
+        if self.terrain == 'wedge':    
+            tangent_vector = ca.MX.ones(2, 1)
+            tangent_vector[1, 0] = self.terrain_factor
+            normal_vector = ca.MX.ones(2, 1)
+            normal_vector[0, 0] = -tangent_vector[1, 0]
+            normal_vector = normal_vector/ca.norm_2(normal_vector)
+            return normal_vector
         # m_tangent = self.terrain_factor*ca.cos(x)
         # m_normal = -1/m_tangent
         # theta_normal = ca.atan(m_normal)
@@ -272,8 +284,8 @@ class nlp(walker):
         # ceq.extend([walker.pos[0][4, 1] == walker.heightMap(walker.pos[0][4, 0])])
 
         ceq.extend([    
-                    (ca.dot(walker.dpos[0][4,:].T, walker.heightMapNormalVector(walker.pos[0][4, 0])) > 0.),
-                    (ca.dot(walker.dpos[-1][4,:].T, walker.heightMapNormalVector(walker.pos[-1][4, 0])) < 0.)
+                    # (ca.dot(walker.dpos[0][4,:].T, walker.heightMapNormalVector(walker.pos[0][4, 0])) > 0.),
+                    # (ca.dot(walker.dpos[-1][4,:].T, walker.heightMapNormalVector(walker.pos[-1][4, 0])) < 0.)
                     ])
 
         # ceq.extend([
@@ -347,8 +359,8 @@ class nlp(walker):
             #     comy += walker.com[i][j][1]
             # ceq.extend([comy - walker.p0[1] >= walker.comh])
 
-        ceq.extend([walker.pos[-1][4, 0] >= walker.step_max + walker.p0[0]])
-        ceq.extend([walker.pos[-1][4, 0] <= 2*walker.step_max + walker.p0[0]])
+        ceq.extend([walker.pos[-1][4, 0] >= 0.5*walker.step_max + walker.p0[0]])
+        ceq.extend([walker.pos[-1][4, 0] <= 1.5*walker.step_max + walker.p0[0]])
         # ceq.extend([walker.pos[int(len(walker.pos)/2)][4, 0] >= walker.p0[0]])
         ceq.extend([walker.pos[-1][4, 1] == walker.heightMap(walker.pos[-1][4, 0])])
         
@@ -365,17 +377,17 @@ class nlp(walker):
         c = []
         c.extend([  
                     # (q0 == q_plus),
-                    # (dq0 == dq_plus),
+                    (dq0 == dq_plus),
                     (q0 - goal[0] == 0),
-                    (dq0 - goal[1] == 0),
-                    (qf - q_plus == 0),
-                    (dqf - dq_plus == 0)
+                    # (dq0 - goal[1] == 0),
+                    # (qf - q_plus == 0),
+                    # (dqf - dq_plus == 0)
         ])
         return c
     
     def getBounds(self,walker):
         c = []
-        f = 30
+        # f = 3
         for i in range(walker.N):
             q = walker.x[i]
             dq = walker.xdot[i]
