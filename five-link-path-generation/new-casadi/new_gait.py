@@ -7,7 +7,7 @@ class walker():
         self.opti = ca.Opti()
         self.terrain_factor = 1.
         self.terrain = ['sin','wedge'][0]
-        self.N = 20; self.T = .2
+        self.N = 20; self.T = .3
         self.step_max = 0.5; self.tauMax = 20
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
@@ -334,11 +334,11 @@ class nlp(walker):
                         # (ca.fabs(walker.x[i][0, 0]-walker.x[i][1, 0]) > 0),
                         # (ca.fabs(walker.x[i][4, 0]-walker.x[i][3, 0]) > 0),
                         
-                        # (walker.x[i][0, 0] > walker.x[i][1, 0]), # human
-                        # (walker.x[i][4, 0] < walker.x[i][3, 0]), # human
+                        (walker.x[i][0, 0] > walker.x[i][1, 0]), # human
+                        (walker.x[i][4, 0] < walker.x[i][3, 0]), # human
                         
-                        (walker.x[i][0, 0] < walker.x[i][1, 0]), # ostrich
-                        (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
+                        # (walker.x[i][0, 0] < walker.x[i][1, 0]), # ostrich
+                        # (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
                         ])
 
             ceq.extend([(walker.x[i][2, 0] <= walker.pi/3)])
@@ -394,7 +394,7 @@ class nlp(walker):
             dq = walker.xdot[i]
             u = walker.u[i]
             c.extend([  walker.opti.bounded(ca.MX([-walker.pi]*5),q,ca.MX([walker.pi]*5)),
-                        # walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
+                        walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
                         walker.opti.bounded(ca.MX([-walker.tauMax]*4),u,ca.MX([walker.tauMax]*4)),
             ])
                     

@@ -179,8 +179,8 @@ ax.grid()
 camodelra = Camera(fig)
 k = 0
 terrain = np.linspace(-2,f*6,int(f*100/2))
-ax.set_xlim([-1., 11])
-ax.set_ylim([-2, 4])
+ax.set_xlim([-1., 7])
+ax.set_ylim([-1, 3])
 
 for i in range(f*model.N):
     # print(i)    
