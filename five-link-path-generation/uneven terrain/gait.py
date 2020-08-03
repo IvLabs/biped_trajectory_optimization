@@ -5,10 +5,11 @@ class walker():
     def __init__(self,start,start_pos, start_vel=[0.,0.,0.,0.,0.]):
         # set our parameters of optimization
         self.opti = ca.Opti()
+        self.terrain_factor = 0.
         self.N = 40; self.T = 0.1
-        self.step_max = 0.25; self.tauMax = 1.5
+        self.step_max = 0.2; self.tauMax = 1000
         self.pi = np.pi; 
-        self.l1 = 0.25; self.l2 = 0.25; self.l3 = 0.25
+        self.l1 = 0.5; self.l2 = 0.5; self.l3 = 0.5
         self.m = [0.25,0.25,0.25,0.25,0.25]#; self.m2 = 0.5; self.m3 = 0.5
         self.i1 = self.m[0]*(self.l1**2)/12; self.i2 = self.m[1]*(self.l2**2)/12; self.i3 = self.m[2]*(self.l3**2)/12
         self.i = [self.i1,self.i2,self.i3,self.i2,self.i1]
@@ -18,7 +19,10 @@ class walker():
         goali = start; goalf = goali[::-1]
         self.goal = [goali,goalf]
         self.goal_vel = [start_vel, start_vel[::-1]]
-        self.p0 = start_pos
+        if start_pos == [[0, 0]]:
+            self.p0 = self.heightMap(start_pos)
+        else:
+            self.p0 = start_pos     
         #set our optimization variables
         self.state = []
         self.u = []
@@ -153,6 +157,9 @@ class walker():
 
         return [qi,dqi]
 
+    def heightMap(self, x):
+        return self.terrain_factor*ca.sin(x)
+
 class nlp(walker):
     def __init__(self, walker):
         self.cost = self.getCost(walker.u,walker.N,walker.h)
@@ -164,6 +171,7 @@ class nlp(walker):
         p_opts = {"expand":True}
         s_opts = {"max_iter": 1000}
         walker.opti.solver("ipopt",p_opts,s_opts)
+        
         self.initial = self.initalGuess(walker)
 
     def initalGuess(self,walker):
@@ -214,29 +222,27 @@ class nlp(walker):
         for i in range(1, walker.N - 1):
             ceq.extend([((walker.pos[i][4][0]) <= (walker.step_max + walker.p0[0]))])
             ceq.extend([((walker.pos[i][4][0]) >= -(walker.step_max + walker.p0[0]))])
-
-            ceq.extend([((walker.pos[i][4][1]) >= walker.p0[1])])
-            ceq.extend([((walker.pos[i][3][1] - walker.p0[1]) >= walker.comh)])
-            
-            ceq.extend([((walker.state[i][0][0, 0] + walker.state[i][0][1, 0]) < 0)])
-            ceq.extend([((walker.state[i][0][4, 0] + walker.state[i][0][3, 0]) < 0)])
-            ceq.extend([(walker.state[i][0][2, 0] <= walker.pi/15)])
-            ceq.extend([(walker.state[i][0][2, 0] >= -walker.pi/15)])
+            ceq.extend([((walker.pos[i][4][1]) >= walker.heightMap(walker.pos[i][4][0]+walker.p0[0]))])
+            ceq.extend([((walker.pos[i][3][1] - walker.heightMap(walker.pos[i][3][0]+walker.p0[0])) >= walker.comh)])
+            # ceq.extend([((walker.state[i][0][0, 0] + walker.state[i][0][1, 0]) < 0)])
+            # ceq.extend([((walker.state[i][0][4, 0] + walker.state[i][0][3, 0]) < 0)])
+            ceq.extend([(walker.state[i][0][2, 0] <= walker.pi/10)])
+            ceq.extend([(walker.state[i][0][2, 0] >= -walker.pi/10)])
 
             # ceq.extend([((walker.state[i][0][4, 0] - walker.state[i][0][3]) <= walker.pi/2)])
 
             # ceq.extend([((walker.pos[i][0][1] - walker.p0[1]) >= walker.comh)])
             # ceq.extend([((walker.pos[i][1][1] - walker.p0[1]) >= walker.comh)])
             # ceq.extend([((walker.pos[i][2][1] - walker.p0[1]) >= walker.comh)])
-            if i == 0:
-                ceq.extend([((walker.pos[i][4][1]) == walker.p0[1])])
+
             comy = 0
             for j in range(4):
-                comy += walker.com[i][j][1]
-            ceq.extend([comy - walker.p0[1] >= walker.comh])
-
-        ceq.extend([walker.pos[-1][4][1] == walker.p0[1]])
-        ceq.extend([walker.pos[-1][4][0] == walker.step_max + walker.p0[0]])
+                comy += walker.com[i][j][1] - walker.heightMap(walker.pos[i][j][0])
+            ceq.extend([comy - walker.p0[0] >= walker.comh])
+        
+        ceq.extend([((walker.pos[0][4][1]) == walker.heightMap(walker.pos[0][4][0]+walker.p0[0]))])
+        ceq.extend([walker.pos[-1][4][1] == walker.heightMap(walker.pos[-1][4][0]+walker.p0[0])])
+        ceq.extend([walker.pos[-1][4][0] >= (walker.step_max + walker.p0[0])])
         return ceq
 
     def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,h):
@@ -259,7 +265,7 @@ class nlp(walker):
     
     def getBounds(self,walker):
         c = []
-        f = 5
+        f = 500
         for i in range(walker.N):
             q = (walker.state[i][0])
             dq = (walker.state[i][1])

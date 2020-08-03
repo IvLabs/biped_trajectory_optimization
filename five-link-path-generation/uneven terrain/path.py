@@ -1,12 +1,12 @@
-from gait_human import * 
+from gait import * 
 
 q = []; dq = []; u = []; pos = []; time = []
-f = 8
+f = 1
 test = {'q1': [], 'q2': [], 'q3': [], 'q4': []}
 from matplotlib import pyplot as plt
 start = [-0.6,0.7,0.0,-0.5,-0.3]
-start = [0.3,-0.3,0.1,-0.3,-0.3]
-start = [0,-0,0,-0,-0]
+# start = [0.3,-0.3,0.1,-0.3,-0.3]
+# start = [0,-0,0,-0,-0]
 
 start_vel = [0., 0., 0., 0., 0.]
 start_pos = [[0,0]]
@@ -14,10 +14,15 @@ for k in range(f):
     if k == 0:
         me = walker(start,start_pos[k])
         n1 = nlp(me)
+        debug = me.opti.debug.value
+        print(debug)
         sol1 = me.opti.solve()
+        
     else :
         me = walker(start,start_pos[k], start_vel)
         n1 = nlp(me)
+        debug = me.opti.debug.value
+        print(debug)
         sol1 = me.opti.solve()
 
     for j in range(5):
@@ -58,7 +63,7 @@ for k in range(f):
         # print(start_pos[k][1])
 
 time = np.arange(0.0, f*me.T, me.h)
-
+terrain = np.linspace(-2,6,100)
 from matplotlib import animation
 from celluloid import Camera
 # print(len(pos[0]))
@@ -87,7 +92,7 @@ for i in range(f*me.N):
             [p2[1],p3[1]], [p2[0],p3[0]],'b', [p2[1],p4[1]], [p2[0],p4[0]],'y',
             [p4[1],p5[1]], [p4[0],p5[0]],'c')
     
-    plt.plot([-2,6],[0,0],'g')    
+    plt.plot(terrain,me.terrain_factor*np.sin(terrain),'g')    
     # if cv2.waitKey(0) & 0xFF == ord("q"):
     # #     break
     camera.snap()
