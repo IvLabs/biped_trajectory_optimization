@@ -222,8 +222,8 @@ for i in range(f*model.N):
     # plt.draw() 
     # plt.pause(1e-5)
     # ax.cla()
-animation = camodelra.animate(interval=30)
-# animation.save('path_test_ostrich.mp4')
+animation = camodelra.animate(interval=60)
+# animation.save('path_50_human.mp4')
 plt.show()
 
 

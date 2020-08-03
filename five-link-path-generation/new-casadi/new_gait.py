@@ -7,7 +7,7 @@ class walker():
         self.opti = ca.Opti()
         self.terrain_factor = 1.
         self.terrain = ['sin','wedge'][0]
-        self.N = 20; self.T = .3
+        self.N = 40; self.T = .5
         self.step_max = 0.5; self.tauMax = 20
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
