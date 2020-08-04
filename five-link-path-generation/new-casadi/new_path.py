@@ -75,6 +75,7 @@ for k in range(f):
     # start_angular_vel = ca.MX(sol.value(model.xdot[-1]))
     print('##################')
     print('step number = ', k)
+    print('step time = ', model.T)
     print('##################')
 
     start_pos.append([pos[4][-1][0], pos[4][-1][1]])

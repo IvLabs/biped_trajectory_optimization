@@ -7,7 +7,11 @@ class walker():
         self.opti = ca.Opti()
         self.terrain_factor = 1.
         self.terrain = ['sin','wedge'][0]
-        self.N = 40; self.T = .5
+        self.N = 40; self.T0 = .08
+        # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
+        # /(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
+        self.T = ((self.T0)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T0
+        print(self.T)
         self.step_max = 0.5; self.tauMax = 20
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
@@ -202,6 +206,14 @@ class walker():
             return self.terrain_factor*ca.sin(x)
         if self.terrain == 'wedge':
             return self.terrain_factor*x
+    
+    def heightMapNumericalSlope(self, x):
+        if self.terrain == 'sin':
+            slope = self.terrain_factor*np.cos(x)
+            return slope
+        if self.terrain == 'wedge':
+            slope = self.terrain_factor
+            return slope
 
     def heightMapNormalVector(self, x):
         if self.terrain == 'sin':
