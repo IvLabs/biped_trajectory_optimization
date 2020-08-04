@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 20
+f = 10
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -180,8 +180,11 @@ ax.grid()
 camodelra = Camera(fig)
 k = 0
 terrain = np.linspace(-2,f*6,int(f*100/2))
-ax.set_xlim([-1., 7])
-ax.set_ylim([-1, 3])
+# ax.set_xlim([-1., 7]) # sin
+ax.set_xlim([-1., 5]) # wedge
+ax.set_ylim([-1, 5]) # wedge
+# ax.set_ylim([-1, 3]) # sin
+
 
 for i in range(f*model.N):
     # print(i)    
@@ -224,7 +227,7 @@ for i in range(f*model.N):
     # plt.pause(1e-5)
     # ax.cla()
 animation = camodelra.animate(interval=60)
-# animation.save('path_sin_40_human.mp4')
+animation.save('path_slope_1by2_N_40_human.mp4')
 plt.show()
 
 
