@@ -18,6 +18,12 @@
 
 ### Human gait
 
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human_terminal.gif)
+
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.png) 
+
+
 ## Dynamic Walking on flat terrain
 
 ### Human gait
