@@ -198,7 +198,7 @@ for i in range(f*model.N):
     #     [p4[1] - 2*p2[1],p5[1]], [2*p2[0]-p4[0],(p5[0] - 2*p2[0])],'r')
     if i%model.N == 0:
             p0 = start_pos[k]
-            print(p0)
+            # print(p0)
             k += 1 
 
     # plt.plot([p0[0],p1[1]], [p0[1],p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'g',
@@ -224,7 +224,7 @@ for i in range(f*model.N):
     # plt.pause(1e-5)
     # ax.cla()
 animation = camodelra.animate(interval=60)
-# animation.save('path_50_human.mp4')
+# animation.save('path_sin_40_human.mp4')
 plt.show()
 
 
