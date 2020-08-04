@@ -12,9 +12,9 @@ class walker():
         if self.terrain == 'sin':
             self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
         elif self.terrain == 'wedge':
-            self.T = 0.2
+            self.T = 0.25
             # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
-        self.step_max = 0.8; self.tauMax = 20
+        self.step_max = 0.5; self.tauMax = 20
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
         self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
@@ -348,11 +348,11 @@ class nlp(walker):
                         # (ca.fabs(walker.x[i][0, 0]-walker.x[i][1, 0]) > 0),
                         # (ca.fabs(walker.x[i][4, 0]-walker.x[i][3, 0]) > 0),
                         
-                        (walker.x[i][0, 0] > walker.x[i][1, 0]), # human
-                        (walker.x[i][4, 0] < walker.x[i][3, 0]), # human
+                        # (walker.x[i][0, 0] > walker.x[i][1, 0]), # human
+                        # (walker.x[i][4, 0] < walker.x[i][3, 0]), # human
                         
-                        # (walker.x[i][0, 0] < walker.x[i][1, 0]), # ostrich
-                        # (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
+                        (walker.x[i][0, 0] < walker.x[i][1, 0]), # ostrich
+                        (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
                         ])
 
             ceq.extend([(walker.x[i][2, 0] <= walker.pi/3)])

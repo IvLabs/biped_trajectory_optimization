@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 10
+f = 7
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
