@@ -5,16 +5,16 @@ class walker():
     def __init__(self, start_angles, start_angular_vel, start_pos):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.terrain_factor = 1.
-        self.terrain = ['sin','wedge'][0]
+        self.terrain_factor = 0.5
+        self.terrain = ['sin','wedge'][1]
         self.N = 40; self.T = .08
         # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
         if self.terrain == 'sin':
             self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
         elif self.terrain == 'wedge':
-            # self.T = 0.3
-            self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
-        self.step_max = 0.5; self.tauMax = 20
+            self.T = 0.2
+            # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
+        self.step_max = 0.8; self.tauMax = 20
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
         self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
@@ -408,7 +408,7 @@ class nlp(walker):
             dq = walker.xdot[i]
             u = walker.u[i]
             c.extend([  walker.opti.bounded(ca.MX([-walker.pi]*5),q,ca.MX([walker.pi]*5)),
-                        walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
+                        # walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
                         walker.opti.bounded(ca.MX([-walker.tauMax]*4),u,ca.MX([walker.tauMax]*4)),
             ])
                     
