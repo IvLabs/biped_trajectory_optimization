@@ -1,7 +1,7 @@
 # Biped Trajectory Optimization
 ## NOTE : This project is still in developement
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
-  * [Path Generation on flat terrain](#path-generation-on-flat-terrain)
+  * [Dynamic Walk on flat terrain](#dynamic-walk-on-flat-terrain)
     + [Human gait](#human-gait)
     + [Ostrich gait](#ostrich-gait)
   * [Gait Generation for single step](#gait-generation-for-single-step)
@@ -12,7 +12,7 @@
     + [cartpole on C++](#cartpole-on-c)
   * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
 
-## Path Generation on flat terrain
+## Dynamic Walk on flat terrain
 
 ### Human gait
 
