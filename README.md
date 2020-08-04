@@ -1,7 +1,9 @@
 # Biped Trajectory Optimization
 ## NOTE : This project is still in developement
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
-  * [Path Generation on flat terrain](#path-generation-on-flat-terrain)
+  * [Dynamic Walking on sinusoidal terrain](#dynamic-walk-on-sinusoidal-terrain)
+    + [Human gait](#human-gait)
+  * [Dynamic Walking on flat terrain](#dynamic-walk-on-flat-terrain)
     + [Human gait](#human-gait)
     + [Ostrich gait](#ostrich-gait)
   * [Gait Generation for single step](#gait-generation-for-single-step)
@@ -12,7 +14,17 @@
     + [cartpole on C++](#cartpole-on-c)
   * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
 
-## Path Generation on flat terrain
+## Dynamic Walking on sinusoidal terrain
+
+### Human gait
+
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human_terminal.gif)
+
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.png) 
+
+
+## Dynamic Walking on flat terrain
 
 ### Human gait
 
