@@ -1,6 +1,8 @@
 # Biped Trajectory Optimization
 ## NOTE : This project is still in developement
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
+  * [Dynamic Walk on sinusoidal terrain](#dynamic-walk-on-sinusoidal-terrain)
+    + [Human gait](#human-gait)
   * [Dynamic Walk on flat terrain](#dynamic-walk-on-flat-terrain)
     + [Human gait](#human-gait)
     + [Ostrich gait](#ostrich-gait)
@@ -11,6 +13,10 @@
     + [simple pendulum](#simple-pendulum)
     + [cartpole on C++](#cartpole-on-c)
   * [Passive Walking of 2-link bipedal system](#passive-walking-of-2-link-bipedal-system)
+
+## Dynamic Walk on sinusoidal terrain
+
+### Human gait
 
 ## Dynamic Walk on flat terrain
 
