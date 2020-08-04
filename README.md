@@ -23,7 +23,7 @@
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.gif)
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human_terminal.gif)
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.png) 
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_slope_1by2_N_40_human_terminal.gif) 
 
 ## Dynamic Walking on sloped terrain
 
