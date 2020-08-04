@@ -227,7 +227,7 @@ for i in range(f*model.N):
     # plt.pause(1e-5)
     # ax.cla()
 animation = camodelra.animate(interval=60)
-animation.save('path_slope_1by2_N_40_human.mp4')
+# animation.save('path_slope_1by2_N_40_human.mp4')
 plt.show()
 
 
