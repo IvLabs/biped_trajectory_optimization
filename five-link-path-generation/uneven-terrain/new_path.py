@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 6
+f = 7
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -186,7 +186,7 @@ elif model.terrain == 'wedge':
 elif model.terrain == 'smooth_stair':
     k = -50
     terrain_y = terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))))
-    terrain_y /= k
+    terrain_y /= abs(k)
 k = 0
 # ax.set_xlim([-1., 7]) # sin
 # ax.set_xlim([-1., 5]) # wedge
@@ -194,8 +194,8 @@ k = 0
 # ax.set_ylim([-1, 3]) # sin
 
 
-ax.set_ylim([-1, 3]) # ss
-ax.set_xlim([-1., 3]) # ss
+ax.set_ylim([-3, 2]) # ss
+ax.set_xlim([-1., 2]) # ss
 
 for i in range(f*model.N):
     # print(i)    
