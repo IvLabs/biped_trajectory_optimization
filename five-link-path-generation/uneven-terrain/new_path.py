@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 7
+f = 6
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -178,13 +178,24 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.grid()
 camodelra = Camera(fig)
+terrain = np.linspace(-2,2,1000*f)
+if model.terrain == 'sin':
+    terrain_y = model.terrain_factor*ca.sin(terrain)
+elif model.terrain == 'wedge':
+    y_pos = model.terrain_factor*terrain
+elif model.terrain == 'smooth_stair':
+    k = -50
+    terrain_y = terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))))
+    terrain_y /= k
 k = 0
-terrain = np.linspace(-2,f*6,int(f*100/2))
 # ax.set_xlim([-1., 7]) # sin
-ax.set_xlim([-1., 5]) # wedge
-ax.set_ylim([-1, 5]) # wedge
+# ax.set_xlim([-1., 5]) # wedge
+# ax.set_ylim([-1, 5]) # wedge
 # ax.set_ylim([-1, 3]) # sin
 
+
+ax.set_ylim([-1, 3]) # ss
+ax.set_xlim([-1., 3]) # ss
 
 for i in range(f*model.N):
     # print(i)    
@@ -216,9 +227,12 @@ for i in range(f*model.N):
     # plt.plot([-2,6],[0,0],'g')  
 
     if model.terrain == 'sin':
-        ax.plot(terrain, model.terrain_factor*np.sin(terrain),'black')   # sin
+        ax.plot(terrain, terrain_y,'black')   # sin
     if model.terrain == 'wedge':
-        ax.plot(terrain, model.terrain_factor*(terrain),'black')   # wedge 
+        ax.plot(terrain, terrain_y,'black')   # wedge 
+    if model.terrain == 'smooth_stair':
+        ax.plot(terrain, terrain_y,'black')   # smooth stair 
+
 
     camodelra.snap()
     ax.grid()
@@ -227,7 +241,7 @@ for i in range(f*model.N):
     # plt.pause(1e-5)
     # ax.cla()
 animation = camodelra.animate(interval=60)
-# animation.save('path_slope_1by2_N_40_human.mp4')
+animation.save('path_sstairs_down_N_40_human.mp4')
 plt.show()
 
 
