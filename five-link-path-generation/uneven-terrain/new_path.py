@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 6
+f = 20  
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -178,7 +178,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.grid()
 camodelra = Camera(fig)
-terrain = np.linspace(-2,2,1000*f)
+terrain = np.linspace(-2,f,1000*f)
 if model.terrain == 'sin':
     terrain_y = model.terrain_factor*ca.sin(terrain)
 elif model.terrain == 'wedge':
