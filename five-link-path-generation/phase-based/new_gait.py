@@ -74,8 +74,13 @@ class walker():
             ddq = self.getDynamics(self.x[n], self.xdot[n], self.u[n], p, ddp, c, ddc, self.l_force[n], self.r_force[n])
             self.ddq.append(ddq)
 
-            # if n == self.N - 1:
-            #    self.x_impact, self.xdot_impact = self.impactMap(self.x[n], self.xdot[n], p, dp, c, dc)
+            self.opti.subject_to(ca.vec(p)>=0)
+            
+            if n == 0:
+               self.opti.subject_to(self.x[n] == self.goal[0])
+               self.opti.subject_to(self.xdot[n] == self.goal[1]) 
+            #    self.opti.subject_to(self.left[n] == self.p0)
+            #    self.opti.subject_to(self.right[n] == self.p5) 
 
     def getDynamics(self, q, dq, u, p, ddp, c, ddc, l_force, r_force):
         ddq = ca.MX.zeros(5)
@@ -163,16 +168,24 @@ class walker():
         p[3,0],p[3,1] = self.length[2]*ca.sin(q[2]) + p[2,0], self.length[2]*ca.cos(q[2]) + p[2,1]
 
 
-        c[0,0],c[0,1] = self.length[0]*ca.sin(q[0])/2 + p0[0] , self.length[0]*ca.cos(q[0])/2 + p0[1]
+        c[0,0],c[0,1] = self.length[0]*ca.sin(q[0])/2 + p[0,0], self.length[0]*ca.cos(q[0])/2 + p[0,0]
         c[1,0],c[1,1] = self.length[1]*ca.sin(q[1])/2 + p[1,0], self.length[1]*ca.cos(q[1])/2 + p[1,1]
+        
         c[2,0],c[2,1] = self.length[2]*ca.sin(q[2])/2 + p[2,0], self.length[2]*ca.cos(q[2])/2 + p[2,1]
-        c[3,0],c[3,1] = self.length[3]*ca.sin(q[3])/2 + p[3,0],-self.length[3]*ca.cos(q[3])/2 + p[3,1]
-        c[4,0],c[4,1] = self.length[4]*ca.sin(q[4])/2 + p[4,0],-self.length[4]*ca.cos(q[4])/2 + p[4,1]
+
+        c[3,0],c[3,1] = self.length[3]*ca.sin(q[3])/2 + p[4,0], self.length[3]*ca.cos(q[3])/2 + p[4,1]
+        c[4,0],c[4,1] = self.length[4]*ca.sin(q[4])/2 + p[5,0], self.length[4]*ca.cos(q[4])/2 + p[5,1]
         
         dp = ca.jtimes(p,q,dq)
         dc = ca.jtimes(c,q,dq)
         ddp = ca.jtimes(dp,q,dq)
         ddc = ca.jtimes(dc,q,dq)
+
+        self.opti.subject_to(ca.norm_2(p[1, :]-p[0, :]) == self.length[0])
+        self.opti.subject_to(ca.norm_2(p[2, :]-p[1, :]) == self.length[1])
+        self.opti.subject_to(ca.norm_2(p[3, :]-p[2, :]) == self.length[2])
+        self.opti.subject_to(ca.norm_2(p[4, :]-p[2, :]) == self.length[3])
+        self.opti.subject_to(ca.norm_2(p[5, :]-p[4, :]) == self.length[4])
 
         return p,dp,ddp,c,dc,ddc        
 
@@ -262,8 +275,6 @@ class walker():
         return q_plus, dq_plus
 
     def crossProduct2D(self, a, b):
-        # print(a.shape)
-        # print(b.shape)
         return (a[0]*b[1]) - (b[0]*a[1])
 
     def heightMap(self, x):
@@ -303,8 +314,8 @@ class nlp(walker):
     def __init__(self, walker):
         self.cost = self.getCost(walker.u,walker.N,walker.h)
         walker.opti.minimize(self.cost)
-        self.ceq = self.getConstraints(walker)
-        walker.opti.subject_to(self.ceq)
+        # self.ceq = self.getConstraints(walker)
+        # walker.opti.subject_to(self.ceq)
         self.bounds = self.getBounds(walker)
         walker.opti.subject_to(self.bounds)
         p_opts = {"expand":True}

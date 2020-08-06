@@ -4,9 +4,9 @@ from time import sleep
 # start_angles = ca.MX([-0.3,0.3,0.2,-0.3,0.3])
 # start_angles = ca.MX([-0.2,0.1,0.2,-0.5,1.5]) # ostrich 2
 # start_angles = ca.MX([-0.6,0.2,0.0,-0.7,0.9]) # ostrich 3
-start_angles = ca.MX.zeros(5)
+# start_angles = ca.MX.zeros(5)
 # start_angles = ca.MX([-0.6,0.7,0.0,-0.5,0.9]) # ostrich
-# start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45]) # human
+start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45]) # human
 
 start_pos_left = [[0,0]]
 start_pos_right = [[0,0]]
@@ -17,7 +17,7 @@ f = 1
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos_left[-1], start_pos_right[-1])  
-    exit()
+    # exit()
     problem = nlp(model)
     sol = model.opti.solve_limited()
     # except:
@@ -65,14 +65,15 @@ for k in range(f):
             u.append(tempu)
 
     # start = [q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]]
-    xi = sol.value(model.x_impact)
-    dxi = sol.value(model.xdot_impact)
-    start_angles, start_angular_vel = ca.MX([-xi[0],-xi[1],xi[2],-xi[3],-xi[4]]), ca.MX([dxi[0],dxi[1],dxi[2],dxi[3],dxi[4]])
+    # xi = sol.value(model.x_impact)
+    # dxi = sol.value(model.xdot_impact)
+    # start_angles, start_angular_vel = ca.MX([-xi[0],-xi[1],xi[2],-xi[3],-xi[4]]), ca.MX([dxi[0],dxi[1],dxi[2],dxi[3],dxi[4]])
+    
     # start_angles = ca.MX([q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]])
     # start_angular_vel = ca.MX([dq[4][-1],dq[3][-1],dq[2][-1],dq[1][-1],dq[0][-1]])
     
-    # start_angles = ca.MX([q[0][-1],q[1][-1],q[2][-1],q[3][-1],q[4][-1]])
-    # start_angular_vel = ca.MX([dq[0][-1],dq[1][-1],dq[2][-1],dq[3][-1],dq[4][-1]])
+    start_angles = ca.MX([q[0][-1],q[1][-1],q[2][-1],q[3][-1],q[4][-1]])
+    start_angular_vel = ca.MX([dq[0][-1],dq[1][-1],dq[2][-1],dq[3][-1],dq[4][-1]])
     
     # start_angles = ca.MX(sol.value(model.x[-1]))
     # start_angular_vel = ca.MX(sol.value(model.xdot[-1]))
@@ -81,7 +82,7 @@ for k in range(f):
     print('step time = ', model.T)
     print('##################')
 
-    start_pos_left.append([pos[4][-1][0], pos[4][-1][1]])
+    start_pos_left.append([pos[0][-1][0], pos[0][-1][1]])
 
 #     if k > 1:
         # print(start_pos[k][1])
