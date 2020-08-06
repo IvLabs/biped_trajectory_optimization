@@ -6,7 +6,7 @@ class walker():
         # set our parameters of optimization
         self.opti = ca.Opti()
         self.terrain_factor = 1.
-        self.terrain = ['sin','wedge','smooth_stair'][2]
+        self.terrain = ['sin','wedge','smooth_stair'][1]
         self.N = 40; self.T = .08
         # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
         x_pos = ca.MX.sym('x_pos', 1)
@@ -14,12 +14,12 @@ class walker():
         if self.terrain == 'sin':
             self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
             y_pos = self.terrain_factor*ca.sin(x_pos)
-            self.f = ca.Function('terrain_sin',[x_pos],[y_pos])
+            self.f = ca.Function('terrain_sin',[x_pos],[y_pos],['x'],['y'])
             self.df = self.f.jacobian()
         elif self.terrain == 'wedge':
             self.T = 0.25
             y_pos = self.terrain_factor*x_pos
-            self.f = ca.Function('terrain_wedge',[x_pos],[y_pos])
+            self.f = ca.Function('terrain_wedge',[x_pos],[y_pos],['x'],['y'])
             self.df = self.f.jacobian()
             # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
         elif self.terrain == 'smooth_stair':
@@ -219,7 +219,7 @@ class walker():
         return q_plus, dq_plus
 
     def crossProduct2D(self, a, b):
-        return (a[0]*b[1]) - (b[1]*a[1])
+        return (a[0]*b[1]) - (b[0]*a[1])
 
     def heightMap(self, x):
         return self.f(x=x)['y']    
@@ -396,7 +396,7 @@ class nlp(walker):
             # ceq.extend([comy >= walker.heightMap(comx)])
             # ceq.extend([comy <= walker.comh + walker.heightMap(comx)])
 
-        ceq.extend([walker.pos[-1][4, 0] >= 0.1*walker.step_max + walker.p0[0]])
+        ceq.extend([walker.pos[-1][4, 0] >= 0.5*walker.step_max + walker.p0[0]])
         ceq.extend([walker.pos[-1][4, 0] <= 1.5*walker.step_max + walker.p0[0]])
         # ceq.extend([walker.pos[int(len(walker.pos)/2)][4, 0] >= walker.p0[0]])
         ceq.extend([walker.pos[-1][4, 1] == walker.heightMap(walker.pos[-1][4, 0])])

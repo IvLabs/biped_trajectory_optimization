@@ -182,7 +182,7 @@ terrain = np.linspace(-2,2,1000*f)
 if model.terrain == 'sin':
     terrain_y = model.terrain_factor*ca.sin(terrain)
 elif model.terrain == 'wedge':
-    y_pos = model.terrain_factor*terrain
+    terrain_y = model.terrain_factor*terrain
 elif model.terrain == 'smooth_stair':
     k = -50
     terrain_y = terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))))
@@ -194,7 +194,7 @@ k = 0
 # ax.set_ylim([-1, 3]) # sin
 
 
-ax.set_ylim([-3, 2]) # ss
+ax.set_ylim([-4, 2]) # ss
 ax.set_xlim([-1., 2]) # ss
 
 for i in range(f*model.N):
