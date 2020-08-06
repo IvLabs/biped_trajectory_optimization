@@ -71,8 +71,8 @@ class walker():
         for n in range(self.N):
             p,dp,ddp,c,dc,ddc = self.getKinematics(self.x[n], self.xdot[n], self.left[n], self.right[n]) 
             self.pos.append(p);self.dpos.append(dp);self.com.append(c)
-            # ddq = self.getDynamics(self.x[n], self.xdot[n], self.u[n], p, ddp, c, ddc)
-            # self.ddq.append(ddq)
+            ddq = self.getDynamics(self.x[n], self.xdot[n], self.u[n], p, ddp, c, ddc, self.l_force[n], self.r_force[n])
+            self.ddq.append(ddq)
 
             # if n == self.N - 1:
             #    self.x_impact, self.xdot_impact = self.impactMap(self.x[n], self.xdot[n], p, dp, c, dc)
@@ -80,45 +80,65 @@ class walker():
     def getDynamics(self, q, dq, u, p, ddp, c, ddc, l_force, r_force):
         ddq = ca.MX.zeros(5)
 
-        f10 = l_force
-        f50 = r_force
+        f10 = ca.reshape(l_force, 1, 2)
+        f50 = ca.reshape(r_force, 1, 2)
 
-        f12 = self.mass[0]*ddp[0] - f10
+        f12 = self.mass[0]*ddc[0] - f10
+        ddq[0] = -u[0] + self.crossProduct2D(f12, p[1, :]-c[0, :]) + self.crossProduct2D(f10, p[0, :]-c[0, :])
 
-        ddq[4] = (u[3] + self.mass[4]*(c[4, 0] - p[3, 0])*self.gravity
-                       - self.mass[4]*self.crossProduct2D(c[4, :] - p[3, :], ddc[4, :]) - ddq[4])
+        f21 = -f12
+        f23_24 = self.mass[1]*ddc[0] - f21
+        ddq[1] = u[0]-u[1] + self.crossProduct2D(f21, p[2, :]-c[1, :]) + self.crossProduct2D(f23_24, p[1, :]-c[1, :])
+
+
+        f54 = self.mass[4]*ddc[4] - f50
+        ddq[4] = -u[3] + self.crossProduct2D(f54, p[4, :]-c[4, :]) + self.crossProduct2D(f50, p[5, :]-c[4, :])
+
+        f45 = -f54
+        f43_42 = self.mass[3]*ddc[3] - f45
+        ddq[3] = u[3]-u[2] + self.crossProduct2D(f43_42, p[3, :]-c[3, :]) + self.crossProduct2D(f45, p[4, :]-c[3, :])
+
+
+        f32_34 = self.mass[2]*ddc[2, :]
+        ddq[2] = u[2]+u[1] + self.crossProduct2D(f32_34, p[2, :]-c[2, :])
+
+        # ddq[0] = -u[0] + self.crossProduct2D(f12, p[1, :] - c[1, :]) + self.crossProduct2D(f10, p[0, :]-c[1, :])
+
+
+        # ddq[4] = (u[3] + self.mass[4]*(c[4, 0] - p[3, 0])*self.gravity
+        #                - self.mass[4]*self.crossProduct2D(c[4, :] - p[3, :], ddc[4, :]) - ddq[4])
         
-        ddq[3] = (u[2] + self.mass[4]*(c[4, 0] - p[2, 0])*self.gravity 
-                       + self.mass[3]*(c[3, 0] - p[2, 0])*self.gravity
-                       - self.mass[4]*self.crossProduct2D(c[4, :] - p[2, :], ddc[4, :])
-                       - self.mass[3]*self.crossProduct2D(c[3, :] - p[2, :], ddc[3, :]) - ddq[4])
+        # ddq[3] = (u[2] + self.mass[4]*(c[4, 0] - p[2, 0])*self.gravity 
+        #                + self.mass[3]*(c[3, 0] - p[2, 0])*self.gravity
+        #                - self.mass[4]*self.crossProduct2D(c[4, :] - p[2, :], ddc[4, :])
+        #                - self.mass[3]*self.crossProduct2D(c[3, :] - p[2, :], ddc[3, :]) - ddq[4])
         
-        ddq[2] = (u[1] + self.mass[4]*(c[4, 0] - p[1, 0])*self.gravity 
-                       + self.mass[3]*(c[3, 0] - p[1, 0])*self.gravity
-                       + self.mass[2]*(c[2, 0] - p[1, 0])*self.gravity 
-                       - self.mass[4]*self.crossProduct2D(c[4, :] - p[1, :], ddc[4, :])
-                       - self.mass[3]*self.crossProduct2D(c[3, :] - p[1, :], ddc[3, :]) 
-                       - self.mass[2]*self.crossProduct2D(c[2, :] - p[1, :], ddc[2, :]) - ddq[3])
+        # ddq[2] = (u[1] + self.mass[4]*(c[4, 0] - p[1, 0])*self.gravity 
+        #                + self.mass[3]*(c[3, 0] - p[1, 0])*self.gravity
+        #                + self.mass[2]*(c[2, 0] - p[1, 0])*self.gravity 
+        #                - self.mass[4]*self.crossProduct2D(c[4, :] - p[1, :], ddc[4, :])
+        #                - self.mass[3]*self.crossProduct2D(c[3, :] - p[1, :], ddc[3, :]) 
+        #                - self.mass[2]*self.crossProduct2D(c[2, :] - p[1, :], ddc[2, :]) - ddq[3])
 
-        ddq[1] = (u[0] + self.mass[4]*(c[4, 0] - p[0, 0])*self.gravity 
-                       + self.mass[3]*(c[3, 0] - p[0, 0])*self.gravity
-                       + self.mass[2]*(c[2, 0] - p[0, 0])*self.gravity
-                       + self.mass[1]*(c[1, 0] - p[0, 0])*self.gravity 
-                       - self.mass[4]*self.crossProduct2D(c[4, :] - p[0, :], ddc[4, :])
-                       - self.mass[3]*self.crossProduct2D(c[3, :] - p[0, :], ddc[3, :]) 
-                       - self.mass[2]*self.crossProduct2D(c[2, :] - p[0, :], ddc[2, :])
-                       - self.mass[1]*self.crossProduct2D(c[1, :] - p[0, :], ddc[1, :]) - ddq[2])
+        # ddq[1] = (u[0] + self.mass[4]*(c[4, 0] - p[0, 0])*self.gravity 
+        #                + self.mass[3]*(c[3, 0] - p[0, 0])*self.gravity
+        #                + self.mass[2]*(c[2, 0] - p[0, 0])*self.gravity
+        #                + self.mass[1]*(c[1, 0] - p[0, 0])*self.gravity 
+        #                - self.mass[4]*self.crossProduct2D(c[4, :] - p[0, :], ddc[4, :])
+        #                - self.mass[3]*self.crossProduct2D(c[3, :] - p[0, :], ddc[3, :]) 
+        #                - self.mass[2]*self.crossProduct2D(c[2, :] - p[0, :], ddc[2, :])
+        #                - self.mass[1]*self.crossProduct2D(c[1, :] - p[0, :], ddc[1, :]) - ddq[2])
 
-        ddq[0] = (       self.mass[4]*(c[4, 0] - p0[0, 0])*self.gravity 
-                       + self.mass[3]*(c[3, 0] - p0[0, 0])*self.gravity
-                       + self.mass[2]*(c[2, 0] - p0[0, 0])*self.gravity
-                       + self.mass[1]*(c[1, 0] - p0[0, 0])*self.gravity 
-                       + self.mass[0]*(c[0, 0] - p0[0, 0])*self.gravity 
-                       - self.mass[4]*self.crossProduct2D(c[4, :] - p0[0, :], ddc[4, :])
-                       - self.mass[3]*self.crossProduct2D(c[3, :] - p0[0, :], ddc[3, :]) 
-                       - self.mass[2]*self.crossProduct2D(c[2, :] - p0[0, :], ddc[2, :])
-                       - self.mass[1]*self.crossProduct2D(c[1, :] - p0[0, :], ddc[1, :]) 
-                       - self.mass[0]*self.crossProduct2D(c[0, :] - p0[0, :], ddc[2, :]) - ddq[2])
+        # ddq[0] = (       self.mass[4]*(c[4, 0] - p0[0, 0])*self.gravity 
+        #                + self.mass[3]*(c[3, 0] - p0[0, 0])*self.gravity
+        #                + self.mass[2]*(c[2, 0] - p0[0, 0])*self.gravity
+        #                + self.mass[1]*(c[1, 0] - p0[0, 0])*self.gravity 
+        #                + self.mass[0]*(c[0, 0] - p0[0, 0])*self.gravity 
+        #                - self.mass[4]*self.crossProduct2D(c[4, :] - p0[0, :], ddc[4, :])
+        #                - self.mass[3]*self.crossProduct2D(c[3, :] - p0[0, :], ddc[3, :]) 
+        #                - self.mass[2]*self.crossProduct2D(c[2, :] - p0[0, :], ddc[2, :])
+        #                - self.mass[1]*self.crossProduct2D(c[1, :] - p0[0, :], ddc[1, :]) 
+        #                - self.mass[0]*self.crossProduct2D(c[0, :] - p0[0, :], ddc[2, :]) - ddq[2])
 
         return ddq/self.inertia
 
@@ -144,10 +164,10 @@ class walker():
 
 
         c[0,0],c[0,1] = self.length[0]*ca.sin(q[0])/2 + p0[0] , self.length[0]*ca.cos(q[0])/2 + p0[1]
-        c[1,0],c[1,1] = self.length[1]*ca.sin(q[1])/2 + p[0,0], self.length[1]*ca.cos(q[1])/2 + p[0,1]
-        c[2,0],c[2,1] = self.length[2]*ca.sin(q[2])/2 + p[1,0], self.length[2]*ca.cos(q[2])/2 + p[1,1]
-        c[3,0],c[3,1] = self.length[3]*ca.sin(q[3])/2 + p[1,0],-self.length[3]*ca.cos(q[3])/2 + p[1,1]
-        c[4,0],c[4,1] = self.length[4]*ca.sin(q[4])/2 + p[3,0],-self.length[4]*ca.cos(q[4])/2 + p[3,1]
+        c[1,0],c[1,1] = self.length[1]*ca.sin(q[1])/2 + p[1,0], self.length[1]*ca.cos(q[1])/2 + p[1,1]
+        c[2,0],c[2,1] = self.length[2]*ca.sin(q[2])/2 + p[2,0], self.length[2]*ca.cos(q[2])/2 + p[2,1]
+        c[3,0],c[3,1] = self.length[3]*ca.sin(q[3])/2 + p[3,0],-self.length[3]*ca.cos(q[3])/2 + p[3,1]
+        c[4,0],c[4,1] = self.length[4]*ca.sin(q[4])/2 + p[4,0],-self.length[4]*ca.cos(q[4])/2 + p[4,1]
         
         dp = ca.jtimes(p,q,dq)
         dc = ca.jtimes(c,q,dq)
@@ -242,7 +262,9 @@ class walker():
         return q_plus, dq_plus
 
     def crossProduct2D(self, a, b):
-        return (a[0]*b[1]) - (b[1]*a[1])
+        # print(a.shape)
+        # print(b.shape)
+        return (a[0]*b[1]) - (b[0]*a[1])
 
     def heightMap(self, x):
         return self.f(x=x)['y']    
