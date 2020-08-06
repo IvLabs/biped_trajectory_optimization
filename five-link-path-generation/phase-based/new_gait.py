@@ -2,24 +2,25 @@ import numpy as np
 import casadi as ca
 
 class walker():
-    def __init__(self, start_angles, start_angular_vel, start_pos):
+    def __init__(self, start_angles, start_angular_vel, start_pos_left, start_pos_right):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.terrain_factor = 1.
-        self.terrain = ['sin','wedge','smooth_stair'][2]
+        self.terrain_factor = 0.
+        self.terrain = ['sin','wedge','smooth_stair'][1]
         self.N = 40; self.T = .08
         # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
         x_pos = ca.MX.sym('x_pos', 1)
         self.step_max = 0.5; self.tauMax = 20
+
         if self.terrain == 'sin':
-            self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
+            self.T = ((self.T)/(1 + np.tanh(self.terrain_factor*np.sin(start_pos[0]+np.pi)))) + 2*self.T
             y_pos = self.terrain_factor*ca.sin(x_pos)
-            self.f = ca.Function('terrain_sin',[x_pos],[y_pos])
+            self.f = ca.Function('terrain_sin',[x_pos],[y_pos],['x'],['y'])
             self.df = self.f.jacobian()
         elif self.terrain == 'wedge':
             self.T = 0.25
             y_pos = self.terrain_factor*x_pos
-            self.f = ca.Function('terrain_wedge',[x_pos],[y_pos])
+            self.f = ca.Function('terrain_wedge',[x_pos],[y_pos],['x'],['y'])
             self.df = self.f.jacobian()
             # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
         elif self.terrain == 'smooth_stair':
@@ -38,37 +39,51 @@ class walker():
         self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
         self.inertia = self.mass * (self.length**2) /12
         self.gravity = 10
+        
         self.h = self.T/self.N
         self.goal = [start_angles, start_angular_vel]
         self.ini_goal = self.goal[0].to_DM()
         self.fin_goal = ca.DM([self.ini_goal[4],self.ini_goal[3],self.ini_goal[2],self.ini_goal[1],self.ini_goal[0]])
-        self.p0 = ca.MX(start_pos)     
+        self.p0 = ca.MX(start_pos_left)
+        self.p5 = ca.MX(start_pos_right)
+
         self.comh = self.length[0]*0.5
         #set our optimization variables
         self.x = []
         self.xdot = []
         self.u = []
+        self.left = []
+        self.right = []
+        self.l_force = []
+        self.r_force = []
         for i in range(self.N): 
             self.x.append(self.opti.variable(5))
             self.xdot.append(self.opti.variable(5))
             self.u.append(self.opti.variable(4))
+            self.left.append(self.opti.variable(2))
+            self.right.append(self.opti.variable(2))
+            self.l_force.append(self.opti.variable(2))
+            self.r_force.append(self.opti.variable(2))
 
         self.pos = [];self.com = [];self.ddq = []
         self.dpos = []
 
         for n in range(self.N):
-            p,dp,ddp,c,dc,ddc = self.getKinematics(self.x[n], self.xdot[n]) 
+            p,dp,ddp,c,dc,ddc = self.getKinematics(self.x[n], self.xdot[n], self.left[n], self.right[n]) 
             self.pos.append(p);self.dpos.append(dp);self.com.append(c)
-            ddq = self.getDynamics(self.x[n], self.xdot[n], self.u[n], p, ddp, c, ddc)
-            self.ddq.append(ddq)
+            # ddq = self.getDynamics(self.x[n], self.xdot[n], self.u[n], p, ddp, c, ddc)
+            # self.ddq.append(ddq)
 
-            if n == self.N - 1:
-               self.x_impact, self.xdot_impact = self.impactMap(self.x[n], self.xdot[n], p, dp, c, dc)
+            # if n == self.N - 1:
+            #    self.x_impact, self.xdot_impact = self.impactMap(self.x[n], self.xdot[n], p, dp, c, dc)
 
-    def getDynamics(self, q, dq, u, p, ddp, c, ddc):
-        p0 = ca.reshape(self.p0, 1, 2)
-
+    def getDynamics(self, q, dq, u, p, ddp, c, ddc, l_force, r_force):
         ddq = ca.MX.zeros(5)
+
+        f10 = l_force
+        f50 = r_force
+
+        f12 = self.mass[0]*ddp[0] - f10
 
         ddq[4] = (u[3] + self.mass[4]*(c[4, 0] - p[3, 0])*self.gravity
                        - self.mass[4]*self.crossProduct2D(c[4, :] - p[3, :], ddc[4, :]) - ddq[4])
@@ -107,19 +122,27 @@ class walker():
 
         return ddq/self.inertia
 
-    def getKinematics(self, q, dq):
-        p0 = [self.p0[0],self.p0[1]]
-        
-        p = ca.MX.zeros(5, 2)
+    def getKinematics(self, q, dq, left, right):
+        p0 = left
+        p5 = right
+
+        p = ca.MX.zeros(6, 2)
         c = ca.MX.zeros(5, 2)
-        p0 = [self.p0[0],self.p0[1]]
         
-        p[0,0],p[0,1] = self.length[0]*ca.sin(q[0]) + p0[0] , self.length[0]*ca.cos(q[0]) + p0[1]
-        p[1,0],p[1,1] = self.length[1]*ca.sin(q[1]) + p[0,0], self.length[1]*ca.cos(q[1]) + p[0,1]
-        p[2,0],p[2,1] = self.length[2]*ca.sin(q[2]) + p[1,0], self.length[2]*ca.cos(q[2]) + p[1,1]
-        p[3,0],p[3,1] = self.length[3]*ca.sin(q[3]) + p[1,0],-self.length[3]*ca.cos(q[3]) + p[1,1]
-        p[4,0],p[4,1] = self.length[4]*ca.sin(q[4]) + p[3,0],-self.length[4]*ca.cos(q[4]) + p[3,1]
+        p[0,0],p[0,1] = p0[0] , p0[1]
+        p[1,0],p[1,1] = self.length[0]*ca.sin(q[0]) + p[0,0], self.length[0]*ca.cos(q[0]) + p[0,1]
+        p[2,0],p[2,1] = self.length[1]*ca.sin(q[1]) + p[1,0], self.length[1]*ca.cos(q[1]) + p[1,1]
         
+        p[5,0],p[5,1] = p5[0], p5[1]
+        p[4,0],p[4,1] = self.length[4]*ca.sin(q[4]) + p[5,0], self.length[4]*ca.cos(q[4]) + p[5,1]
+        prx,pry = self.length[3]*ca.sin(q[3]) + p[4,0], self.length[3]*ca.cos(q[3]) + p[4,1]
+        
+        self.opti.subject_to(p[2, 0]==prx)
+        self.opti.subject_to(p[2, 1]==pry)
+
+        p[3,0],p[3,1] = self.length[2]*ca.sin(q[2]) + p[2,0], self.length[2]*ca.cos(q[2]) + p[2,1]
+
+
         c[0,0],c[0,1] = self.length[0]*ca.sin(q[0])/2 + p0[0] , self.length[0]*ca.cos(q[0])/2 + p0[1]
         c[1,0],c[1,1] = self.length[1]*ca.sin(q[1])/2 + p[0,0], self.length[1]*ca.cos(q[1])/2 + p[0,1]
         c[2,0],c[2,1] = self.length[2]*ca.sin(q[2])/2 + p[1,0], self.length[2]*ca.cos(q[2])/2 + p[1,1]
@@ -396,7 +419,7 @@ class nlp(walker):
             # ceq.extend([comy >= walker.heightMap(comx)])
             # ceq.extend([comy <= walker.comh + walker.heightMap(comx)])
 
-        ceq.extend([walker.pos[-1][4, 0] >= 0.1*walker.step_max + walker.p0[0]])
+        ceq.extend([walker.pos[-1][4, 0] >= 0.5*walker.step_max + walker.p0[0]])
         ceq.extend([walker.pos[-1][4, 0] <= 1.5*walker.step_max + walker.p0[0]])
         # ceq.extend([walker.pos[int(len(walker.pos)/2)][4, 0] >= walker.p0[0]])
         ceq.extend([walker.pos[-1][4, 1] == walker.heightMap(walker.pos[-1][4, 0])])

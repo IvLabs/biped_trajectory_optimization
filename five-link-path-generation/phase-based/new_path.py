@@ -8,15 +8,18 @@ start_angles = ca.MX.zeros(5)
 # start_angles = ca.MX([-0.6,0.7,0.0,-0.5,0.9]) # ostrich
 # start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45]) # human
 
-start_pos = [[0,0]]
+start_pos_left = [[0,0]]
+start_pos_right = [[0,0]]
+
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 6
+f = 1
 for k in range(f):
     # try:
-    model = walker(start_angles, start_angular_vel, start_pos[-1])        
+    model = walker(start_angles, start_angular_vel, start_pos_left[-1], start_pos_right[-1])  
+    exit()
     problem = nlp(model)
-    sol = model.opti.solve()
+    sol = model.opti.solve_limited()
     # except:
     #     pass
     # p = [0, 0, 0, 0, 0]
@@ -78,7 +81,7 @@ for k in range(f):
     print('step time = ', model.T)
     print('##################')
 
-    start_pos.append([pos[4][-1][0], pos[4][-1][1]])
+    start_pos_left.append([pos[4][-1][0], pos[4][-1][1]])
 
 #     if k > 1:
         # print(start_pos[k][1])
@@ -182,7 +185,7 @@ terrain = np.linspace(-2,2,1000*f)
 if model.terrain == 'sin':
     terrain_y = model.terrain_factor*ca.sin(terrain)
 elif model.terrain == 'wedge':
-    y_pos = model.terrain_factor*terrain
+    terrain_y = model.terrain_factor*terrain
 elif model.terrain == 'smooth_stair':
     k = -50
     terrain_y = terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))))
@@ -194,7 +197,7 @@ k = 0
 # ax.set_ylim([-1, 3]) # sin
 
 
-ax.set_ylim([-3, 2]) # ss
+ax.set_ylim([-1, 2]) # ss
 ax.set_xlim([-1., 2]) # ss
 
 for i in range(f*model.N):
@@ -211,7 +214,7 @@ for i in range(f*model.N):
     #     [-p2[1],p4[1] - 2*p2[1]], [p2[0],2*p2[0]-p4[0]],'b',
     #     [p4[1] - 2*p2[1],p5[1]], [2*p2[0]-p4[0],(p5[0] - 2*p2[0])],'r')
     if i%model.N == 0:
-            p0 = start_pos[k]
+            p0 = start_pos_left[k]
             # print(p0)
             k += 1 
 
