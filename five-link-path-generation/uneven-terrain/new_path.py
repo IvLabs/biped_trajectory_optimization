@@ -189,13 +189,13 @@ elif model.terrain == 'smooth_stair':
     terrain_y /= abs(k)
 k = 0
 # ax.set_xlim([-1., 7]) # sin
-# ax.set_xlim([-1., 5]) # wedge
-# ax.set_ylim([-1, 5]) # wedge
+ax.set_xlim([-1., 5]) # wedge
+ax.set_ylim([-1, 5]) # wedge
 # ax.set_ylim([-1, 3]) # sin
 
 
-ax.set_ylim([-4, 2]) # ss
-ax.set_xlim([-1., 2]) # ss
+# ax.set_ylim([-3, 2]) # ss
+# ax.set_xlim([-1., 2]) # ss
 
 for i in range(f*model.N):
     # print(i)    
