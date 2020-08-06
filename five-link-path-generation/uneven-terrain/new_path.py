@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 7
+f = 6
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -241,7 +241,7 @@ for i in range(f*model.N):
     # plt.pause(1e-5)
     # ax.cla()
 animation = camodelra.animate(interval=60)
-animation.save('path_sstairs_down_N_40_human.mp4')
+# animation.save('path_sstairs_down_N_40_human.mp4')
 plt.show()
 
 
