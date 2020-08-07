@@ -44,10 +44,10 @@ class walker():
         self.goal = [start_angles, start_angular_vel]
         self.ini_goal = self.goal[0].to_DM()
         self.fin_goal = ca.DM([self.ini_goal[4],self.ini_goal[3],self.ini_goal[2],self.ini_goal[1],self.ini_goal[0]])
-        self.p0 = ca.MX(start_pos_left)
-        self.p5 = ca.MX(start_pos_right)
+        self.p0 = ca.reshape(ca.MX(start_pos_left) , 2, 1)
+        self.p5 = ca.reshape(ca.MX(start_pos_right), 2, 1)
 
-        self.comh = self.length[0]*0.5
+        self.comh = self.length[0]
         #set our optimization variables
         self.x = []
         self.xdot = []
@@ -76,9 +76,10 @@ class walker():
 
             self.opti.subject_to(ca.vec(p)>=0)
             
-            if n == 0:
-               self.opti.subject_to(self.x[n] == self.goal[0])
-               self.opti.subject_to(self.xdot[n] == self.goal[1]) 
+            # self.opti.subject_to((ca.vec(p[0,:])) <= self.comh)
+            # self.opti.subject_to((ca.vec(p[5,:])) <= self.comh) 
+
+            # if n==0:            
             #    self.opti.subject_to(self.left[n] == self.p0)
             #    self.opti.subject_to(self.right[n] == self.p5) 
 
@@ -181,11 +182,11 @@ class walker():
         ddp = ca.jtimes(dp,q,dq)
         ddc = ca.jtimes(dc,q,dq)
 
-        self.opti.subject_to(ca.norm_2(p[1, :]-p[0, :]) == self.length[0])
-        self.opti.subject_to(ca.norm_2(p[2, :]-p[1, :]) == self.length[1])
-        self.opti.subject_to(ca.norm_2(p[3, :]-p[2, :]) == self.length[2])
-        self.opti.subject_to(ca.norm_2(p[4, :]-p[2, :]) == self.length[3])
-        self.opti.subject_to(ca.norm_2(p[5, :]-p[4, :]) == self.length[4])
+        # self.opti.subject_to(ca.norm_2(p[1, :]-p[0, :]) == self.length[0])
+        # self.opti.subject_to(ca.norm_2(p[2, :]-p[1, :]) == self.length[1])
+        # self.opti.subject_to(ca.norm_2(p[3, :]-p[2, :]) == self.length[2])
+        # self.opti.subject_to(ca.norm_2(p[4, :]-p[2, :]) == self.length[3])
+        # self.opti.subject_to(ca.norm_2(p[5, :]-p[4, :]) == self.length[4])
 
         return p,dp,ddp,c,dc,ddc        
 
@@ -314,8 +315,8 @@ class nlp(walker):
     def __init__(self, walker):
         self.cost = self.getCost(walker.u,walker.N,walker.h)
         walker.opti.minimize(self.cost)
-        # self.ceq = self.getConstraints(walker)
-        # walker.opti.subject_to(self.ceq)
+        self.ceq = self.getConstraints(walker)
+        walker.opti.subject_to(self.ceq)
         self.bounds = self.getBounds(walker)
         walker.opti.subject_to(self.bounds)
         p_opts = {"expand":True}
@@ -357,68 +358,88 @@ class nlp(walker):
             dq2 = walker.xdot[i+1]
             ddq1 = walker.ddq[i]
             ddq2 = walker.ddq[i+1]
+            lp1 = walker.left[i]
+            rp1 = walker.right[i]
+            lp2 = walker.left[i+1]
+            rp2 = walker.right[i+1]
+            dlp1 = ca.reshape(walker.dpos[i][0, :]  , 2, 1)
+            drp1 = ca.reshape(walker.dpos[i][5, :]  , 2, 1)
+            dlp2 = ca.reshape(walker.dpos[i+1][0, :], 2, 1)
+            drp2 = ca.reshape(walker.dpos[i+1][5, :], 2, 1)
             ceq.extend(self.getCollocation(q1,q2,
-                                        dq1,dq2,ddq1,ddq2,
+                                        dq1,dq2,
+                                        ddq1,ddq2,
+                                        lp1,lp2,dlp1,dlp2,
+                                        rp1,rp2,drp1,drp2,
                                         walker.h))
         
         q0 = walker.x[0]
         dq0 = walker.xdot[0]
         qf = walker.x[-1]
         dqf = walker.x[-1]
-        ceq.extend(self.getBoundaryConstrainsts(q0, dq0, qf, dqf, walker.goal, walker.x_impact, walker.xdot_impact))
-        # ceq.extend([walker.pos[0][4, 0] <= walker.p0[0]])
-        # ceq.extend([walker.pos[0][4, 1] == walker.heightMap(walker.pos[0][4, 0])])
+        ceq.extend(self.getBoundaryConstrainsts(q0, dq0, qf, dqf, walker.goal))
+        # # ceq.extend([walker.pos[0][4, 0] <= walker.p0[0]])
+        # # ceq.extend([walker.pos[0][4, 1] == walker.heightMap(walker.pos[0][4, 0])])
 
-        ceq.extend([    
-                    (ca.dot(walker.dpos[0][4,:].T, walker.heightMapNormalVector(walker.pos[0][4, 0])) > 0.),
-                    # (ca.dot(walker.dpos[-1][4,:].T, walker.heightMapNormalVector(walker.pos[-1][4, 0])) < 0.)
-                    ])
-
-        # ceq.extend([
-        #             (walker.dpos[0][4, 1]*ca.sin(walker.heightMapNormal(walker.pos[0][4, 0], walker.pos[0][4, 1])) > 0),
-        #             (walker.dpos[0][4, 0]*ca.cos(walker.heightMapNormal(walker.pos[0][4, 0], walker.pos[0][4, 1])) > 0),
-        #             (walker.dpos[-1][4, 0]*ca.cos(walker.heightMapNormal(walker.pos[-1][4, 0], walker.pos[-1][4, 1])) < 0),
-        #             (walker.dpos[-1][4, 1]*ca.sin(walker.heightMapNormal(walker.pos[-1][4, 0], walker.pos[-1][4, 1])) < 0),
+        # ceq.extend([    
+        #             (ca.dot(walker.dpos[0][4,:].T, walker.heightMapNormalVector(walker.pos[0][4, 0])) > 0.),
+        #             # (ca.dot(walker.dpos[-1][4,:].T, walker.heightMapNormalVector(walker.pos[-1][4, 0])) < 0.)
         #             ])
 
+        # # ceq.extend([
+        # #             (walker.dpos[0][4, 1]*ca.sin(walker.heightMapNormal(walker.pos[0][4, 0], walker.pos[0][4, 1])) > 0),
+        # #             (walker.dpos[0][4, 0]*ca.cos(walker.heightMapNormal(walker.pos[0][4, 0], walker.pos[0][4, 1])) > 0),
+        # #             (walker.dpos[-1][4, 0]*ca.cos(walker.heightMapNormal(walker.pos[-1][4, 0], walker.pos[-1][4, 1])) < 0),
+        # #             (walker.dpos[-1][4, 1]*ca.sin(walker.heightMapNormal(walker.pos[-1][4, 0], walker.pos[-1][4, 1])) < 0),
+        # #             ])
+
         for i in range(walker.N):
-            ceq.extend([
-                        # (walker.pos[i][4, 0] <=  walker.step_max + walker.p0[0, 0]),
-                        # (walker.pos[i][4, 0] >= -walker.step_max - walker.p0[0, 0]),
-
-                        (walker.pos[i][0, 1] > walker.heightMap(walker.pos[i][0, 0])),
-                        (walker.pos[i][1, 1] > walker.heightMap(walker.pos[i][1, 0])),
-                        (walker.pos[i][2, 1] > walker.heightMap(walker.pos[i][2, 0])),
-                        (walker.pos[i][3, 1] > walker.heightMap(walker.pos[i][3, 0])),
-                        (walker.pos[i][4, 1] > walker.heightMap(walker.pos[i][4, 0])),
-
-                        (walker.com[i][0, 1] > walker.heightMap(walker.com[i][0, 0])),
-                        (walker.com[i][1, 1] > walker.heightMap(walker.com[i][1, 0])),
-                        (walker.com[i][2, 1] > walker.heightMap(walker.com[i][2, 0])),
-                        (walker.com[i][3, 1] > walker.heightMap(walker.com[i][3, 0])),
-                        (walker.com[i][4, 1] > walker.heightMap(walker.com[i][4, 0])),
-                        # (walker.pos[i][4, 1] < walker.heightMap(walker.pos[i][4, 0]) + walker.comh),
-                        
-                        # (walker.pos[i][3, 1] > walker.heightMap(walker.pos[i][3, 0])),
-                        # (walker.pos[i][2, 1] > walker.heightMap(walker.pos[i][2, 0])),
-                        # (walker.pos[i][1, 1] > walker.heightMap(walker.pos[i][1, 0])),
-                        # (walker.pos[i][0, 1] > walker.heightMap(walker.pos[i][0, 0])),
-
-                        # (walker.pos[i][4, 1] < walker.pos[i][3, 1]),
-                        # (walker.pos[i][1, 1] < walker.pos[i][2, 1]),
-                        # (walker.pos[i][4, 1] < walker.pos[i][0, 1]),
-                        
-                        # (walker.pos[i][4, 1] - walker.heightMap(walker.pos[i][4, 0] + walker.p0[0, 0]) > 0),
-                        # (walker.pos[i][3, 1] - walker.heightMap(walker.pos[i][3, 0]) >= walker.comh),
-                        # (walker.pos[i][2, 1] - walker.heightMap(walker.pos[i][2, 0]) >= walker.comh),
-                        # (walker.pos[i][1, 1] - walker.heightMap(walker.pos[i][1, 0]) >= walker.comh),
-                        # (walker.pos[i][0, 1] - walker.heightMap(walker.pos[i][0, 0]) >= walker.comh)
+            ceq.extend([    
+                        (ca.dot(walker.l_force[i], walker.heightMapNormalVector(walker.pos[0][4, 0])) >= 0.),
+                        (ca.dot(walker.r_force[i], walker.heightMapNormalVector(walker.pos[-1][4, 0])) >= 0.)
                         ])
-            # ceq.extend([((walker.x[i][0, 0] + walker.x[i][1, 0]) < 0)])
-            # ceq.extend([((-walker.x[i][0, 0] - walker.x[i][1, 0]) + ca.pi > ca.pi*3/2)])
-            # ceq.extend([
-            #     (ca.acos(ca.norm_2(walker.pos[i][1,:]-walker.pos[i][0,:])*ca.norm_2(walker.pos[i][0,:])/(ca.dot(walker.pos[i][1,:]-walker.pos[i][0,:],walker.pos[i][0,:]))) > 0)
-            # ])
+            # ceq.extend([    
+            #             ((walker.l_force[i]*ca.norm_2(walker.pos[i][0, 1] - walker.heightMap(walker.pos[i][4, 0]))) == 0.),
+            #             ((walker.r_force[i]*ca.norm_2(walker.pos[i][5, 1] - walker.heightMap(walker.pos[i][4, 0]))) == 0.)
+            #             ])
+                        
+        #     ceq.extend([
+        #                 # (walker.pos[i][4, 0] <=  walker.step_max + walker.p0[0, 0]),
+        #                 # (walker.pos[i][4, 0] >= -walker.step_max - walker.p0[0, 0]),
+
+        #                 (walker.pos[i][0, 1] > walker.heightMap(walker.pos[i][0, 0])),
+        #                 (walker.pos[i][1, 1] > walker.heightMap(walker.pos[i][1, 0])),
+        #                 (walker.pos[i][2, 1] > walker.heightMap(walker.pos[i][2, 0])),
+        #                 (walker.pos[i][3, 1] > walker.heightMap(walker.pos[i][3, 0])),
+        #                 (walker.pos[i][4, 1] > walker.heightMap(walker.pos[i][4, 0])),
+
+        #                 (walker.com[i][0, 1] > walker.heightMap(walker.com[i][0, 0])),
+        #                 (walker.com[i][1, 1] > walker.heightMap(walker.com[i][1, 0])),
+        #                 (walker.com[i][2, 1] > walker.heightMap(walker.com[i][2, 0])),
+        #                 (walker.com[i][3, 1] > walker.heightMap(walker.com[i][3, 0])),
+        #                 (walker.com[i][4, 1] > walker.heightMap(walker.com[i][4, 0])),
+        #                 # (walker.pos[i][4, 1] < walker.heightMap(walker.pos[i][4, 0]) + walker.comh),
+                        
+        #                 # (walker.pos[i][3, 1] > walker.heightMap(walker.pos[i][3, 0])),
+        #                 # (walker.pos[i][2, 1] > walker.heightMap(walker.pos[i][2, 0])),
+        #                 # (walker.pos[i][1, 1] > walker.heightMap(walker.pos[i][1, 0])),
+        #                 # (walker.pos[i][0, 1] > walker.heightMap(walker.pos[i][0, 0])),
+
+        #                 # (walker.pos[i][4, 1] < walker.pos[i][3, 1]),
+        #                 # (walker.pos[i][1, 1] < walker.pos[i][2, 1]),
+        #                 # (walker.pos[i][4, 1] < walker.pos[i][0, 1]),
+                        
+        #                 # (walker.pos[i][4, 1] - walker.heightMap(walker.pos[i][4, 0] + walker.p0[0, 0]) > 0),
+        #                 # (walker.pos[i][3, 1] - walker.heightMap(walker.pos[i][3, 0]) >= walker.comh),
+        #                 # (walker.pos[i][2, 1] - walker.heightMap(walker.pos[i][2, 0]) >= walker.comh),
+        #                 # (walker.pos[i][1, 1] - walker.heightMap(walker.pos[i][1, 0]) >= walker.comh),
+        #                 # (walker.pos[i][0, 1] - walker.heightMap(walker.pos[i][0, 0]) >= walker.comh)
+        #                 ])
+        #     # ceq.extend([((walker.x[i][0, 0] + walker.x[i][1, 0]) < 0)])
+        #     # ceq.extend([((-walker.x[i][0, 0] - walker.x[i][1, 0]) + ca.pi > ca.pi*3/2)])
+        #     # ceq.extend([
+        #     #     (ca.acos(ca.norm_2(walker.pos[i][1,:]-walker.pos[i][0,:])*ca.norm_2(walker.pos[i][0,:])/(ca.dot(walker.pos[i][1,:]-walker.pos[i][0,:],walker.pos[i][0,:]))) > 0)
+        #     # ])
 
             ceq.extend([
                         # (ca.fabs(walker.x[i][0, 0]) < ca.fabs(walker.x[i][1, 0])),
@@ -427,50 +448,53 @@ class nlp(walker):
                         # (ca.fabs(walker.x[i][4, 0]-walker.x[i][3, 0]) > 0),
                         
                         (walker.x[i][0, 0] > walker.x[i][1, 0]), # human
-                        (walker.x[i][4, 0] < walker.x[i][3, 0]), # human
+                        (walker.x[i][4, 0] > walker.x[i][3, 0]), # human
                         
                         # (walker.x[i][0, 0] < walker.x[i][1, 0]), # ostrich
                         # (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
                         ])
 
-            ceq.extend([(walker.x[i][2, 0] <= walker.pi/3)])
-            ceq.extend([(walker.x[i][2, 0] >= -walker.pi/3)])
-            # ceq.extend([(walker.x[i][1, 0] >= 0 )])
-            # ceq.extend([(walker.x[i][1, 0] >= 0 )])
+        #     ceq.extend([(walker.x[i][2, 0] <= walker.pi/3)])
+        #     ceq.extend([(walker.x[i][2, 0] >= -walker.pi/3)])
+        #     # ceq.extend([(walker.x[i][1, 0] >= 0 )])
+        #     # ceq.extend([(walker.x[i][1, 0] >= 0 )])
 
 
-            # ceq.extend([((walker.state[i][0][4, 0] - walker.state[i][0][3]) <= walker.pi/2)])
+        #     # ceq.extend([((walker.state[i][0][4, 0] - walker.state[i][0][3]) <= walker.pi/2)])
 
-            # ceq.extend([((walker.pos[i][1] - walker.p0[1]) >= walker.comh)])
-            # ceq.extend([((walker.pos[i][1][1] - walker.p0[1]) >= walker.comh)])
-            # ceq.extend([((walker.pos[i][2][1] - walker.p0[1]) >= walker.comh)])
-            # if i == 0:
-            #     ceq.extend([((walker.pos[i][4][1]) == walker.p0[1])])
+        #     # ceq.extend([((walker.pos[i][1] - walker.p0[1]) >= walker.comh)])
+        #     # ceq.extend([((walker.pos[i][1][1] - walker.p0[1]) >= walker.comh)])
+        #     # ceq.extend([((walker.pos[i][2][1] - walker.p0[1]) >= walker.comh)])
+        #     # if i == 0:
+        #     #     ceq.extend([((walker.pos[i][4][1]) == walker.p0[1])])
+
             # comx = ca.sum1(walker.com[i][:, 0])
             # comy = ca.sum1(walker.com[i][:, 1])
 
-            # ceq.extend([comy >= walker.heightMap(comx)])
-            # ceq.extend([comy <= walker.comh + walker.heightMap(comx)])
+            # if i == walker.N-1:
+            #     ceq.extend([comx >= 2*walker.step_max])
 
-        ceq.extend([walker.pos[-1][4, 0] >= 0.5*walker.step_max + walker.p0[0]])
-        ceq.extend([walker.pos[-1][4, 0] <= 1.5*walker.step_max + walker.p0[0]])
+        ceq.extend([walker.pos[-1][5, 0] >= 0.5*walker.step_max])
+        ceq.extend([walker.pos[-1][5, 0] <= 1.5*walker.step_max])
         # ceq.extend([walker.pos[int(len(walker.pos)/2)][4, 0] >= walker.p0[0]])
-        ceq.extend([walker.pos[-1][4, 1] == walker.heightMap(walker.pos[-1][4, 0])])
+        ceq.extend([walker.pos[-1][5, 1] == walker.heightMap(walker.pos[-1][5, 0])])
         
         return ceq
 
-    def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,h):
+    def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,lp1,lp2,dlp1,dlp2,rp1,rp2,drp1,drp2,h):
         cc = []
         cc.extend([(((h/2)*(dq2 + dq1)) - (q2 - q1)==0)])
         cc.extend([(((h/2)*(ddq2 + ddq1)) - (dq2 - dq1)==0)])
+        cc.extend([(((h/2)*(dlp2 + dlp1)) - (lp2 - lp1)==0)])
+        # cc.extend([(((h/2)*(drp2 + drp1)) - (rp2 - rp1)==0)])
 
         return cc
 
-    def getBoundaryConstrainsts(self, q0, dq0, qf, dqf, goal, q_plus, dq_plus):
+    def getBoundaryConstrainsts(self, q0, dq0, qf, dqf, goal):
         c = []
         c.extend([  
                     # (q0 == q_plus),
-                    (dq0 == dq_plus),
+                    # (dq0 == dq_plus),
                     (q0 - goal[0] == 0),
                     # (dq0 - goal[1] == 0),
                     # (qf - q_plus == 0),
@@ -485,8 +509,12 @@ class nlp(walker):
             q = walker.x[i]
             dq = walker.xdot[i]
             u = walker.u[i]
-            c.extend([  walker.opti.bounded(ca.MX([-walker.pi]*5),q,ca.MX([walker.pi]*5)),
-                        walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
+            # lp = ca.reshape(walker.dpos[i][0, :], 2, 1)
+            # rp = ca.reshape(walker.dpos[i][5, :], 2, 1)
+            c.extend([  walker.opti.bounded(ca.MX([-walker.pi/2]*5),q,ca.MX([walker.pi/2]*5)),
+                        # walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
+                        # walker.opti.bounded(ca.MX([-walker.pi]*2), lp, ca.MX([walker.pi]*2)),
+                        # walker.opti.bounded(ca.MX([-walker.pi]*2), rp, ca.MX([walker.pi]*2)),
                         walker.opti.bounded(ca.MX([-walker.tauMax]*4),u,ca.MX([walker.tauMax]*4)),
             ])
                     
