@@ -112,6 +112,8 @@ for i in range(f*model.N):
         [p2[0],p3[0]], [p2[1],p3[1]],'b', [p2[0],p4[0]], [p2[1],p4[1]],'y',
         [p4[0],p5[0]], [p4[1],p5[1]],'c')
 
+    ax.plot()
+
     # plt.plot([-2,6],[0,0],'g')  
 
     if model.terrain == 'sin':

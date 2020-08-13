@@ -33,7 +33,7 @@ class walker():
             self.df = self.f.jacobian()
             print(self.f(x=0.), self.df(x=0.))
             
-        
+        self.mu = 1.
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
         self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
@@ -74,14 +74,20 @@ class walker():
             ddq = self.getDynamics(self.x[n], self.xdot[n], self.u[n], p, ddp, c, ddc, self.l_force[n], self.r_force[n])
             self.ddq.append(ddq)
 
-            self.opti.subject_to(ca.vec(p)>=0)
+            self.opti.subject_to(ca.vec(p[:,1])>=0)
             
-            # self.opti.subject_to((ca.vec(p[0,:])) <= self.comh)
-            # self.opti.subject_to((ca.vec(p[5,:])) <= self.comh) 
+            self.opti.subject_to((ca.vec(p[0,1])) <= self.comh)
+            self.opti.subject_to((ca.vec(p[5,1])) <= self.comh) 
 
-            # if n==0:            
-            #    self.opti.subject_to(self.left[n] == self.p0)
-            #    self.opti.subject_to(self.right[n] == self.p5) 
+            # self.opti.subject_to((ca.vec(p[0,0])) <=  2*self.comh)
+            # self.opti.subject_to((ca.vec(p[5,0])) <=  2*self.comh)
+
+            # self.opti.subject_to((ca.vec(p[0,0])) >= -2*self.comh)
+            # self.opti.subject_to((ca.vec(p[5,0])) >= -2*self.comh) 
+
+            # if n==self.N-1:            
+            #    self.opti.subject_to(self.left[n] == self.p0 + [0, self.step_max])
+            #    self.opti.subject_to(self.right[n] == self.p5 + [0, self.step_max]) 
 
     def getDynamics(self, q, dq, u, p, ddp, c, ddc, l_force, r_force):
         ddq = ca.MX.zeros(5)
@@ -320,14 +326,19 @@ class nlp(walker):
         self.bounds = self.getBounds(walker)
         walker.opti.subject_to(self.bounds)
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 3000}
-        walker.opti.solver("ipopt",p_opts,s_opts)
+        # s_opts = {"max_iter": 500}
+        walker.opti.solver("ipopt",
+                            p_opts
+                            # s_opts
+                            )
         self.initial = self.initalGuess(walker)
 
     def initalGuess(self,walker):
         iniq = ca.DM.zeros((5,walker.N))
         inidq = ca.DM.zeros((5,walker.N))
         iniu = ca.DM.zeros((4,walker.N))
+        inilp = ca.DM.zeros((2,walker.N))
+        inirp = ca.DM.zeros((2,walker.N))
         for j in range(5):
             for i in range(walker.N):
                 walker.opti.set_initial(walker.x[i][j],
@@ -340,6 +351,11 @@ class nlp(walker):
                 
                 if j < 4:
                     walker.opti.set_initial(walker.u[i][j], 0)
+
+                if j < 2:
+                    walker.opti.set_initial(walker.left[i],  ca.DM([i/(walker.N - 1), -((i/(walker.N - 1))**2) + ((i/(walker.N - 1))*walker.step_max)]))   
+                    walker.opti.set_initial(walker.right[i], ca.DM([i/(walker.N - 1), -((i/(walker.N - 1))**2) + ((i/(walker.N - 1))*walker.step_max)]))   
+
                 
         return [iniq,inidq,iniu]
 
@@ -394,15 +410,32 @@ class nlp(walker):
         # #             ])
 
         for i in range(walker.N):
-            ceq.extend([    
-                        (ca.dot(walker.l_force[i], walker.heightMapNormalVector(walker.pos[0][4, 0])) >= 0.),
-                        (ca.dot(walker.r_force[i], walker.heightMapNormalVector(walker.pos[-1][4, 0])) >= 0.)
-                        ])
             # ceq.extend([    
-            #             ((walker.l_force[i]*ca.norm_2(walker.pos[i][0, 1] - walker.heightMap(walker.pos[i][4, 0]))) == 0.),
-            #             ((walker.r_force[i]*ca.norm_2(walker.pos[i][5, 1] - walker.heightMap(walker.pos[i][4, 0]))) == 0.)
+            #             (ca.dot(walker.l_force[i], walker.heightMapNormalVector(walker.pos[0][4, 0])) >= 0.),
+            #             (ca.dot(walker.r_force[i], walker.heightMapNormalVector(walker.pos[-1][4, 0])) >= 0.)
             #             ])
-                        
+            
+            ceq.extend([    
+                        ((walker.l_force[i][1]*ca.norm_2(walker.pos[i][0, 1] - walker.heightMap(walker.pos[i][4, 0]))) == 0.),
+                        ((walker.r_force[i][1]*ca.norm_2(walker.pos[i][5, 1] - walker.heightMap(walker.pos[i][4, 0]))) == 0.)
+                        ])
+
+            ceq.extend([    
+                        ((walker.l_force[i][1]*ca.norm_2(walker.dpos[i][0, 1])) == 0.),
+                        ((walker.r_force[i][1]*ca.norm_2(walker.dpos[i][5, 1])) == 0.)
+                        ])
+
+            ceq.extend([    
+                        ((walker.l_force[i][1]>= 0.)),
+                        ((walker.r_force[i][1]>= 0.))
+                        ])
+
+            ceq.extend([    
+                        (((walker.mu*walker.l_force[i][1])**2) - (walker.l_force[i][0]**2) >= 0.),                        
+                        (((walker.mu*walker.r_force[i][1])**2) - (walker.r_force[i][0]**2) >= 0.),
+
+                        ])
+
         #     ceq.extend([
         #                 # (walker.pos[i][4, 0] <=  walker.step_max + walker.p0[0, 0]),
         #                 # (walker.pos[i][4, 0] >= -walker.step_max - walker.p0[0, 0]),
@@ -477,16 +510,16 @@ class nlp(walker):
         ceq.extend([walker.pos[-1][5, 0] >= 0.5*walker.step_max])
         ceq.extend([walker.pos[-1][5, 0] <= 1.5*walker.step_max])
         # ceq.extend([walker.pos[int(len(walker.pos)/2)][4, 0] >= walker.p0[0]])
-        ceq.extend([walker.pos[-1][5, 1] == walker.heightMap(walker.pos[-1][5, 0])])
+        # ceq.extend([walker.pos[-1][5, 1] == walker.heightMap(walker.pos[-1][5, 0])])
         
         return ceq
 
     def getCollocation(self,q1,q2,dq1,dq2,ddq1,ddq2,lp1,lp2,dlp1,dlp2,rp1,rp2,drp1,drp2,h):
         cc = []
-        cc.extend([(((h/2)*(dq2 + dq1)) - (q2 - q1)==0)])
+        cc.extend([(((h/2)*( dq2 +  dq1)) - ( q2 -  q1)==0)])
         cc.extend([(((h/2)*(ddq2 + ddq1)) - (dq2 - dq1)==0)])
         cc.extend([(((h/2)*(dlp2 + dlp1)) - (lp2 - lp1)==0)])
-        # cc.extend([(((h/2)*(drp2 + drp1)) - (rp2 - rp1)==0)])
+        cc.extend([(((h/2)*(drp2 + drp1)) - (rp2 - rp1)==0)])
 
         return cc
 
@@ -496,7 +529,7 @@ class nlp(walker):
                     # (q0 == q_plus),
                     # (dq0 == dq_plus),
                     (q0 - goal[0] == 0),
-                    # (dq0 - goal[1] == 0),
+                    (dq0 - goal[1] == 0),
                     # (qf - q_plus == 0),
                     # (dqf - dq_plus == 0)
         ])
