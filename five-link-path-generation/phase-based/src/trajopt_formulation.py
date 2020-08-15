@@ -46,8 +46,31 @@ class NLP():
                 self.drpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.ddrpos.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.rforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                
+                q      = self.q     [str(j)+ '_' +str(n)]  
+                qdot   = self.qdot  [str(j)+ '_' +str(n)]
+                u      = self.u     [str(j)+ '_' +str(n)]
+                lpos   = self.lpos  [str(j)+ '_' +str(n)]
+                dlpos  = self.dlpos [str(j)+ '_' +str(n)]
+                ddlpos = self.ddlpos[str(j)+ '_' +str(n)]
+                lforce = self.lforce[str(j)+ '_' +str(n)]
+                rpos   = self.rpos  [str(j)+ '_' +str(n)]
+                drpos  = self.drpos [str(j)+ '_' +str(n)]
+                ddrpos = self.ddrpos[str(j)+ '_' +str(n)]
+                rforce = self.rforce[str(j)+ '_' +str(n)]
 
-        self.getConstraints()
+                self.model.setFullState(q=q, dq=qdot, lp0=lpos, dlp0=dlpos, ddlp0=ddlpos, 
+                                                      rp0=rpos, drp0=drpos, ddrp0=ddrpos, 
+                                                      u=u, lf10=lforce, rf10=rforce)
+
+                ###--Add Model Constraint--###
+                self.opti.subject_to(self.model.p  ['Constraint'])
+                self.opti.subject_to(self.model.dp ['Constraint'])                                                 
+                self.opti.subject_to(self.model.ddp['Constraint'])                                                 
+
+                self.opti.subject_to(self.model.dynamics['Constraint'])
+
+        # self.getConstraints()
 
     def getConstraints(self):
         for j in range(self.num_phases):
@@ -66,9 +89,16 @@ class NLP():
 
                 self.model.setFullState(q=q, dq=qdot, lp0=lpos, dlp0=dlpos, ddlp0=ddlpos, 
                                                       rp0=rpos, drp0=drpos, ddrp0=ddrpos, 
-                                                      u=u, lf10=lforce, rf10=rforce)           
+                                                      u=u, lf10=lforce, rf10=rforce)
+
+                self.opti.subject_to(self.model.p  ['Constraint'])
+                self.opti.subject_to(self.model.dp ['Constraint'])                                                 
+                self.opti.subject_to(self.model.ddp['Constraint'])                                                 
+
+                self.opti.subject_to(self.model.dynamics['Constraint'])
+                print(knot_point)
 
 # test check for sanity
 
 test_problem = NLP(knot_points_per_phase=40, steps=4, total_duration=3, model='biped')            
-print(len(test_problem.q))
+# print(len(test_problem.q))
