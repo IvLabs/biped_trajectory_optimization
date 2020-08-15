@@ -34,7 +34,6 @@ class NLP():
         
         for j in range(self.num_phases):
             
-
             for leg in self.time_phases:
                 if j%2 == 0:
                     self.time_phases[leg].update({'Contact @ ' + str(j) : self.opti.variable(1)})
@@ -77,6 +76,13 @@ class NLP():
 
                 self.opti.subject_to(self.model.dynamics['Constraint'])
 
+                if j==0 and n==0:
+                    com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
+                    self.opti.subject_to(com_x==0)
+                
+                if j==self.num_phases-1 and n==self.num_phases-1:
+                    com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
+                    self.opti.subject_to(com_x==2)
 
         self.getConstraints()
 

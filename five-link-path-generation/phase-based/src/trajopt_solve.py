@@ -1,6 +1,6 @@
 import numpy as np
 import casadi as ca
-from matplotlib.pyplot import plt
+from matplotlib import pyplot as plt
 from trajopt_formulation import NLP
 
 class TrajOptSolve():
@@ -13,9 +13,13 @@ class TrajOptSolve():
 
     def solve(self):
         sol = self.formulation.opti.solve_limited()
-        self.sol_q = 
+        self.sol_q = sol.value(self.formulation.q['3_0'])
+        self.sol_qdot = sol.value(self.formulation.qdot['3_0'])
 
     def plot(self):
-        plt.plot()
+        print(self.sol_q)
+        print(self.sol_qdot)
 
 problem = TrajOptSolve()
+problem.solve()
+problem.plot()
