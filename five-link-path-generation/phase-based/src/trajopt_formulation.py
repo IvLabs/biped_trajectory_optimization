@@ -118,8 +118,8 @@ class NLP():
                 for knot_point in self.drpos:
                     rpos  = self.rpos [knot_point]
                     drpos = self.drpos[knot_point]
-                    
-                    self.opti.subject_to(lpos[1]==self.terrain.heightMap(lpos[0]))
+
+                    self.opti.subject_to(rpos[1]==self.terrain.heightMap(rpos[0]))
                     self.opti.subject_to(drpos==0)                
             total_right += del_T        
             j += 1
