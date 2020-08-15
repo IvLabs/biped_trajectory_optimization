@@ -1,6 +1,8 @@
 import numpy as np
 import casadi as ca
+
 from five_link_model import Biped
+from terrain import Terrain
 
 class NLP():
     def __init__(self, knot_points_per_phase, steps, total_duration, model='biped'):
@@ -93,6 +95,8 @@ class NLP():
             total_left += del_T        
             j += 1
 
+        self.opti.subject_to(total_left==self.total_duration)
+
         ##--Right Leg--###
         j = 0
         for is_contact, del_T in self.time_phases['Right Leg'].items():
@@ -104,6 +108,8 @@ class NLP():
 
             total_right += del_T        
             j += 1
+
+        self.opti.subject_to(total_right==self.total_duration)
 
 
 # test check for sanity

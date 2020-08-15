@@ -158,20 +158,21 @@ class Biped():
 
 # test check for sanity
 
-test_biped = Biped()
+# test_biped = Biped()
 
-q    = ca.MX.sym(   'q', 5, 1)
-dq   = ca.MX.sym(  'dq', 5, 1)
+# q    = ca.MX.sym(   'q', 5, 1)
+# dq   = ca.MX.sym(  'dq', 5, 1)
  
-p0   = ca.MX.sym(  'p0', 2, 1)
-p5   = ca.MX.sym(  'p5', 2, 1)
-dp0  = ca.MX.sym( 'dp0', 2, 1)
-dp5  = ca.MX.sym( 'dp5', 2, 1)
-ddp0 = ca.MX.sym('ddp0', 2, 1)
-ddp5 = ca.MX.sym('ddp5', 2, 1)
+# p0   = ca.MX.sym(  'p0', 2, 1)
+# p5   = ca.MX.sym(  'p5', 2, 1)
+# dp0  = ca.MX.sym( 'dp0', 2, 1)
+# dp5  = ca.MX.sym( 'dp5', 2, 1)
+# ddp0 = ca.MX.sym('ddp0', 2, 1)
+# ddp5 = ca.MX.sym('ddp5', 2, 1)
  
-u    = ca.MX.sym(   'u', 4, 1)
-f10  = ca.MX.sym( 'f10', 2, 1)
-f50  = ca.MX.sym( 'f50', 2, 1)
+# u    = ca.MX.sym(   'u', 4, 1)
+# f10  = ca.MX.sym( 'f10', 2, 1)
+# f50  = ca.MX.sym( 'f50', 2, 1)
 
-test_biped.setFullState(q, dq, p0, dp0, ddp0, p5, dp5, ddp5, u, f10, f50)
+# test_biped.setFullState(q, dq, p0, dp0, ddp0, p5, dp5, ddp5, u, f10, f50)
+# print(test_biped)
