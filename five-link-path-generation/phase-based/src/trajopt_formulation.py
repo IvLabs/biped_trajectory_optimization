@@ -3,6 +3,7 @@ import casadi as ca
 
 from five_link_model import Biped
 from terrain import Terrain
+# import helper_functions as hf 
 
 class NLP():
     def __init__(self, knot_points_per_phase, steps, total_duration, model='biped', terrain='flat'):
@@ -93,14 +94,16 @@ class NLP():
                 for n in range(self.knot_points_per_phase):
                     lforce = self.lforce[str(j)+ '_' +str(n)]
                     self.opti.subject_to(lforce==0)
-            else:
+            else: # Contact
                 for knot_point in self.dlpos:
-                    lpos  = self.lpos [knot_point]
-                    dlpos = self.dlpos[knot_point]
-
+                    lpos  = self.lpos   [knot_point]
+                    dlpos = self.dlpos  [knot_point]
+                    lforce = self.lforce[knot_point]
                     
+                    self.opti.subject_to(ca.dot(lforce,lpos) >= 0)
                     self.opti.subject_to(lpos[1]==self.terrain.heightMap(lpos[0]))
                     self.opti.subject_to(dlpos==0)
+
             total_left += del_T        
             j += 1
 
@@ -116,9 +119,11 @@ class NLP():
                     self.opti.subject_to(rforce==0)
             else:
                 for knot_point in self.drpos:
-                    rpos  = self.rpos [knot_point]
-                    drpos = self.drpos[knot_point]
-
+                    rpos  = self.rpos   [knot_point]
+                    drpos = self.drpos  [knot_point]
+                    rforce = self.rforce[knot_point]
+                    
+                    self.opti.subject_to(ca.dot(rforce,rpos) >= 0)
                     self.opti.subject_to(rpos[1]==self.terrain.heightMap(rpos[0]))
                     self.opti.subject_to(drpos==0)                
             total_right += del_T        
