@@ -1,6 +1,6 @@
 import numpy as np
 import casadi as ca
-
+from matplotlib.pyplot import plt
 from trajopt_formulation import NLP
 
 class TrajOptSolve():
@@ -10,6 +10,12 @@ class TrajOptSolve():
         p_opts = {"expand":True}
         s_opts = {"max_iter": 3000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
-    
+
+    def solve(self):
+        sol = self.formulation.opti.solve_limited()
+        self.sol_q = 
+
+    def plot(self):
+        plt.plot()
+
 problem = TrajOptSolve()
-problem.formulation.opti.solve_limited()
