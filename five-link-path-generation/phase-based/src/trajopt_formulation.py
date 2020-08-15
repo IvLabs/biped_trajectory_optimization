@@ -85,9 +85,10 @@ class NLP():
                     self.opti.subject_to(com_x==2)
 
         self.getConstraints()
-
+        
     def getConstraints(self):
         self.setContactConstraints()
+        self.setCollocationContraints()
 
     def setContactConstraints(self):
 
@@ -141,7 +142,22 @@ class NLP():
 
         self.opti.subject_to(total_right==self.total_duration)
 
+    def setCollocationContraints(self):
+        for j in range(self.num_phases):
+            for n in range(self.knot_points_per_phase-1):
+                q1     , q2      = self.q     [str(j)+ '_' +str(n)], self.q     [str(j)+ '_' +str(n+1)]
+                qdot1  , qdot2   = self.qdot  [str(j)+ '_' +str(n)], self.qdot  [str(j)+ '_' +str(n+1)]
+                u1     , u2      = self.u     [str(j)+ '_' +str(n)], self.u     [str(j)+ '_' +str(n+1)]
+                lpos1  , lpos2   = self.lpos  [str(j)+ '_' +str(n)], self.lpos  [str(j)+ '_' +str(n+1)]
+                dlpos1 , dlpos2  = self.dlpos [str(j)+ '_' +str(n)], self.dlpos [str(j)+ '_' +str(n+1)]
+                ddlpos1, ddlpos2 = self.ddlpos[str(j)+ '_' +str(n)], self.ddlpos[str(j)+ '_' +str(n+1)]
+                lforce1, lforce2 = self.lforce[str(j)+ '_' +str(n)], self.lforce[str(j)+ '_' +str(n+1)]
+                rpos1  , rpos2   = self.rpos  [str(j)+ '_' +str(n)], self.rpos  [str(j)+ '_' +str(n+1)]
+                drpos1 , drpos2  = self.drpos [str(j)+ '_' +str(n)], self.drpos [str(j)+ '_' +str(n+1)]
+                ddrpos1, ddrpos2 = self.ddrpos[str(j)+ '_' +str(n)], self.ddrpos[str(j)+ '_' +str(n+1)]
+                rforce1, rforce2 = self.rforce[str(j)+ '_' +str(n)], self.rforce[str(j)+ '_' +str(n+1)]
 
+                # self.opti.subject_to()
 # test check for sanity
 test_problem = NLP(knot_points_per_phase=40, steps=4, total_duration=3, model='biped')            
 # print(len(test_problem.q))
