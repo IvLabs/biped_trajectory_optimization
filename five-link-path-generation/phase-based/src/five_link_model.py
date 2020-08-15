@@ -116,7 +116,7 @@ class Biped():
         lp   = self.p['Left Leg']
         lc   = self.c['Left Leg']
         ddlc = self.ddc['Left Leg']
-        f10  = self.f10
+        f10  = self.lf10
 
         f12 = self.mass[0]*(ddlc[:,0] - self.gravity_vector) - f10
         ddq[0] = -u[0] + hf.crossProduct2D(lp[:,0]-lc[:,0], f12) + hf.crossProduct2D(lp0-lc[:,0], f10)
@@ -131,7 +131,7 @@ class Biped():
         rp   = self.p['Right Leg']
         rc   = self.c['Right Leg']
         ddrc = self.ddc['Right Leg']
-        f50  = self.f50
+        f50  = self.rf10
         
         f54 = self.mass[4]*(ddrc[:,0] - self.gravity_vector) - f50
         ddq[4] = -u[3] + hf.crossProduct2D(rp[:,0]-rc[:,0],f54) + hf.crossProduct2D(rp[:,0]-rc[:,0],f50)
@@ -146,7 +146,7 @@ class Biped():
         ddtc = self.ddc['Torso']
 
         f32_34 = self.mass[2]*(ddtc - self.gravity_vector)
-        ddq[2] = u[2]+u[1] + self.crossProduct2D(lp[:,1]-tc, f32_34)
+        ddq[2] = u[2]+u[1] + hf.crossProduct2D(lp[:,1]-tc, f32_34)
 
         ddq /= self.inertia
         
