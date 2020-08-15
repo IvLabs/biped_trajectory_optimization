@@ -13,8 +13,8 @@ class TrajOptSolve():
 
     def solve(self):
         sol = self.formulation.opti.solve_limited()
-        self.sol_q = sol.value(self.formulation.q['3_0'])
-        self.sol_qdot = sol.value(self.formulation.qdot['3_0'])
+        self.sol_q = sol.value(self.formulation.q['2_2'])
+        self.sol_qdot = sol.value(self.formulation.qdot['2_2'])
 
     def plot(self):
         print(self.sol_q)
