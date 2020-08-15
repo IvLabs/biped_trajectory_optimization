@@ -63,42 +63,75 @@ class NLP():
                                                       rp0=rpos, drp0=drpos, ddrp0=ddrpos, 
                                                       u=u, lf10=lforce, rf10=rforce)
 
-                ###--Add Model Constraint--###
+                ###--Add Model Constraints--###
                 self.opti.subject_to(self.model.p  ['Constraint'])
                 self.opti.subject_to(self.model.dp ['Constraint'])                                                 
                 self.opti.subject_to(self.model.ddp['Constraint'])                                                 
 
                 self.opti.subject_to(self.model.dynamics['Constraint'])
 
-        # self.getConstraints()
+
+        self.getConstraints()
 
     def getConstraints(self):
-        for j in range(self.num_phases):
-            for knot_point in self.q:
-                q      = self.q     [knot_point]  
-                qdot   = self.qdot  [knot_point]
-                u      = self.u     [knot_point]
-                lpos   = self.lpos  [knot_point]
-                dlpos  = self.dlpos [knot_point]
-                ddlpos = self.ddlpos[knot_point]
-                lforce = self.lforce[knot_point]
-                rpos   = self.rpos  [knot_point]
-                drpos  = self.drpos [knot_point]
-                ddrpos = self.ddrpos[knot_point]
-                rforce = self.rforce[knot_point]
+        self.setContactConstraints()
 
-                self.model.setFullState(q=q, dq=qdot, lp0=lpos, dlp0=dlpos, ddlp0=ddlpos, 
-                                                      rp0=rpos, drp0=drpos, ddrp0=ddrpos, 
-                                                      u=u, lf10=lforce, rf10=rforce)
+    def setContactConstraints(self):
 
-                self.opti.subject_to(self.model.p  ['Constraint'])
-                self.opti.subject_to(self.model.dp ['Constraint'])                                                 
-                self.opti.subject_to(self.model.ddp['Constraint'])                                                 
+        total_left  = 0
+        total_right = 0
+        
+        ##--Left Leg--###
+        j = 0
+        for is_contact, del_T in self.time_phases['Left Leg'].items():
+            
+            if is_contact == 'No Contact @ ' + str(j):
+                for n in range(self.knot_points_per_phase):
+                    lforce = self.lforce[str(j)+ '_' +str(n)]
+                    self.opti.subject_to(lforce==0)
 
-                self.opti.subject_to(self.model.dynamics['Constraint'])
-                print(knot_point)
+            total_left += del_T        
+            j += 1
+
+        ##--Right Leg--###
+        j = 0
+        for is_contact, del_T in self.time_phases['Right Leg'].items():
+            
+            if is_contact == 'No Contact @ ' + str(j):
+                for n in range(self.knot_points_per_phase):
+                    rforce = self.lforce[str(j)+ '_' +str(n)]
+                    self.opti.subject_to(rforce==0)
+
+            total_right += del_T        
+            j += 1
+
 
 # test check for sanity
-
 test_problem = NLP(knot_points_per_phase=40, steps=4, total_duration=3, model='biped')            
 # print(len(test_problem.q))
+
+#    def getConstraints(self):
+        # for j in range(self.num_phases):
+        #     for knot_point in self.q:
+        #         q      = self.q     [knot_point]  
+        #         qdot   = self.qdot  [knot_point]
+        #         u      = self.u     [knot_point]
+        #         lpos   = self.lpos  [knot_point]
+        #         dlpos  = self.dlpos [knot_point]
+        #         ddlpos = self.ddlpos[knot_point]
+        #         lforce = self.lforce[knot_point]
+        #         rpos   = self.rpos  [knot_point]
+        #         drpos  = self.drpos [knot_point]
+        #         ddrpos = self.ddrpos[knot_point]
+        #         rforce = self.rforce[knot_point]
+
+        #         self.model.setFullState(q=q, dq=qdot, lp0=lpos, dlp0=dlpos, ddlp0=ddlpos, 
+        #                                               rp0=rpos, drp0=drpos, ddrp0=ddrpos, 
+        #                                               u=u, lf10=lforce, rf10=rforce)
+
+        #         self.opti.subject_to(self.model.p  ['Constraint'])
+        #         self.opti.subject_to(self.model.dp ['Constraint'])                                                 
+        #         self.opti.subject_to(self.model.ddp['Constraint'])                                                 
+
+        #         self.opti.subject_to(self.model.dynamics['Constraint'])
+        #         print(knot_point)
