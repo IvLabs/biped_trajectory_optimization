@@ -155,6 +155,9 @@ class Biped():
 
         return dynamics
 
+
+# test check for sanity
+
 test_biped = Biped()
 
 q    = ca.MX.sym(   'q', 5, 1)
