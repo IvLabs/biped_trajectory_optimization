@@ -27,27 +27,48 @@ class NLP():
         self.ddrpos = {} # i = 1
         self.rforce = {} # i = 1
         
-        for leg in self.time_phases:
-            for j in range(self.num_phases):
+        for j in range(self.num_phases):
+            for leg in self.time_phases:
                 if j%2 == 0:
                     self.time_phases[leg].update({'Contact @ ' + str(j) : self.opti.variable(1)})
                 else:
                     self.time_phases[leg].update({'No Contact @ ' + str(j): self.opti.variable(1)})
 
-                for n in range(self.knot_points_per_phase):
-                    self.q.update(     {str(j)+ '_' +str(n) : self.opti.variable(5)})
-                    self.qdot.update(  {str(j)+ '_' +str(n) : self.opti.variable(5)})
-                    self.u.update(     {str(j)+ '_' +str(n) : self.opti.variable(4)})
-                    self.lpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    self.dlpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    self.ddlpos.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    self.lforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    self.rpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    self.drpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    self.ddrpos.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    self.rforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
-                    
+            for n in range(self.knot_points_per_phase):
+                self.q.update(     {str(j)+ '_' +str(n) : self.opti.variable(5)})
+                self.qdot.update(  {str(j)+ '_' +str(n) : self.opti.variable(5)})
+                self.u.update(     {str(j)+ '_' +str(n) : self.opti.variable(4)})
+                self.lpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.dlpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.ddlpos.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.lforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.rpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.drpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.ddrpos.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.rforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+
+        self.getConstraints()
+
+    def getConstraints(self):
+        for j in range(self.num_phases):
+            for knot_point in self.q:
+                q      = self.q     [knot_point]  
+                qdot   = self.qdot  [knot_point]
+                u      = self.u     [knot_point]
+                lpos   = self.lpos  [knot_point]
+                dlpos  = self.dlpos [knot_point]
+                ddlpos = self.ddlpos[knot_point]
+                lforce = self.lforce[knot_point]
+                rpos   = self.rpos  [knot_point]
+                drpos  = self.drpos [knot_point]
+                ddrpos = self.ddrpos[knot_point]
+                rforce = self.rforce[knot_point]
+
+                self.model.setFullState(q=q, dq=qdot, lp0=lpos, dlp0=dlpos, ddlp0=ddlpos, 
+                                                      rp0=rpos, drp0=drpos, ddrp0=ddrpos, 
+                                                      u=u, lf10=lforce, rf10=rforce)           
 
 # test check for sanity
 
 test_problem = NLP(knot_points_per_phase=40, steps=4, total_duration=3, model='biped')            
+print(len(test_problem.q))
