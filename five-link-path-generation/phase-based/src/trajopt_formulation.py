@@ -157,7 +157,7 @@ class NLP():
                 ddrpos1, ddrpos2 = self.ddrpos[str(j)+ '_' +str(n)], self.ddrpos[str(j)+ '_' +str(n+1)]
                 rforce1, rforce2 = self.rforce[str(j)+ '_' +str(n)], self.rforce[str(j)+ '_' +str(n+1)]
 
-                # self.opti.subject_to()
+                self.opti.subject_to()
 # test check for sanity
 test_problem = NLP(knot_points_per_phase=40, steps=4, total_duration=3, model='biped')            
 # print(len(test_problem.q))
