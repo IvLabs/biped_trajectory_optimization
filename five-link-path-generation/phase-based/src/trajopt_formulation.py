@@ -5,7 +5,7 @@ from five_link_model import Biped
 from terrain import Terrain
 
 class NLP():
-    def __init__(self, knot_points_per_phase, steps, total_duration, model='biped'):
+    def __init__(self, knot_points_per_phase, steps, total_duration, model='biped', terrain='flat'):
         super().__init__()
         self.knot_points_per_phase = knot_points_per_phase
         self.num_phases            = steps
@@ -15,6 +15,8 @@ class NLP():
             self.model = Biped()
             self.time_phases = {'Left Leg' : {}, 'Right Leg': {}}
         
+        self.terrain = Terrain(type=terrain)
+
         self.opti   = ca.Opti()
 
         self.q      = {}
@@ -93,7 +95,11 @@ class NLP():
                     self.opti.subject_to(lforce==0)
             else:
                 for knot_point in self.dlpos:
+                    lpos  = self.lpos [knot_point]
                     dlpos = self.dlpos[knot_point]
+
+                    
+                    self.opti.subject_to(lpos[1]==self.terrain.heightMap(lpos[0]))
                     self.opti.subject_to(dlpos==0)
             total_left += del_T        
             j += 1
@@ -110,7 +116,10 @@ class NLP():
                     self.opti.subject_to(rforce==0)
             else:
                 for knot_point in self.drpos:
+                    rpos  = self.rpos [knot_point]
                     drpos = self.drpos[knot_point]
+                    
+                    self.opti.subject_to(lpos[1]==self.terrain.heightMap(lpos[0]))
                     self.opti.subject_to(drpos==0)                
             total_right += del_T        
             j += 1
