@@ -5,6 +5,7 @@ import helper_functions as hf
 class Biped():
     def __init__(self):
         super().__init__()
+        self.num_ee = 2
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
         self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
         self.inertia = self.mass * (self.length**2) /12
@@ -12,7 +13,7 @@ class Biped():
 
         self.gravity_vector = ca.MX.zeros(2)
         self.gravity_vector[1] = self.gravity
-
+        
         self.b = ca.mmax(self.length*2)
         self.a = ca.mmax(self.length)
 
