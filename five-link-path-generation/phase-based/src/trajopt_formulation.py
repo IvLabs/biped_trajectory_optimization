@@ -91,7 +91,10 @@ class NLP():
                 for n in range(self.knot_points_per_phase):
                     lforce = self.lforce[str(j)+ '_' +str(n)]
                     self.opti.subject_to(lforce==0)
-
+            else:
+                for knot_point in self.dlpos:
+                    dlpos = self.dlpos[knot_point]
+                    self.opti.subject_to(dlpos==0)
             total_left += del_T        
             j += 1
 
@@ -105,7 +108,10 @@ class NLP():
                 for n in range(self.knot_points_per_phase):
                     rforce = self.lforce[str(j)+ '_' +str(n)]
                     self.opti.subject_to(rforce==0)
-
+            else:
+                for knot_point in self.drpos:
+                    drpos = self.drpos[knot_point]
+                    self.opti.subject_to(drpos==0)                
             total_right += del_T        
             j += 1
 
