@@ -150,7 +150,7 @@ class Biped():
 
         ddq /= self.inertia
         
-        dynamics = {'ddq':ddq, 'Contraints': (f32_34 + f23_24 + f43_42 == 0)}
+        dynamics = {'ddq':ddq, 'Contraint': (f32_34 + f23_24 + f43_42 == 0)}
 
         return dynamics
 
