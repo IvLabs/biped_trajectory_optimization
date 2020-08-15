@@ -25,6 +25,7 @@ class walker():
         self.u = []
         self.left = []
         self.right = []
+        
         for i in range(self.N): 
             self.x.append(self.opti.variable(5))
             self.xdot.append(self.opti.variable(5))
