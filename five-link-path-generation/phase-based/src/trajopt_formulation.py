@@ -33,6 +33,8 @@ class NLP():
         self.rforce = {} # i = 1
         
         for j in range(self.num_phases):
+            
+
             for leg in self.time_phases:
                 if j%2 == 0:
                     self.time_phases[leg].update({'Contact @ ' + str(j) : self.opti.variable(1)})
@@ -100,6 +102,7 @@ class NLP():
                     dlpos = self.dlpos  [knot_point]
                     lforce = self.lforce[knot_point]
                     
+                    self.opti.subject_to((self.terrain.mu*lforce[0])**2 - lforce[1]**2 >= 0)
                     self.opti.subject_to(ca.dot(lforce,lpos) >= 0)
                     self.opti.subject_to(lpos[1]==self.terrain.heightMap(lpos[0]))
                     self.opti.subject_to(dlpos==0)
@@ -122,7 +125,8 @@ class NLP():
                     rpos  = self.rpos   [knot_point]
                     drpos = self.drpos  [knot_point]
                     rforce = self.rforce[knot_point]
-                    
+
+                    self.opti.subject_to((self.terrain.mu*rforce[0])**2 - rforce[1]**2 >= 0)                    
                     self.opti.subject_to(ca.dot(rforce,rpos) >= 0)
                     self.opti.subject_to(rpos[1]==self.terrain.heightMap(rpos[0]))
                     self.opti.subject_to(drpos==0)                

@@ -6,7 +6,7 @@ class Terrain():
         super().__init__()
 
         x_pos = ca.MX.sym('x_pos', 1)
-
+        self.mu = 1.
         if type == 'flat':
             self.terrain_factor = 0.
             y_pos = self.terrain_factor*x_pos
