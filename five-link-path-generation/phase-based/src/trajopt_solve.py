@@ -53,6 +53,13 @@ class TrajOptSolve():
 
             self.sol_dtq.append(sol.value(self.formulation.tqdot[keys][0]))
 
+            self.sol_lf.append(sol.value(self.formulation.lforce[keys]))
+            self.sol_rf.append(sol.value(self.formulation.rforce[keys]))
+
+            self.sol_lp.append(sol.value(self.formulation.lpos[keys]))
+            self.sol_rp.append(sol.value(self.formulation.rpos[keys]))
+
+
         self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_lq1))
         
     def plot(self):
