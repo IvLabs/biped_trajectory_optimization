@@ -154,7 +154,7 @@ class NLP1():
             
             if is_contact == 'No Contact @ ' + str(j):
                 for n in range(self.knot_points_per_phase):
-                    rforce = self.lforce[str(j)+ '_' +str(n)]
+                    rforce = self.rforce[str(j)+ '_' +str(n)]
                     self.opti.subject_to(rforce==0)
             else:
                 for knot_point in self.drpos:
@@ -256,9 +256,11 @@ class NLP2():
         self.u      = {}
 
         self.lpos   = {} # i = 0
+        self.dlpos  = {} # i = 0
         self.lforce = {} # i = 0
         
         self.rpos   = {} # i = 1
+        self.drpos  = {} # i = 1
         self.rforce = {} # i = 1
         
         self.setVariable()
@@ -286,9 +288,11 @@ class NLP2():
                 self.u.update(     {str(j)+ '_' +str(n) : self.opti.variable(4)})
 
                 self.lpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.dlpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.lforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
 
                 self.rpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
+                self.drpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.rforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
                 
                 lq     = self.lq    [str(j)+ '_' +str(n)]  
@@ -303,14 +307,17 @@ class NLP2():
                 u      = self.u     [str(j)+ '_' +str(n)]
 
                 lpos   = self.lpos  [str(j)+ '_' +str(n)]
+                dlpos  = self.dlpos [str(j)+ '_' +str(n)]
                 lforce = self.lforce[str(j)+ '_' +str(n)]
 
                 rpos   = self.rpos  [str(j)+ '_' +str(n)]
+                drpos  = self.drpos [str(j)+ '_' +str(n)]
                 rforce = self.rforce[str(j)+ '_' +str(n)]
 
                 self.model.setFullState(lq=lq, dlq=lqdot, rq=rq, drq=rqdot, 
                                         tq=tq, dtq=tqdot, 
-                                        lp0=lpos, rp0=rpos, 
+                                        lp0=lpos, dlp0=dlpos, 
+                                        rp0=rpos, drp0=drpos,
                                         u=u, lf10=lforce, rf10=rforce)
 
                 ###--Add Model Constraints--###
@@ -328,6 +335,7 @@ class NLP2():
                 #     self.opti.subject_to(com_x==2)
   
     def setConstraints(self):
+        # pass
         self.setContactConstraints()
         # self.setCollocationContraints()
 
@@ -346,8 +354,8 @@ class NLP2():
                     self.opti.subject_to(lforce==0)
             else: # Contact
                 for knot_point in self.dlpos:
-                    lpos  = self.lpos   [knot_point]
-                    dlpos = self.dlpos  [knot_point]
+                    lpos   = self.lpos  [knot_point]
+                    dlpos  = self.dlpos [knot_point]
                     lforce = self.lforce[knot_point]
                     
                     self.opti.subject_to((self.terrain.mu*lforce[0])**2 - lforce[1]**2 >= 0)
@@ -366,12 +374,12 @@ class NLP2():
             
             if is_contact == 'No Contact @ ' + str(j):
                 for n in range(self.knot_points_per_phase):
-                    rforce = self.lforce[str(j)+ '_' +str(n)]
+                    rforce = self.rforce[str(j)+ '_' +str(n)]
                     self.opti.subject_to(rforce==0)
             else:
                 for knot_point in self.drpos:
-                    rpos  = self.rpos   [knot_point]
-                    drpos = self.drpos  [knot_point]
+                    rpos   = self.rpos  [knot_point]
+                    drpos  = self.drpos [knot_point]
                     rforce = self.rforce[knot_point]
 
                     self.opti.subject_to((self.terrain.mu*rforce[0])**2 - rforce[1]**2 >= 0)                    
