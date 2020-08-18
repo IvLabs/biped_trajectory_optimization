@@ -179,7 +179,7 @@ class Biped2():
         self.b = ca.mmax(self.length*2)
         self.a = ca.mmax(self.length)
 
-    def setFullState(self, lq, dlq, rq, drq, tq, dtq, lp0, rp0, u, lf10, rf10):
+    def setFullState(self, lq, dlq, rq, drq, tq, dtq, lp0, dlp0, rp0, drp0, u, lf10, rf10):
         self.lq   = ca.reshape(  lq, 2, 1)
         self.dlq  = ca.reshape( dlq, 2, 1)
 
@@ -191,6 +191,9 @@ class Biped2():
 
         self.lp0   = ca.reshape(  lp0, 2, 1) 
         self.rp0   = ca.reshape(  rp0, 2, 1)
+
+        self.dlp0  = ca.reshape( dlp0, 2, 1) 
+        self.drp0  = ca.reshape( drp0, 2, 1)
 
         self.u    = ca.reshape(   u, 4, 1)
         self.lf10 = ca.reshape(lf10, 2, 1)
@@ -217,8 +220,8 @@ class Biped2():
         lc[0,1],lc[1,1] = self.length[1]*ca.sin(self.lq[1])/2 +  lp[0,0], self.length[1]*ca.cos(self.lq[1])/2 +  lp[1,0]
 
         ###--Derivatives--###
-        dlp  = ca.jtimes( lp, self.lq, self.dlq) 
-        dlc  = ca.jtimes( lc, self.lq, self.dlq) 
+        dlp  = ca.jtimes( lp, self.lq, self.dlq) + self.dlp0
+        dlc  = ca.jtimes( lc, self.lq, self.dlq) + self.dlp0
 
         ddlp = ca.jtimes(dlp, self.lq, self.dlq) 
         ddlc = ca.jtimes(dlc, self.lq, self.dlq) 
@@ -238,8 +241,8 @@ class Biped2():
         rc[0,1],rc[1,1] = self.length[3]*ca.sin(self.rq[1])/2 +  rp[0,0], self.length[3]*ca.cos(self.rq[1])/2 +  rp[1,0]
 
         ###--Derivatives--###
-        drp  = ca.jtimes( rp, self.rq, self.drq) 
-        drc  = ca.jtimes( rc, self.rq, self.drq) 
+        drp  = ca.jtimes( rp, self.rq, self.drq) + self.drp0
+        drc  = ca.jtimes( rc, self.rq, self.drq) + self.drp0
 
         ddrp = ca.jtimes(drp, self.rq, self.drq) 
         ddrc = ca.jtimes(drc, self.rq, self.drq) 
@@ -255,8 +258,8 @@ class Biped2():
         tc[0],tc[1] = self.length[2]*ca.sin(self.tq[0])/2 + lp[0,1], self.length[2]*ca.cos(self.tq[0])/2 + lp[1,1]
         
         ###--Derivatives--###
-        dtp  = ca.jtimes( tp, self.tq, self.dtq)
-        dtc  = ca.jtimes( tc, self.tq, self.dtq)
+        dtp  = ca.jtimes( tp, self.tq, self.dtq) + self.dlp0 
+        dtc  = ca.jtimes( tc, self.tq, self.dtq) + self.dlp0
 
         ddtp = ca.jtimes(dtp, self.tq, self.dtq)
         ddtc = ca.jtimes(dtc, self.tq, self.dtq)
@@ -340,8 +343,9 @@ tdq   = ca.MX.sym(  'dq', 1, 1)
 p0   = ca.MX.sym(  'p0', 2, 1)
 p5   = ca.MX.sym(  'p5', 2, 1)
 
-# dp0  = ca.MX.sym( 'dp0', 2, 1)
-# dp5  = ca.MX.sym( 'dp5', 2, 1)
+dp0  = ca.MX.sym( 'dp0', 2, 1)
+dp5  = ca.MX.sym( 'dp5', 2, 1)
+
 # ddp0 = ca.MX.sym('ddp0', 2, 1)
 # ddp5 = ca.MX.sym('ddp5', 2, 1)
  
@@ -350,6 +354,6 @@ f10  = ca.MX.sym( 'f10', 2, 1)
 f50  = ca.MX.sym( 'f50', 2, 1)
 
 # test_biped.setFullState(lq, ldq, rq, rdq, tq, tdq, p0, dp0, ddp0, p5, dp5, ddp5, u, f10, f50)
-test_biped.setFullState(lq, ldq, rq, rdq, tq, tdq, p0, p5, u, f10, f50)
+test_biped.setFullState(lq, ldq, rq, rdq, tq, tdq, p0, dp0, p5, dp5, u, f10, f50)
 
 print(test_biped.dynamics)
