@@ -24,26 +24,33 @@ class NLP1():
 
         self.lq     = {}
         self.lqdot  = {}
-        self.lqddot = {}
+        # self.lqddot = {}
 
         self.rq     = {}
         self.rqdot  = {}
-        self.rqddot = {}
+        # self.rqddot = {}
 
         self.tq     = {}
         self.tqdot  = {}
-        self.tqddot = {}
+        # self.tqddot = {}
 
         self.u      = {}
         self.lpos   = {} # i = 0
         self.dlpos  = {} # i = 0
         self.ddlpos = {} # i = 0
+
         self.lforce = {} # i = 0
+
         self.rpos   = {} # i = 1
         self.drpos  = {} # i = 1
         self.ddrpos = {} # i = 1
+        
         self.rforce = {} # i = 1
         
+        self.setVariables()
+        self.setConstraints()
+
+    def setVariables(self):    
         for j in range(self.num_phases):
             
             for leg in self.time_phases:
@@ -55,45 +62,49 @@ class NLP1():
             for n in range(self.knot_points_per_phase):
                 self.lq.update(    {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.lqdot.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
-                self.lqddot.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                # self.lqddot.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
                 
                 self.rq.update(    {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.rqdot.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
-                self.rqddot.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                # self.rqddot.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
 
                 self.tq.update(    {str(j)+ '_' +str(n) : self.opti.variable(1)})
                 self.tqdot.update( {str(j)+ '_' +str(n) : self.opti.variable(1)})
-                self.tqddot.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                # self.tqddot.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
                 
                 self.u.update(     {str(j)+ '_' +str(n) : self.opti.variable(4)})
                 self.lpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.dlpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.ddlpos.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                
                 self.lforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                
                 self.rpos.update(  {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.drpos.update( {str(j)+ '_' +str(n) : self.opti.variable(2)})
                 self.ddrpos.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
+                
                 self.rforce.update({str(j)+ '_' +str(n) : self.opti.variable(2)})
                 
                 lq     = self.lq    [str(j)+ '_' +str(n)]  
                 lqdot  = self.lqdot [str(j)+ '_' +str(n)]
-                lqddot = self.lqddot[str(j)+ '_' +str(n)]
+                # lqddot = self.lqddot[str(j)+ '_' +str(n)]
                 rq     = self.rq    [str(j)+ '_' +str(n)]
                 rqdot  = self.rqdot [str(j)+ '_' +str(n)]
-                rqddot = self.lqddot[str(j)+ '_' +str(n)]
+                # rqddot = self.lqddot[str(j)+ '_' +str(n)]
                 tq     = self.tq    [str(j)+ '_' +str(n)]
                 tqdot  = self.tqdot [str(j)+ '_' +str(n)]
-                tqddot = self.tqddot[str(j)+ '_' +str(n)]
+                # tqddot = self.tqddot[str(j)+ '_' +str(n)]
                 u      = self.u     [str(j)+ '_' +str(n)]
                 lpos   = self.lpos  [str(j)+ '_' +str(n)]
                 dlpos  = self.dlpos [str(j)+ '_' +str(n)]
                 ddlpos = self.ddlpos[str(j)+ '_' +str(n)]
                 lforce = self.lforce[str(j)+ '_' +str(n)]
+                
                 rpos   = self.rpos  [str(j)+ '_' +str(n)]
                 drpos  = self.drpos [str(j)+ '_' +str(n)]
                 ddrpos = self.ddrpos[str(j)+ '_' +str(n)]
                 rforce = self.rforce[str(j)+ '_' +str(n)]
-
+            
                 self.model.setFullState(lq=lq, dlq=lqdot, rq=rq, drq=rqdot, tq=tq, dtq=tqdot, 
                                                       lp0=lpos, dlp0=dlpos, ddlp0=ddlpos, 
                                                       rp0=rpos, drp0=drpos, ddrp0=ddrpos, 
@@ -105,17 +116,15 @@ class NLP1():
                 self.opti.subject_to(self.model.ddp['Constraint'])                                                 
                 self.opti.subject_to(self.model.dynamics['Constraint'])
 
-                # if j==0 and n==0:
-                #     com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
-                #     self.opti.subject_to(com_x==0)
+                if j==0 and n==0:
+                    com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
+                    self.opti.subject_to(com_x==0)
                 
-                # if j==self.num_phases-1 and n==self.num_phases-1:
-                #     com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
-                #     self.opti.subject_to(com_x==2)
-
-        self.getConstraints()
+                if j==self.num_phases-1 and n==self.num_phases-1:
+                    com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
+                    self.opti.subject_to(com_x==2)
         
-    def getConstraints(self):
+    def setConstraints(self):
         self.setContactConstraints()
         self.setCollocationContraints()
 
@@ -184,42 +193,63 @@ class NLP1():
             for n in range(self.knot_points_per_phase-1):
                 lq1    , lq2     = self.lq    [str(j)+ '_' +str(n)], self.lq    [str(j)+ '_' +str(n+1)]
                 lqdot1 , lqdot2  = self.lqdot [str(j)+ '_' +str(n)], self.lqdot [str(j)+ '_' +str(n+1)]
-                lqddot1, lqddot2 = self.lqddot[str(j)+ '_' +str(n)], self.lqddot[str(j)+ '_' +str(n+1)]
+                # lqddot1, lqddot2 = self.lqddot[str(j)+ '_' +str(n)], self.lqddot[str(j)+ '_' +str(n+1)]
                 
                 rq1    , rq2     = self.rq    [str(j)+ '_' +str(n)], self.rq    [str(j)+ '_' +str(n+1)]
                 rqdot1 , rqdot2  = self.rqdot [str(j)+ '_' +str(n)], self.rqdot [str(j)+ '_' +str(n+1)]
-                rqddot1, rqddot2 = self.rqddot[str(j)+ '_' +str(n)], self.rqddot[str(j)+ '_' +str(n+1)]
+                # rqddot1, rqddot2 = self.rqddot[str(j)+ '_' +str(n)], self.rqddot[str(j)+ '_' +str(n+1)]
                 
                 tq1    , tq2     = self.tq    [str(j)+ '_' +str(n)], self.tq    [str(j)+ '_' +str(n+1)]
                 tqdot1 , tqdot2  = self.tqdot [str(j)+ '_' +str(n)], self.tqdot [str(j)+ '_' +str(n+1)]
-                tqddot1, tqddot2 = self.tqddot[str(j)+ '_' +str(n)], self.tqddot[str(j)+ '_' +str(n+1)]
+                # tqddot1, tqddot2 = self.tqddot[str(j)+ '_' +str(n)], self.tqddot[str(j)+ '_' +str(n+1)]
                 
-                # u1     , u2      = self.u     [str(j)+ '_' +str(n)], self.u     [str(j)+ '_' +str(n+1)]
+                u1     , u2      = self.u     [str(j)+ '_' +str(n)], self.u     [str(j)+ '_' +str(n+1)]
                 lpos1  , lpos2   = self.lpos  [str(j)+ '_' +str(n)], self.lpos  [str(j)+ '_' +str(n+1)]
                 dlpos1 , dlpos2  = self.dlpos [str(j)+ '_' +str(n)], self.dlpos [str(j)+ '_' +str(n+1)]
                 ddlpos1, ddlpos2 = self.ddlpos[str(j)+ '_' +str(n)], self.ddlpos[str(j)+ '_' +str(n+1)]
-                # lforce1, lforce2 = self.lforce[str(j)+ '_' +str(n)], self.lforce[str(j)+ '_' +str(n+1)]
+                lforce1, lforce2 = self.lforce[str(j)+ '_' +str(n)], self.lforce[str(j)+ '_' +str(n+1)]
 
                 rpos1  , rpos2   = self.rpos  [str(j)+ '_' +str(n)], self.rpos  [str(j)+ '_' +str(n+1)]
                 drpos1 , drpos2  = self.drpos [str(j)+ '_' +str(n)], self.drpos [str(j)+ '_' +str(n+1)]
                 ddrpos1, ddrpos2 = self.ddrpos[str(j)+ '_' +str(n)], self.ddrpos[str(j)+ '_' +str(n+1)]
-                # rforce1, rforce2 = self.rforce[str(j)+ '_' +str(n)], self.rforce[str(j)+ '_' +str(n+1)]
+                rforce1, rforce2 = self.rforce[str(j)+ '_' +str(n)], self.rforce[str(j)+ '_' +str(n+1)]
 
+                m1 = Biped1()
+                m1.setFullState(        lq=lq1,   dlq=lqdot1,        rq=rq1, 
+                                    drq=rqdot1,       tq=tq1,    dtq=tqdot1, 
+                                     lp0=lpos1,  dlp0=dlpos1, ddlp0=ddlpos1, 
+                                     rp0=rpos1,  drp0=drpos1, ddrp0=ddrpos1, 
+                                          u=u1, lf10=lforce1,  rf10=rforce1)
+                
+                lqddot1 = m1.dynamics['Left Leg']
+                rqddot1 = m1.dynamics['Right Leg']
+                tqddot1 = m1.dynamics['Torso']
+                
+                m2 = Biped1()
+                m2.setFullState(        lq=lq2,   dlq=lqdot2,        rq=rq2, 
+                                    drq=rqdot2,       tq=tq2,    dtq=tqdot2, 
+                                     lp0=lpos2,  dlp0=dlpos2, ddlp0=ddlpos2, 
+                                     rp0=rpos2,  drp0=drpos2, ddrp0=ddrpos2, 
+                                          u=u2, lf10=lforce2,  rf10=rforce2)
+                
+                lqddot2 = m2.dynamics['Left Leg']
+                rqddot2 = m2.dynamics['Right Leg']
+                tqddot2 = m2.dynamics['Torso']
                 
                 self.opti.subject_to( (l_h/2) * (lqdot2  + lqdot1) == (lq2 - lq1) )
                 self.opti.subject_to( (l_h/2) * (lqddot2 + lqddot1) == (lqdot2 - lqdot1) )
 
-                # self.opti.subject_to( (l_h/2) * (dlpos2  + dlpos1) == (lpos2 - lpos1) )
+                self.opti.subject_to( (l_h/2) * (dlpos2  + dlpos1) == (lpos2 - lpos1) )
                 # self.opti.subject_to( (l_h/2) * (ddlpos2 + ddlpos1) == (dlpos2 - dlpos1) )
 
-                # self.opti.subject_to( (r_h/2) * (rqdot2 + rqdot1) == (rq2 - rq1) )
-                # self.opti.subject_to( (r_h/2) * (rqddot2 + rqddot1) == (rqdot2 - rqdot1) )
+                self.opti.subject_to( (r_h/2) * (rqdot2 + rqdot1) == (rq2 - rq1) )
+                self.opti.subject_to( (r_h/2) * (rqddot2 + rqddot1) == (rqdot2 - rqdot1) )
 
-                # self.opti.subject_to( (r_h/2) * (drpos2  + drpos1) == (rpos2 - rpos1) )
+                self.opti.subject_to( (r_h/2) * (drpos2  + drpos1) == (rpos2 - rpos1) )
                 # self.opti.subject_to( (r_h/2) * (ddrpos2 + ddrpos1) == (drpos2 - drpos1) )
 
-                # self.opti.subject_to( (l_h/2) * (tqdot2 + tqdot1) == (tq2 - tq1) )
-                # self.opti.subject_to( (l_h/2) * (tqddot2 + tqddot1) == (tqdot2 - tqdot1) )
+                self.opti.subject_to( (l_h/2) * (tqdot2 + tqdot1) == (tq2 - tq1) )
+                self.opti.subject_to( (l_h/2) * (tqddot2 + tqddot1) == (tqdot2 - tqdot1) )
 
 
 
