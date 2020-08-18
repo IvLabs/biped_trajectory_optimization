@@ -29,8 +29,11 @@ class TrajOptSolve():
         self.sol_tq  = [] 
         self.sol_dtq = []
 
-        self.sol_lp  = [] 
-        self.sol_rp  = []
+        self.sol_lpx  = [] 
+        self.sol_rpx  = []
+
+        self.sol_lpy  = [] 
+        self.sol_rpy  = []
 
         self.sol_lf  = [] 
         self.sol_rf  = []
@@ -53,18 +56,20 @@ class TrajOptSolve():
 
             self.sol_dtq.append(sol.value(self.formulation.tqdot[keys][0]))
 
-            self.sol_lf.append(sol.value(self.formulation.lforce[keys]))
-            self.sol_rf.append(sol.value(self.formulation.rforce[keys]))
+            self.sol_lf.append(np.linalg.norm(sol.value(self.formulation.lforce[keys])))
+            self.sol_rf.append(np.linalg.norm(sol.value(self.formulation.rforce[keys])))
 
-            self.sol_lp.append(sol.value(self.formulation.lpos[keys]))
-            self.sol_rp.append(sol.value(self.formulation.rpos[keys]))
-
-
+            self.sol_lpx.append(sol.value(self.formulation.lpos[keys][0]))
+            self.sol_rpx.append(sol.value(self.formulation.rpos[keys][0]))
+       
+            self.sol_lpy.append(sol.value(self.formulation.lpos[keys][1]))
+            self.sol_rpy.append(sol.value(self.formulation.rpos[keys][1]))
+       
         self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_lq1))
         
     def plot(self):
 
-        plt.subplot(211)
+        plt.subplot(411)
         plt.plot(self.time, self.sol_lq1, label='lq1')
         plt.plot(self.time, self.sol_lq2, label='lq2')
         plt.plot(self.time, self.sol_rq1, label='rq1')
@@ -72,12 +77,24 @@ class TrajOptSolve():
         plt.plot(self.time, self.sol_tq , label='tq ')
         plt.legend()
 
-        plt.subplot(212)
+        plt.subplot(412)
         plt.plot(self.time, self.sol_dlq1, label='dlq1')
         plt.plot(self.time, self.sol_dlq2, label='dlq2')
         plt.plot(self.time, self.sol_drq1, label='drq1')
         plt.plot(self.time, self.sol_drq2, label='drq2')
         plt.plot(self.time, self.sol_dtq , label='dtq ')
+        plt.legend()
+
+        plt.subplot(413)
+        plt.plot(self.time, self.sol_lf, label='lf')
+        plt.plot(self.time, self.sol_rf, label='rf')
+        plt.legend()
+
+        plt.subplot(414)
+        plt.plot(self.time, self.sol_lpx, label='lpx')
+        plt.plot(self.time, self.sol_lpy, label='lpy')
+        plt.plot(self.time, self.sol_rpx, label='rpx')
+        plt.plot(self.time, self.sol_rpy, label='rpy')
         plt.legend()
 
         plt.show()
