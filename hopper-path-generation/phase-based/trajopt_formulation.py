@@ -158,5 +158,5 @@ class NLP():
 
 
 # test check for sanity
-test_problem = NLP(knot_points_per_phase=40, steps=3, total_duration=2, model='hopper')            
-print((test_problem.time_phases))
+# test_problem = NLP(knot_points_per_phase=40, steps=3, total_duration=2, model='hopper')            
+# print((test_problem.time_phases))
