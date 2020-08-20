@@ -112,9 +112,9 @@ class NLP():
                     self.opti.subject_to(f10==0)
             else: 
                 for knot_point in range(self.knot_points_per_phase):
-                    p0  = self.p0 [knot_point]
-                    dp0 = self.dp0[knot_point]
-                    f10 = self.f10[knot_point]
+                    p0  = self.p0 [str(step)][knot_point]
+                    dp0 = self.dp0[str(step)][knot_point]
+                    f10 = self.f10[str(step)][knot_point]
                     
                     self.opti.subject_to((self.terrain.mu*f10[0])**2 - f10[1]**2 >= 0)
                     self.opti.subject_to(ca.dot(f10,p0) >= 0)
