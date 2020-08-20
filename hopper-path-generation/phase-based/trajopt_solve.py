@@ -9,75 +9,52 @@ from trajopt_formulation import NLP2
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NLP1(knot_points_per_phase=20, steps=2, total_duration=1, model='biped')
+        self.formulation = NLP1(knot_points_per_phase=20, steps=3, total_duration=1, model='hopper')
         p_opts = {"expand":True}
         s_opts = {"max_iter": 3000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
         sol = self.formulation.opti.solve_limited()
-        self.sol_lq1  = [] 
-        self.sol_dlq1 = []
+        self.sol_q1  = [] 
+        self.sol_dq1 = []
         
-        self.sol_lq2  = [] 
-        self.sol_dlq2 = []
+        self.sol_q2  = [] 
+        self.sol_dq2 = []
         
-        self.sol_rq1  = [] 
-        self.sol_drq1 = []
+        self.sol_q3  = [] 
+        self.sol_dq3 = []
 
-        self.sol_rq2  = [] 
-        self.sol_drq2 = []
+        self.sol_p0x  = [] 
+        self.sol_p0y  = [] 
 
-        self.sol_tq  = [] 
-        self.sol_dtq = []
-
-        self.sol_lpx  = [] 
-        self.sol_rpx  = []
-
-        self.sol_lpy  = [] 
-        self.sol_rpy  = []
-
-        self.sol_lf  = [] 
-        self.sol_rf  = []
+        self.sol_fx  = [] 
+        self.sol_fy  = []
 
         self.sol_u1 = []
         self.sol_u2 = []
-        self.sol_u3 = []
-        self.sol_u4 = []
 
+        for step in (self.formulation.num_phases):
 
-        for keys in self.formulation.lq:
-            self.sol_lq1.append(sol.value(self.formulation.lq[keys][0]))
-            self.sol_rq1.append(sol.value(self.formulation.rq[keys][0]))
+            for knot_point in range(self.formulation.knot_points_per_phase):
+                self.sol_q1.append(sol.value(self.formulation.q[str(step)][knot_point][0]))
+                self.sol_q2.append(sol.value(self.formulation.q[str(step)][knot_point][1]))
+                self.sol_q3.append(sol.value(self.formulation.q[str(step)][knot_point][2]))
 
-            self.sol_lq2.append(sol.value(self.formulation.lq[keys][1]))
-            self.sol_rq2.append(sol.value(self.formulation.rq[keys][1]))
+                self.sol_dq1.append(sol.value(self.formulation.dq[str(step)][knot_point][0]))
+                self.sol_dq2.append(sol.value(self.formulation.dq[str(step)][knot_point][1]))
+                self.sol_dq3.append(sol.value(self.formulation.dq[str(step)][knot_point][2]))
 
-            self.sol_tq.append(sol.value(self.formulation.tq[keys][0]))
+                self.sol_fx.append(sol.value(self.formulation.f10[str(step)][knot_point][0]))
+                self.sol_fy.append(sol.value(self.formulation.f10[str(step)][knot_point][1]))
 
-            self.sol_dlq1.append(sol.value(self.formulation.lqdot[keys][0]))
-            self.sol_drq1.append(sol.value(self.formulation.rqdot[keys][0]))
+                self.sol_p0x.append(sol.value(self.formulation.p10[str(step)][knot_point][0]))
+                self.sol_p0x.append(sol.value(self.formulation.p10[str(step)][knot_point][1]))
+        
+                self.sol_u1.append(sol.value(self.formulation.u[str(step)][knot_point][0]))
+                self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
 
-            self.sol_dlq2.append(sol.value(self.formulation.lqdot[keys][1]))
-            self.sol_drq2.append(sol.value(self.formulation.rqdot[keys][1]))
-
-            self.sol_dtq.append(sol.value(self.formulation.tqdot[keys][0]))
-
-            self.sol_lf.append(np.linalg.norm(sol.value(self.formulation.lforce[keys])))
-            self.sol_rf.append(np.linalg.norm(sol.value(self.formulation.rforce[keys])))
-
-            self.sol_lpx.append(sol.value(self.formulation.lpos[keys][0]))
-            self.sol_rpx.append(sol.value(self.formulation.rpos[keys][0]))
-       
-            self.sol_lpy.append(sol.value(self.formulation.lpos[keys][1]))
-            self.sol_rpy.append(sol.value(self.formulation.rpos[keys][1]))
-
-            self.sol_u1.append(sol.value(self.formulation.u[keys][0]))
-            self.sol_u2.append(sol.value(self.formulation.u[keys][1]))
-            self.sol_u3.append(sol.value(self.formulation.u[keys][2]))
-            self.sol_u4.append(sol.value(self.formulation.u[keys][3]))
-
-        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_lq1))
+        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_q1))
 
     def plot(self):
         fig = plt.figure()
@@ -200,4 +177,4 @@ class TrajOptSolve():
 problem = TrajOptSolve()
 problem.solve()
 problem.plot()
-problem.visualize()
+# problem.visualize()
