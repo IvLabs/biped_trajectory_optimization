@@ -5,11 +5,17 @@ import helper_functions as hf
 class Biped1():
     def __init__(self):
         super().__init__()
-        self.num_ee = 2
-        self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
-        self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
-        self.inertia = self.mass * (self.length**2) /12
-        self.gravity = -10
+        self.num_ee    = 2
+        self.length    = np.array([0.5,0.5,0.5,0.5,0.5])
+        self.mass      = np.array([0.25,0.25,0.25,0.25,0.25])
+        self.initial_lq = np.zeros((2,1))
+        self.final_lq   = np.zeros((2,1))
+        self.initial_rq = np.zeros((2,1))
+        self.final_rq   = np.zeros((2,1))
+        self.initial_tq = np.zeros(1)
+        self.final_tq   = np.zeros(1)
+        self.inertia   = self.mass * (self.length**2) /12
+        self.gravity   = -10
 
         self.gravity_vector = ca.MX.zeros(2)
         self.gravity_vector[1] = self.gravity
@@ -104,9 +110,9 @@ class Biped1():
         ddtc = ca.jtimes(dtc, self.tq, self.dtq) + self.ddlp0
 
         ###--Form a dictionary--###
-        p   = {'Left Leg' :   lp, 'Right Leg':   rp, 'Torso' :   tp, 'Constraint' : (  lp[:,1] ==   rp[:,1])}
-        dp  = {'Left Leg' :  dlp, 'Right Leg':  drp, 'Torso' :  dtp, 'Constraint' : ( dlp[:,1] ==  drp[:,1])}
-        ddp = {'Left Leg' : ddlp, 'Right Leg': ddrp, 'Torso' : ddtp, 'Constraint' : (ddlp[:,1] == ddrp[:,1])}
+        p   = {'Left Leg' :   lp, 'Right Leg':   rp, 'Torso' :   tp, 'Constraint' : [(  lp[:,1] ==   rp[:,1]), self.lq[0]<=self.lq[1], self.rq[0]<=self.rq[1]]}
+        dp  = {'Left Leg' :  dlp, 'Right Leg':  drp, 'Torso' :  dtp, 'Constraint' :  ( dlp[:,1] ==  drp[:,1])}
+        ddp = {'Left Leg' : ddlp, 'Right Leg': ddrp, 'Torso' : ddtp, 'Constraint' :  (ddlp[:,1] == ddrp[:,1])}
 
         c   = {'Left Leg' :   lc, 'Right Leg':   rc, 'Torso' :   tc}
         dc  = {'Left Leg' :  dlc, 'Right Leg':  drc, 'Torso' :  dtc}
@@ -168,8 +174,8 @@ class Biped2():
     def __init__(self):
         super().__init__()
         self.num_ee = 2
-        self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
-        self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
+        self.length = ca.DM([0.5,0.5,0.5,0.5,0.5])
+        self.mass = ca.DM([0.25,0.25,0.25,0.25,0.25])
         self.inertia = self.mass * (self.length**2) /12
         self.gravity = -10
 

@@ -7,6 +7,9 @@ from five_link_model import Biped2
 from terrain import Terrain
 # import helper_functions as hf 
 
+##################################
+#### Remove ddpos ###############
+#################################
 class NLP1():
     def __init__(self, knot_points_per_phase, steps, total_duration, model='biped', terrain='flat'):
         super().__init__()
@@ -16,6 +19,7 @@ class NLP1():
 
         if model == 'biped':
             self.model = Biped1()
+            
             self.time_phases = {'Left Leg' : {}, 'Right Leg': {}}
         
         self.terrain = Terrain(type=terrain)
@@ -116,17 +120,32 @@ class NLP1():
                 self.opti.subject_to(self.model.ddp['Constraint'])                                                 
                 self.opti.subject_to(self.model.dynamics['Constraint'])
 
-                if j==0 and n==0:
-                    com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
-                    self.opti.subject_to(com_x==0)
+                # if j==0 and n==0:
+                #     self.setInitialBoundary()
+                #     com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
+                #     self.opti.subject_to(com_x==0)
                 
                 if j==self.num_phases-1 and n==self.num_phases-1:
                     com_x = (self.model.c['Left Leg'][0,:]) + (self.model.c['Right Leg'][0,:]) + (self.model.c['Torso'][0,:]) 
                     self.opti.subject_to(com_x==2)
         
     def setConstraints(self):
+        self.setBoundary()
         self.setContactConstraints()
         self.setCollocationContraints()
+
+    def setBoundary(self):
+        self.opti.subject_to(self.lq[str(0)+'_'+str(0)] == self.model.initial_lq)
+        self.opti.subject_to(self.rq[str(0)+'_'+str(0)] == self.model.initial_rq)
+        self.opti.subject_to(self.tq[str(0)+'_'+str(0)] == self.model.initial_tq)
+
+        self.opti.subject_to(self.lpos[str(0)+'_'+str(0)] == np.zeros((2,1)))
+        self.opti.subject_to(self.rpos[str(0)+'_'+str(0)] == np.zeros((2,1)))
+
+        self.opti.subject_to(self.lq[str(self.num_phases-1)+'_'+str(self.knot_points_per_phase-1)] == self.model.final_lq)
+        self.opti.subject_to(self.rq[str(self.num_phases-1)+'_'+str(self.knot_points_per_phase-1)] == self.model.final_rq)
+        self.opti.subject_to(self.tq[str(self.num_phases-1)+'_'+str(self.knot_points_per_phase-1)] == self.model.final_tq)
+
 
     def setContactConstraints(self):
 
