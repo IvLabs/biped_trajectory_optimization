@@ -141,14 +141,14 @@ class NLP():
                                  p0=p0_1, dp0=dp0_1, 
                                  u=u_1, f10=f10_1)
                 
-                qddot_1 = m1.dynamics['Leg']
+                qddot_1 = m_1.dynamics['Leg']
 
                 m_2 = Hopper()
                 m_2.setFullState(q=q_2, dq=qdot_2, 
                                  p0=p0_2, dp0=dp0_2, 
                                  u=u_2, f10=f10_2)
                 
-                qddot_2 = m2.dynamics['Leg']
+                qddot_2 = m_2.dynamics['Leg']
 
                 
                 self.opti.subject_to( (h/2) * (qdot_2  + qdot_1)  == (q_2 - q_1) )
