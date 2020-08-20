@@ -98,18 +98,18 @@ class Hopper():
 
 # test check for sanity
 
-test_hopper = Hopper()
+# test_hopper = Hopper()
 
-q    = ca.MX.sym(   'q', 3, 1)
-dq   = ca.MX.sym(  'dq', 3, 1)
+# q    = ca.MX.sym(   'q', 3, 1)
+# dq   = ca.MX.sym(  'dq', 3, 1)
 
-p0   = ca.MX.sym(  'p0', 2, 1)
+# p0   = ca.MX.sym(  'p0', 2, 1)
 
-dp0  = ca.MX.sym( 'dp0', 2, 1)
+# dp0  = ca.MX.sym( 'dp0', 2, 1)
 
-u    = ca.MX.sym(   'u', 2, 1)
-f10  = ca.MX.sym( 'f10', 2, 1)
+# u    = ca.MX.sym(   'u', 2, 1)
+# f10  = ca.MX.sym( 'f10', 2, 1)
 
-test_hopper.setFullState(q, dq, p0, dp0, u, f10)
+# test_hopper.setFullState(q, dq, p0, dp0, u, f10)
 
-print(test_hopper.dynamics)
+# print(test_hopper.dynamics)
