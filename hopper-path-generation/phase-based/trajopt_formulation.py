@@ -101,7 +101,7 @@ class NLP():
 
         self.opti.subject_to(sum(self.time_phases.values()) == self.total_duration)
 
-        for step in self.num_phases:
+        for step in range(self.num_phases):
             
             # if step is even ==> Contact
             # if step is odd  ==> No Contact
