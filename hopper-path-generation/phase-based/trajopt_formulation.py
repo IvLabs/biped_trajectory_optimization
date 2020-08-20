@@ -99,7 +99,7 @@ class NLP():
 
     def setContactConstraints(self):
 
-        self.opti.subject_to(sum(self.time_phases) == self.total_duration)
+        self.opti.subject_to(sum(self.time_phases.values()) == self.total_duration)
 
         for step in self.num_phases:
             
