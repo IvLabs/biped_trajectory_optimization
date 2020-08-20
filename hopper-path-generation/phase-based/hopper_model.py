@@ -16,7 +16,7 @@ class Hopper():
         self.gravity_vector = ca.MX.zeros(2)
         self.gravity_vector[1] = self.gravity
         
-        self.b = ca.mmax(self.length*2)
+        self.b = ca.mmax(self.length*3)
         self.a = ca.mmax(self.length)
 
     def setFullState(self, q, dq, p0, dp0, u, f10):
@@ -91,7 +91,7 @@ class Hopper():
         ddq[2] = self.u[1] + hf.crossProduct2D(p[:,2]-c[:,2], f32)
 
         ddq /= self.inertia
-        
+
         dynamics = {'Leg': ddq, 'Constraint': (f32 + f23 == 0)}
 
         return dynamics
