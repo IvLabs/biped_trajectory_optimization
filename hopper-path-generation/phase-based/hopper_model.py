@@ -110,6 +110,6 @@ dp0  = ca.MX.sym( 'dp0', 2, 1)
 u    = ca.MX.sym(   'u', 2, 1)
 f10  = ca.MX.sym( 'f10', 2, 1)
 
-test_hopper.setFullState(lq, ldq, rq, rdq, tq, tdq, p0, dp0, p5, dp5, u, f10, f50)
+test_hopper.setFullState(q, dq, p0, dp0, u, f10)
 
 print(test_hopper.dynamics)
