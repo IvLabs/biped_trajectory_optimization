@@ -58,10 +58,10 @@
 ### cartpole on python using CasADi
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/cartpole.gif) ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/catpole-python/Graph.png)
 
-### [simple pendulum](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic_tasks/simple_pendulum.m)
+### [simple pendulum](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/basic-tasks/simple_pendulum.m)
 
-### [cartpole on C++](https://github.com/IvLabs/biped_trajectory_optimization/tree/master/basic_tasks/cartpole-cpp)
+### [cartpole on C++](https://github.com/IvLabs/biped_trajectory_optimization/tree/master/basic-tasks/cartpole-cpp)
 
-## [Passive Walking of 2-link bipedal system](https://github.com/IvLabs/biped_trajectory_optimization/tree/master/Passive%20Walker)
+## [Passive Walking of 2-link bipedal system](https://github.com/IvLabs/biped_trajectory_optimization/tree/master/passive-walker)
 
 
