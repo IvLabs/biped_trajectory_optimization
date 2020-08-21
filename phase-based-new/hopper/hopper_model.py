@@ -87,7 +87,8 @@ class Hopper():
         f23 = self.mass[1]*(ddc[:,1] - self.gravity_vector) - f21
         ddq[1] = self.u[0]-self.u[1] + hf.crossProduct2D(p[:,1]-c[:,1], f23) + hf.crossProduct2D(p[:,0]-c[:,1], f21)
 
-        f32 = self.mass[2]*(ddc[:,2] - self.gravity_vector)
+        # f32 = self.mass[2]*(ddc[:,2] - self.gravity_vector)
+        f32 = -f23
         ddq[2] = self.u[1] + hf.crossProduct2D(p[:,2]-c[:,2], f32)
 
         ddq /= self.inertia

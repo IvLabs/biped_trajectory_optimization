@@ -83,13 +83,13 @@ class NLP():
                 # self.opti.subject_to(self.model.dynamics['Constraint'])
                 
                 self.ceq.append(self.model.p['Constraint'])
-                self.ceq.append(self.model.dynamics['Constraint'])
+                # self.ceq.append(self.model.dynamics['Constraint'])
 
                 # self.opti.minimize(p0[1]**2)
                 # self.opti.minimize(ca.sumsqr(self.model.p['Leg'][1,:]))
 
-                # for i in range(3):
-                #     self.opti.subject_to((self.model.p['Leg'][1,i]) >= self.terrain.heightMap(self.model.p['Leg'][0,:]))                                                 
+                for i in range(3):
+                    self.opti.subject_to((self.model.p['Leg'][1,i]) >= self.terrain.heightMap(self.model.p['Leg'][0,:]))                                                 
 
                 # if j==0 and n==0:
                 #     self.setInitialBoundary()
@@ -127,13 +127,15 @@ class NLP():
             # if step is odd  ==> No Contact
             for knot_point in range(self.knot_points_per_phase):
                 
+
                 if step > 0:
                     # self.opti.subject_to(self.p0 [str(step-1)][-1] - self. p0[str(step)][0] == 0)
                     # self.opti.subject_to(self.f10[str(step-1)][-1] - self.f10[str(step)][0] == 0)
                     
-                    self.ceq.append(self.p0 [str(step-1)][-1] - self. p0[str(step)][0] == 0)
+                    self.ceq.append(self.p0 [str(step-1)][-1] - self.p0 [str(step)][0] == 0)
+                    self.ceq.append(self.dp0 [str(step-1)][-1] - self.dp0[str(step)][0] == 0)
                     self.ceq.append(self.f10[str(step-1)][-1] - self.f10[str(step)][0] == 0)
-
+                
                 if step%2 != 0:
                     f10 = self.f10[str(step)][knot_point]
                     p0  = self.p0 [str(step)][knot_point]
@@ -141,7 +143,7 @@ class NLP():
                     # self.opti.bounded(0,self.terrain.heightMap(p0[0])-p0[1],ca.inf)
                     # self.opti.subject_to(f10==0)
                     
-                    self.ceq.append(self.terrain.heightMap(p0[0])<=p0[1])   
+                    # self.ceq.append(self.terrain.heightMap(p0[0])<=p0[1])   
                     self.ceq.append(f10==0)
                 else: 
                     p0  = self.p0 [str(step)][knot_point]
@@ -153,8 +155,8 @@ class NLP():
                     # self.opti.subject_to(p0[1]==self.terrain.heightMap(p0[0]))
                     # self.opti.subject_to(dp0==0)
 
-                    self.ceq.append((self.terrain.mu*f10[0])**2 - f10[1]**2 >= 0)
-                    self.ceq.append(ca.dot(f10,p0) >= 0)
+                    self.ceq.append((self.terrain.mu*f10[0])**2 - f10[1]**2 > 0)
+                    self.ceq.append(ca.dot(f10,p0) > 0)
                     self.ceq.append(p0[1]==self.terrain.heightMap(p0[0]))
                     self.ceq.append(dp0==0)
 
@@ -196,7 +198,7 @@ class NLP():
                 self.ceq.append((h/2) * (qdot_2  + qdot_1)  == (q_2 - q_1))
                 self.ceq.append((h/2) * (qddot_2 + qddot_1) == (qdot_2 - qdot_1))
                 self.ceq.append((h/2) * (dp0_2  + dp0_1) == (p0_2 - dp0_1))
-                self.ceq.append((h)*(self.model.gravity) == (dp0_2[1] - dp0_1[1]))
+                # self.ceq.append((h)*(self.model.gravity) == (dp0_2[1] - dp0_1[1]))
 
     def setBounds(self):
         # traj=0

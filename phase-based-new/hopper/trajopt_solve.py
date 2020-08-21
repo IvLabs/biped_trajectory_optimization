@@ -135,8 +135,8 @@ class TrajOptSolve():
 
             link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
             link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
-            force_x = [p0[0], self.sol_fx[i]/math.sqrt(self.sol_fx[i]**2 + self.sol_fy[i]**2) + p0[0]]
-            force_y = [p0[1], self.sol_fy[i]/math.sqrt(self.sol_fx[i]**2 + self.sol_fy[i]**2) + p0[1]]
+            force_x = [p0[0], (self.sol_fx[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + p0[0]]
+            force_y = [p0[1], (self.sol_fy[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + p0[1]]
             
             # ax.set_xlim([-2+l_link2_x[1], 2+l_link2_x[1]])
             # ax.set_ylim([-2+l_link2_y[1], 2+l_link2_y[1]])
