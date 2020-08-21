@@ -5,16 +5,35 @@ class walker():
     def __init__(self, start_angles, start_angular_vel, start_pos):
         # set our parameters of optimization
         self.opti = ca.Opti()
-        self.terrain_factor = 0.5
-        self.terrain = ['sin','wedge'][1]
+        self.terrain_factor = 1.
+        self.terrain = ['sin','wedge','smooth_stair'][0]
         self.N = 40; self.T = .08
         # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
+        x_pos = ca.MX.sym('x_pos', 1)
+        self.step_max = 0.5; self.tauMax = 20
         if self.terrain == 'sin':
             self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
+            self.T = 0.25
+            y_pos = self.terrain_factor*ca.sin(x_pos)
+            self.f = ca.Function('terrain_sin',[x_pos],[y_pos],['x'],['y'])
+            self.df = self.f.jacobian()
         elif self.terrain == 'wedge':
-            self.T = 0.2
+            self.T = 0.25
+            y_pos = self.terrain_factor*x_pos
+            self.f = ca.Function('terrain_wedge',[x_pos],[y_pos],['x'],['y'])
+            self.df = self.f.jacobian()
             # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
-        self.step_max = 0.8; self.tauMax = 20
+        elif self.terrain == 'smooth_stair':
+            self.T = 0.25
+            k = -50
+            self.step_max = abs(k)*0.01/2
+            y_pos = x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))))
+            y_pos /= abs(k)
+            self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
+            self.df = self.f.jacobian()
+            print(self.f(x=0.), self.df(x=0.))
+            
+        
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
         self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
@@ -201,37 +220,35 @@ class walker():
         return q_plus, dq_plus
 
     def crossProduct2D(self, a, b):
-        return (a[0]*b[1]) - (b[1]*a[1])
+        return (a[0]*b[1]) - (b[0]*a[1])
 
     def heightMap(self, x):
-        if self.terrain == 'sin':
-            return self.terrain_factor*ca.sin(x)
-        if self.terrain == 'wedge':
-            return self.terrain_factor*x
+        return self.f(x=x)['y']    
     
     def heightMapNumericalSlope(self, x):
-        if self.terrain == 'sin':
-            slope = self.terrain_factor*np.cos(x)
-            return slope
-        if self.terrain == 'wedge':
-            slope = self.terrain_factor
-            return slope
+        return self.df(x=x)['jac']
 
     def heightMapNormalVector(self, x):
-        if self.terrain == 'sin':
-            tangent_vector = ca.MX.ones(2, 1)
-            tangent_vector[1, 0] = self.terrain_factor*ca.cos(x)
-            normal_vector = ca.MX.ones(2, 1)
-            normal_vector[0, 0] = -tangent_vector[1, 0]
-            normal_vector = normal_vector/ca.norm_2(normal_vector)
-            return normal_vector
-        if self.terrain == 'wedge':    
-            tangent_vector = ca.MX.ones(2, 1)
-            tangent_vector[1, 0] = self.terrain_factor
-            normal_vector = ca.MX.ones(2, 1)
-            normal_vector[0, 0] = -tangent_vector[1, 0]
-            normal_vector = normal_vector/ca.norm_2(normal_vector)
-            return normal_vector
+        # if self.terrain == 'sin':
+        #     tangent_vector = ca.MX.ones(2, 1)
+        #     tangent_vector[1, 0] = self.terrain_factor*ca.cos(x)
+        #     normal_vector = ca.MX.ones(2, 1)
+        #     normal_vector[0, 0] = -tangent_vector[1, 0]
+        #     normal_vector = normal_vector/ca.norm_2(normal_vector)
+        #     return normal_vector
+        # if self.terrain == 'wedge':    
+        #     tangent_vector = ca.MX.ones(2, 1)
+        #     tangent_vector[1, 0] = self.terrain_factor
+        #     normal_vector = ca.MX.ones(2, 1)
+        #     normal_vector[0, 0] = -tangent_vector[1, 0]
+        #     normal_vector = normal_vector/ca.norm_2(normal_vector)
+        #     return normal_vector
+        tangent_vector = ca.MX.ones(2, 1)
+        tangent_vector[1, 0] = self.df(x=x)['jac']
+        normal_vector = ca.MX.ones(2, 1)
+        normal_vector[0, 0] = -tangent_vector[1, 0]
+        normal_vector = normal_vector/ca.norm_2(normal_vector)
+        return normal_vector    
         # m_tangent = self.terrain_factor*ca.cos(x)
         # m_normal = -1/m_tangent
         # theta_normal = ca.atan(m_normal)
@@ -319,6 +336,12 @@ class nlp(walker):
                         (walker.pos[i][2, 1] > walker.heightMap(walker.pos[i][2, 0])),
                         (walker.pos[i][3, 1] > walker.heightMap(walker.pos[i][3, 0])),
                         (walker.pos[i][4, 1] > walker.heightMap(walker.pos[i][4, 0])),
+
+                        (walker.com[i][0, 1] > walker.heightMap(walker.com[i][0, 0])),
+                        (walker.com[i][1, 1] > walker.heightMap(walker.com[i][1, 0])),
+                        (walker.com[i][2, 1] > walker.heightMap(walker.com[i][2, 0])),
+                        (walker.com[i][3, 1] > walker.heightMap(walker.com[i][3, 0])),
+                        (walker.com[i][4, 1] > walker.heightMap(walker.com[i][4, 0])),
                         # (walker.pos[i][4, 1] < walker.heightMap(walker.pos[i][4, 0]) + walker.comh),
                         
                         # (walker.pos[i][3, 1] > walker.heightMap(walker.pos[i][3, 0])),
@@ -326,9 +349,9 @@ class nlp(walker):
                         # (walker.pos[i][1, 1] > walker.heightMap(walker.pos[i][1, 0])),
                         # (walker.pos[i][0, 1] > walker.heightMap(walker.pos[i][0, 0])),
 
-                        (walker.pos[i][4, 1] < walker.pos[i][3, 1]),
+                        # (walker.pos[i][4, 1] < walker.pos[i][3, 1]),
                         # (walker.pos[i][1, 1] < walker.pos[i][2, 1]),
-                        (walker.pos[i][4, 1] < walker.pos[i][0, 1]),
+                        # (walker.pos[i][4, 1] < walker.pos[i][0, 1]),
                         
                         # (walker.pos[i][4, 1] - walker.heightMap(walker.pos[i][4, 0] + walker.p0[0, 0]) > 0),
                         # (walker.pos[i][3, 1] - walker.heightMap(walker.pos[i][3, 0]) >= walker.comh),
@@ -408,7 +431,7 @@ class nlp(walker):
             dq = walker.xdot[i]
             u = walker.u[i]
             c.extend([  walker.opti.bounded(ca.MX([-walker.pi]*5),q,ca.MX([walker.pi]*5)),
-                        # walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
+                        walker.opti.bounded(ca.MX([-f*walker.pi]*5),dq,ca.MX([f*walker.pi]*5)),
                         walker.opti.bounded(ca.MX([-walker.tauMax]*4),u,ca.MX([walker.tauMax]*4)),
             ])
                     

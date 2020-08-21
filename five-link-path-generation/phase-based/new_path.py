@@ -8,177 +8,67 @@ start_angles = ca.MX.zeros(5)
 # start_angles = ca.MX([-0.6,0.7,0.0,-0.5,0.9]) # ostrich
 # start_angles = ca.MX([0.3,-0.3,0.1,-0.3,-0.45]) # human
 
-start_pos = [[0,0]]
+start_pos_left = [[0,0]]
+start_pos_right = [[0,0]]
+
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 20  
+f = 1
 for k in range(f):
-    # try:
-    model = walker(start_angles, start_angular_vel, start_pos[-1])        
+    model = walker(start_angles, start_angular_vel, start_pos_left[-1], start_pos_right[-1])  
+    # exit()
     problem = nlp(model)
-    sol = model.opti.solve()
-    # except:
-    #     pass
-    # p = [0, 0, 0, 0, 0]
+    sol = model.opti.solve_limited()
+
     for j in range(5):
-        # tq = []; tdq = []; tu = []; tpos = []
-        tempq = [];tempdq = [];tempu = [];temp = []
+        tempq = [];tempdq = [];tempu = []
         for i in range(model.N):
             tempq.append(sol.value(model.x[i][j]))    
             tempdq.append(sol.value(model.xdot[i][j]))
-            temp.append([sol.value(model.pos[i][j, 0]),sol.value(model.pos[i][j, 1])]) 
-
-            # if k != 0:
-            #     p0x, p0y = start_pos[-1][0].to_DM(), start_pos[-1][1].to_DM()
-            # else:
-            #     p0x, p0y = start_pos[-1][0], start_pos[-1][1]
-            # p[0] = np.array([tempq[-1]]),  np.cos(tempq[-1]) + np.full((2,), [p0x, p0y])
-            # p[1] = np.array([tempq[-1]]),  np.cos(tempq[-1]) + p[0]
-            # p[2] = np.array([tempq[-1]]),  np.cos(tempq[-1]) + p[1]
-            # p[3] = np.array([tempq[-1]]), -np.cos(tempq[-1]) + p[1]
-            # p[4] = np.array([tempq[-1]]), -np.cos(tempq[-1]) + p[3]
-
-            # temp.append([p[j][0],p[j][1]]) 
             if j < 4:
                 tempu.append(sol.value(model.u[i][j]))
-
-        # if k%2 != 0:
-        #     tempq = tempq[::-1] 
-        #     tempdq = tempdq[::-1]
-        #     tempu = tempu[::-1]
-        #     # temp = temp[::-1]
-        # test['q' + str(k)] = tempq
+            if j==0:
+                print(sol.value(model.l_force[i]))
+                print(sol.value(model.r_force[i]))
         if k > 0:
             q[j].extend(tempq)
             dq[j].extend(tempdq)
-            pos[j].extend(temp)
             if j < 4:    
                 u[j].extend(tempu)
-            # print(j)    
         else : 
             q.append(tempq)
             dq.append(tempdq)
-            pos.append(temp)   
             u.append(tempu)
 
-    # start = [q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]]
-    xi = sol.value(model.x_impact)
-    dxi = sol.value(model.xdot_impact)
-    start_angles, start_angular_vel = ca.MX([-xi[0],-xi[1],xi[2],-xi[3],-xi[4]]), ca.MX([dxi[0],dxi[1],dxi[2],dxi[3],dxi[4]])
-    # start_angles = ca.MX([q[4][-1],q[3][-1],q[2][-1],q[1][-1],q[0][-1]])
-    # start_angular_vel = ca.MX([dq[4][-1],dq[3][-1],dq[2][-1],dq[1][-1],dq[0][-1]])
+    for j in range(6):
+        temp = []
+        for i in range(model.N):
+            temp.append([sol.value(model.pos[i][j, 0]),sol.value(model.pos[i][j, 1])]) 
+            if i==0:
+                print('p'+str(j)+'_'+str(i)+' == '+str(temp[-1]))
+        pos.append(temp)   
     
-    # start_angles = ca.MX([q[0][-1],q[1][-1],q[2][-1],q[3][-1],q[4][-1]])
-    # start_angular_vel = ca.MX([dq[0][-1],dq[1][-1],dq[2][-1],dq[3][-1],dq[4][-1]])
-    
-    # start_angles = ca.MX(sol.value(model.x[-1]))
-    # start_angular_vel = ca.MX(sol.value(model.xdot[-1]))
+    start_angles = ca.MX([q[0][-1],q[1][-1],q[2][-1],q[3][-1],q[4][-1]])
+    start_angular_vel = ca.MX([dq[0][-1],dq[1][-1],dq[2][-1],dq[3][-1],dq[4][-1]])
+
     print('##################')
     print('step number = ', k)
     print('step time = ', model.T)
     print('##################')
 
-    start_pos.append([pos[4][-1][0], pos[4][-1][1]])
-
-#     if k > 1:
-        # print(start_pos[k][1])
+    start_pos_left.append([pos[0][-1][0], pos[0][-1][1]])
+    start_pos_right.append([pos[5][-1][0], pos[5][-1][1]])
 
 timodel = np.linspace(0.0, f*model.T, len(q[:][0]))
 
 from matplotlib import animation
 from celluloid import Camera
 
-# fig = plt.figure()
-# ax = fig.add_subplot(111, autoscale_on=False)
-
-# ax.grid()
-
-# time_template = 'time = %.1fs'
-# time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
-# p1, = ax.plot([], [], '-', color='r')
-# p2, = ax.plot([], [], '-', color='g')
-# p3, = ax.plot([], [], '-', color='b')
-# p4, = ax.plot([], [], '-', color='y')
-# p5, = ax.plot([], [], '-', color='c')
-
-# def init():
-#     p1.set_data([], [])
-#     p2.set_data([], [])
-#     p3.set_data([], [])
-#     p4.set_data([], [])
-#     p5.set_data([], [])
-#     time_text.set_text('')
-#     return p1, p2, p3, p4, p5, time_text
-
-# k = 0
-# def animate(i):
-#     global k
-#     if i%model.N == 0:
-#         k += 1
-#         # print(k)
-#     if i == len(q[:])+1:
-#         k = 0    
-#     ax.set_xlim([-2.+pos[4][i][0], 2.+pos[4][i][0]])
-#     ax.set_ylim([-1+pos[4][i][1], 3+pos[4][i][1]])
-#     p0 = start_pos[k]
-#     p1x = [       p0[0],pos[0][i][0]]
-#     p2x = [pos[0][i][0],pos[1][i][0]]
-#     p3x = [pos[1][i][0],pos[2][i][0]]
-#     p4x = [pos[1][i][0],pos[3][i][0]]
-#     p5x = [pos[3][i][0],pos[4][i][0]]
-
-#     p1y = [       p0[1],pos[0][i][1]]
-#     p2y = [pos[0][i][1],pos[1][i][1]]
-#     p3y = [pos[1][i][1],pos[2][i][1]]
-#     p4y = [pos[1][i][1],pos[3][i][1]]
-#     p5y = [pos[3][i][1],pos[4][i][1]]
-
-    
-#     p1.set_data(p1x, p1y)
-#     p2.set_data(p2x, p2y)
-#     p3.set_data(p3x, p3y)
-#     p4.set_data(p4x, p4y)
-#     p5.set_data(p5x, p5y)
-#     time_text.set_text(time_template % (i*20/len(timodel)))
-
-#     return p1, p2, p3, p4, p5, time_text
-
-# ani = animation.FuncAnimation(fig, animate, np.arange(0, len(q[:][0])), init_func=init,
-#                                interval=20, blit=True)
-
-# # ani.save('spoiler.mp4')
-# plt.show()
-
-# print(len(pos[0]))
-
-# from matplotlib.animation import FuncAnimation
-# plt.style.use('seaborn-pastel')
-
-
-# fig = plt.figure()
-# ax = plt.axes(xlim=(0, 4), ylim=(-2, 2))
-# line, = ax.plot([], [], lw=3)
-
-# def init():
-#     line.set_data([], [])
-#     return line,
-# def animate(i):
-#     x = np.linspace(0, 4, 1000)
-#     y = np.sin(2 * np.pi * (x - 0.01 * i))
-#     line.set_data(x, y)
-#     return line,
-
-# anim = FuncAnimation(fig, animate, init_func=init,
-#                                frames=200, interval=20, blit=True)
-
-
-# anim.save('sine_wave.gif', writer='imagemagick')
-
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.grid()
 camodelra = Camera(fig)
-terrain = np.linspace(-2,f,1000*f)
+terrain = np.linspace(-2,2,1000*f)
 if model.terrain == 'sin':
     terrain_y = model.terrain_factor*ca.sin(terrain)
 elif model.terrain == 'wedge':
@@ -188,32 +78,30 @@ elif model.terrain == 'smooth_stair':
     terrain_y = terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))))
     terrain_y /= abs(k)
 k = 0
-# ax.set_xlim([-1., 7]) # sin
-ax.set_xlim([-1., 5]) # wedge
-ax.set_ylim([-1, 5]) # wedge
-# ax.set_ylim([-1, 3]) # sin
+ax.set_xlim([-1., 7]) # sin
+# ax.set_xlim([-1., 5]) # wedge
+# ax.set_ylim([-1, 5]) # wedge
+ax.set_ylim([-1, 3]) # sin
 
 
-# ax.set_ylim([-3, 2]) # ss
+# ax.set_ylim([-1, 2]) # ss
 # ax.set_xlim([-1., 2]) # ss
 
 for i in range(f*model.N):
     # print(i)    
-    p1 = [pos[0][i][0],pos[0][i][1]]
-    p2 = [pos[1][i][0],pos[1][i][1]]
-    p3 = [pos[2][i][0],pos[2][i][1]]
-    p4 = [pos[3][i][0],pos[3][i][1]]
-    p5 = [pos[4][i][0],pos[4][i][1]]
+    p0 = [pos[0][i][0],pos[0][i][1]]
+    p1 = [pos[1][i][0],pos[1][i][1]]
+    p2 = [pos[2][i][0],pos[2][i][1]]
+    p3 = [pos[3][i][0],pos[3][i][1]]
+    p4 = [pos[4][i][0],pos[4][i][1]]
+    p5 = [pos[5][i][0],pos[5][i][1]]
     # plt.axes(xlim=(-2, 2), ylim=(-2, 2))
     # plt.axes(xlim=(-2., 2.), ylim=(-0.1, 3))
     # plt.plot([0,-p1[1]], [0,p1[0]],'r',[-p1[1],-p2[1]], [p1[0],p2[0]],'b',
     #     [-p2[1],-p3[1]], [p2[0],p3[0]],'c',
     #     [-p2[1],p4[1] - 2*p2[1]], [p2[0],2*p2[0]-p4[0]],'b',
     #     [p4[1] - 2*p2[1],p5[1]], [2*p2[0]-p4[0],(p5[0] - 2*p2[0])],'r')
-    if i%model.N == 0:
-            p0 = start_pos[k]
-            # print(p0)
-            k += 1 
+    
 
     # plt.plot([p0[0],p1[1]], [p0[1],p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'g',
     #         [p2[1],p3[1]], [p2[0],p3[0]],'b', [p2[1],p4[1]], [p2[0],p4[0]],'y',
@@ -223,6 +111,8 @@ for i in range(f*model.N):
     ax.plot([p0[0],p1[0]], [p0[1],p1[1]],'r',[p1[0],p2[0]], [p1[1],p2[1]],'g',
         [p2[0],p3[0]], [p2[1],p3[1]],'b', [p2[0],p4[0]], [p2[1],p4[1]],'y',
         [p4[0],p5[0]], [p4[1],p5[1]],'c')
+
+    ax.plot()
 
     # plt.plot([-2,6],[0,0],'g')  
 
