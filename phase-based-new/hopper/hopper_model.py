@@ -16,7 +16,7 @@ class Hopper():
         self.gravity_vector = ca.MX.zeros(2)
         self.gravity_vector[1] = self.gravity
         
-        self.b = ca.mmax(self.length*3)
+        self.b = ca.mmax(self.length*2)
         self.a = ca.mmax(self.length)
 
     def setFullState(self, q, dq, p0, dp0, u, f10):
