@@ -19,15 +19,15 @@ class Hopper():
         self.b = ca.mmax(self.length*2)
         self.a = ca.mmax(self.length)
 
-    def setFullState(self, q, dq, p0, dp0, u, f10):
-        self.q   = ca.reshape(  q, 3, 1)
-        self.dq  = ca.reshape( dq, 3, 1)
+    def setFullState(self, q, dq, c3, dc3, u, f32):
+        self.q   = ca.reshape( q, 3, 1)
+        self.dq  = ca.reshape(dq, 3, 1)
 
-        self.p0   = ca.reshape(  p0, 2, 1)
-        self.dp0  = ca.reshape( dp0, 2, 1)
+        self.c3  = ca.reshape( c3, 2, 1)
+        self.dc3 = ca.reshape(dc3, 2, 1)
 
-        self.u    = ca.reshape(   u, 2, 1)
-        self.f10 = ca.reshape(f10, 2, 1)
+        self.u   = ca.reshape(  u, 2, 1)
+        self.f32 = ca.reshape(f32, 2, 1)
 
         self.p, self.dp, self.ddp, self.c, self.dc, self.ddc = self.getKinematics()
         self.dynamics = self.getDynamics()
@@ -38,22 +38,23 @@ class Hopper():
         ##################
         #####--Leg--######
         ##################
-        p = ca.MX.zeros(2, 3)
+        p = ca.MX.zeros(2, 4)
         c = ca.MX.zeros(2, 3)
 
-        p0 = self.p0
+        c3 = self.c3
 
-        p[0,0],p[1,0] = self.length[0]*ca.sin(self.q[0]) + p0[0,0]  , self.length[0]*ca.cos(self.q[0]) + p0[1,0]
-        p[0,1],p[1,1] = self.length[1]*ca.sin(self.q[1]) +  p[0,0]  , self.length[1]*ca.cos(self.q[1]) +   p[1,0]
-        p[0,2],p[1,2] = self.length[2]*ca.sin(self.q[2]) +  p[0,1]  , self.length[2]*ca.cos(self.q[2]) +   p[1,1]
-        
-        c[0,0],c[1,0] = self.length[0]*ca.sin(self.q[0])/2 + p0[0,0], self.length[0]*ca.cos(self.q[0])/2 + p0[1,0]
-        c[0,1],c[1,1] = self.length[1]*ca.sin(self.q[1])/2 +  p[0,0], self.length[1]*ca.cos(self.q[1])/2 +  p[1,0]
-        c[0,2],c[1,2] = self.length[2]*ca.sin(self.q[2])/2 +  p[0,1], self.length[2]*ca.cos(self.q[2])/2 +  p[1,1]
+        p[0,3],p[1,3] =  self.length[2]*ca.sin(self.q[2])/2 + c3[0,0],  self.length[2]*ca.cos(self.q[2])/2 + c3[1,0]
+        p[0,2],p[1,2] = -self.length[2]*ca.sin(self.q[2])/2 + c3[0,0], -self.length[2]*ca.cos(self.q[2])/2 + c3[1,0]
+        p[0,1],p[1,1] = -self.length[1]*ca.sin(self.q[1]) + p[0,2]   , -self.length[1]*ca.cos(self.q[1]) + p[1,2]
+        p[0,0],p[1,0] = -self.length[0]*ca.sin(self.q[1]) + p[0,1]   , -self.length[1]*ca.cos(self.q[1]) + p[1,1]
 
+        c[0,2],c[1,2] = c3[0,0], c3[1,0]
+        c[0,1],c[1,1] = -self.length[1]*ca.sin(self.q[1])/2 + p[0,2], -self.length[1]*ca.cos(self.q[1])/2 + p[1,2]
+        c[0,0],c[1,0] = -self.length[0]*ca.sin(self.q[0])/2 + p[0,1], -self.length[0]*ca.cos(self.q[0])/2 + p[1,1]
+ 
         ###--Derivatives--###
-        dp  = ca.jtimes( p, self.q, self.dq) + self.dp0
-        dc  = ca.jtimes( c, self.q, self.dq) + self.dp0
+        dp  = ca.jtimes( p, self.q, self.dq) + self.dc3
+        dc  = ca.jtimes( c, self.q, self.dq) + self.dc3
 
         ddp = ca.jtimes(dp, self.q, self.dq) 
         ddc = ca.jtimes(dc, self.q, self.dq) 
