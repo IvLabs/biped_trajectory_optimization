@@ -19,13 +19,12 @@ class Hopper():
         self.b = ca.mmax(self.length*2)
         self.a = ca.mmax(self.length)
 
-    def setFullState(self, q, dq, c3, dc3, ddc3, u, f10):
+    def setFullState(self, q, dq, c3, dc3, u, f10):
         self.q   = ca.reshape( q, 3, 1)
         self.dq  = ca.reshape(dq, 3, 1)
 
         self.c3   = ca.reshape(  c3, 2, 1)
         self.dc3  = ca.reshape( dc3, 2, 1)
-        self.ddc3 = ca.reshape(ddc3, 2, 1)
 
         self.u   = ca.reshape(  u, 2, 1)
         self.f10 = ca.reshape(f10, 2, 1)
@@ -57,8 +56,8 @@ class Hopper():
         dp  = ca.jtimes( p, self.q, self.dq) + self.dc3
         dc  = ca.jtimes( c, self.q, self.dq) + self.dc3
 
-        ddp = ca.jtimes(dp, self.q, self.dq**2) + self.ddc3
-        ddc = ca.jtimes(dc, self.q, self.dq**2) + self.ddc3
+        ddp = ca.jtimes(dp, self.q, self.dq**2)
+        ddc = ca.jtimes(dc, self.q, self.dq**2)
 
 
         ###--Form a dictionary--###
