@@ -175,9 +175,6 @@ class NLP():
                     u_1  , u_2   = self.u  [str(step-1)][-1], self.u  [str(step)][n]
                     f10_1, f10_2 = self.f10[str(step-1)][-1], self.f10[str(step)][n]
 
-                    # A = ca.MX.zeros(6)
-                    # A[0,0] = q_2 - q_1;A[1,0] = qdot_2 - qdot_1;A[2,0] = p0_2-p0_1
-                    # A[3,0] = dp0_2-dp0_1;A[4,0] = u_2-u_1;A[5,0] = f10_2-f10_1
     
                     self.ceq.append(q_2 - q_1== 0);self.ceq.append(qdot_2 - qdot_1== 0)
                     self.ceq.append(p0_2-p0_1== 0);self.ceq.append(dp0_2-dp0_1== 0)
