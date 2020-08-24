@@ -7,7 +7,7 @@ class Hopper():
         super().__init__()
         self.num_ee    = 1
         self.length    = np.array([0.5,0.5,0.5])
-        self.mass      = np.array([0.25,0.25,0.25])
+        self.mass      = np.array([0.1,0.1,0.5])
         self.initial_q = np.zeros((3,1))
         self.final_q   = np.zeros((3,1))
         self.inertia   = self.mass * (self.length**2) /12
@@ -19,7 +19,7 @@ class Hopper():
         self.b = ca.mmax(self.length*2)
         self.a = ca.mmax(self.length)
 
-    def setFullState(self, q, dq, c3, dc3, u, f10):
+    def setFullState(self, q, dq, c3, dc3, ddc3, u, f10):
         self.q   = ca.reshape( q, 3, 1)
         self.dq  = ca.reshape(dq, 3, 1)
 
@@ -100,18 +100,18 @@ class Hopper():
 
 # test check for sanity
 
-test_hopper = Hopper()
 
-q    = ca.MX.sym(   'q', 3, 1)
-dq   = ca.MX.sym(  'dq', 3, 1)
+# test_hopper = Hopper()
+# q    = ca.MX.sym(   'q', 3, 1)
+# dq   = ca.MX.sym(  'dq', 3, 1)
 
-p0   = ca.MX.sym(  'p0', 2, 1)
+# c3   = ca.MX.sym(  'c3', 2, 1)
+# dc3  = ca.MX.sym( 'dc3', 2, 1)
+# ddc3 = ca.MX.sym('ddc3', 2, 1)
 
-dp0  = ca.MX.sym( 'dp0', 2, 1)
+# u    = ca.MX.sym(   'u', 2, 1)
+# f10  = ca.MX.sym( 'f10', 2, 1)
 
-u    = ca.MX.sym(   'u', 2, 1)
-f10  = ca.MX.sym( 'f10', 2, 1)
+# test_hopper.setFullState(q, dq, c3, dc3, ddc3, u, f10)
 
-test_hopper.setFullState(q, dq, p0, dp0, u, f10)
-
-print(test_hopper.dynamics)
+# print(test_hopper.dynamics)
