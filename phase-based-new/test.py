@@ -1,21 +1,154 @@
 import casadi as ca
 import numpy as np
+import matplotlib.pyplot as plt
 
-t = ca.MX.sym('t', 1)
+# p = ca.MX.sym('t', 2)
 opti = ca.Opti()
-a0 = opti.variable(1)
-y = a0*t
 
-f = ca.Function('f',[a0,t],[y],['t','a0'],['y'])
+delta_T = ca.MX.sym('delta_T',1)
+t = ca.MX.sym('t', 1)
+x0 = ca.MX.sym('x0', 2)
+x1 = ca.MX.sym('x1', 2)
+dx0 = ca.MX.sym('dx0', 2)
+dx1 = ca.MX.sym('dx1', 2)
 
-d = ca.MX.sym('d',5)
-atest = ca.MX.sym('atest',1)
-e = 1.
+a0 = x0
+a1 = dx0
+a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
 
-print(f(t=e,a0=atest))
-# atest = 2.
-d = np.linspace(1,2,20)
-print(f(t=d,a0=atest)['y'].shape)
+x = a0 + a1*t + a2*(t**2) + a3*(t**3)
+
+f = ca.Function('f', [delta_T, t, x0, x1, dx0, dx1], [x], ['delta_T', 't', 'x0', 'x1', 'dx0', 'dx1'], ['x'])
+
+delta_T = opti.variable(1)
+t = 0.2
+x0 = opti.variable(2)
+x1 = opti.variable(2)
+dx0 = opti.variable(2)
+dx1 = opti.variable(2)  
+
+print(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
+
+
+
+############################################################################################
+############################################################################################
+############################################################################################
+############################################################################################
+
+# # Inverse Kinnematics
+
+# q = opti.variable(3)
+# c_real = [0.5, 0.8]
+# length = ca.DM([0.5,0.5,0.5])
+
+# p0 = ca.DM([0, 0])
+# p = ca.MX.zeros(2,3)
+# p[0,0],p[1,0] = length[0]*ca.sin(q[0]) + p0[0,0]  , length[0]*ca.cos(q[0]) + p0[1,0]
+# p[0,1],p[1,1] = length[1]*ca.sin(q[1]) +  p[0,0]  , length[1]*ca.cos(q[1]) +   p[1,0]
+# p[0,2],p[1,2] = length[2]*ca.sin(q[2]) +  p[0,1]  , length[2]*ca.cos(q[2]) +   p[1,1]
+
+# c = ca.MX.zeros(2,3)
+# c[0,0],c[1,0] =  length[0]*ca.sin(q[0])/2 + p0[0,0], length[0]*ca.cos(q[0])/2 + p0[1,0]
+# c[0,1],c[1,1] =  length[1]*ca.sin(q[1])/2 +  p[0,0], length[1]*ca.cos(q[1])/2 +  p[1,0]
+# c[0,2],c[1,2] =  length[2]*ca.sin(q[2])/2 +  p[0,1], length[2]*ca.cos(q[2])/2 +  p[1,1]
+
+# opti.minimize(ca.sumsqr(c_real - c[:,2]) + ca.sumsqr(c[0,2] - p0[0,0]))
+
+# opti.subject_to(q[1]>=q[0])
+# opti.subject_to(ca.vec(p[:,1])>=0)
+
+# opti.subject_to(ca.fabs(q[2])<=np.pi/3)
+
+# opti.bounded([-np.pi/2]*3,q,[np.pi/2]*3)
+
+# p_opts = {"expand":True}
+# s_opts = {"max_iter": 100}
+# opti.solver("ipopt",p_opts,
+#                     s_opts)
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# ax.grid()
+
+# def callplot(q0):
+#     plt.cla()
+#     ax.grid()
+#     ax.set_xlim([-2, 2])
+#     ax.set_ylim([-2, 2])
+
+#     temp = ca.DM.zeros(2,3)
+
+#     temp[0,0],temp[1,0] = length[0]*ca.sin(q0[0]) + p0[0,0]  , length[0]*ca.cos(q0[0]) + p0[1,0]
+#     temp[0,1],temp[1,1] = length[1]*ca.sin(q0[1]) + temp[0,0], length[1]*ca.cos(q0[1]) + temp[1,0]
+#     temp[0,2],temp[1,2] = length[2]*ca.sin(q0[2]) + temp[0,1], length[2]*ca.cos(q0[2]) + temp[1,1]
+
+#     ax.plot([p0[0,0], temp[0,0]], [p0[1,0], temp[1,0]], 'r', lw=4)
+#     ax.plot([temp[0,0], temp[0,1]], [temp[1,0], temp[1,1]], 'g', lw=4)
+#     ax.plot([temp[0,1], temp[0,2]], [temp[1,1], temp[1,2]], 'b', lw=10)
+#     plt.draw()
+#     plt.pause(1e-5)
+
+# opti.callback(lambda x : callplot(opti.debug.value(q)))
+
+# sol = opti.solve()
+
+# print(sol.value(q))
+
+# plt.show()
+
+############################################################################################
+############################################################################################
+############################################################################################
+############################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# random things
+# y = a0*t
+
+# f = ca.Function('f',[a0,t],[y],['t','a0'],['y'])
+
+# d = ca.MX.sym('d',5)
+# atest = ca.MX.sym('atest',1)
+# e = 1.
+
+# print(f(t=e,a0=atest))
+# # atest = 2.
+# d = np.linspace(1,2,20)
+# print(f(t=d,a0=atest)['y'].shape)
 # from new_gait import *
 # from matplotlib import pyplot as plt
 # from time import sleep
