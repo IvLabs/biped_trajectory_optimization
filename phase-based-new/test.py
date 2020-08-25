@@ -7,10 +7,10 @@ opti = ca.Opti()
 
 delta_T = ca.MX.sym('delta_T',1)
 t = ca.MX.sym('t', 1)
-x0 = ca.MX.sym('x0', 2)
-x1 = ca.MX.sym('x1', 2)
-dx0 = ca.MX.sym('dx0', 2)
-dx1 = ca.MX.sym('dx1', 2)
+x0 = ca.MX.sym('x0', 1)
+x1 = ca.MX.sym('x1', 1)
+dx0 = ca.MX.sym('dx0', 1)
+dx1 = ca.MX.sym('dx1', 1)
 
 a0 = x0
 a1 = dx0
@@ -23,14 +23,52 @@ f = ca.Function('f', [delta_T, t, x0, x1, dx0, dx1], [x], ['delta_T', 't', 'x0',
 
 delta_T = opti.variable(1)
 t = 0.2
-x0 = opti.variable(2)
-x1 = opti.variable(2)
-dx0 = opti.variable(2)
-dx1 = opti.variable(2)  
+x0 = opti.variable(1)
+x1 = opti.variable(1)
+dx0 = opti.variable(1)
+dx1 = opti.variable(1)  
 
 print(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
 
 
+t = 0.0
+x0 = 2
+x1 = 1
+dx0 = 0
+dx1 = 0  
+# x0 = 2
+# x1 = 0
+# dx0 = 0
+# dx1 = 0  
+y = []
+N = 200
+T = 0.9
+delta_T = T/3
+count = 0
+while len(y) < N:
+    y.append(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
+    t += T/N
+    if t >= T/3 and count == 0:
+        # delta_T = T - delta_T
+        x0 = x1
+        x1 = 2
+        dx0 = dx0
+        dx1 = 0
+        t = 0
+        count += 1
+    if t >= T/3 and count == 1:
+        # delta_T = T - delta_T
+        x0 = x1
+        x1 = 0
+        dx0 = dx0
+        dx1 = 0
+        t = 0
+        count += 1    
+        # print(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
+    print("x0 = " + str(x0) + ", x1 = " + str(x1) + ", dx0 = " + str(dx0) + ", dx1 = " + str(dx1) + ", y = "+ str(y[-1]))
+time = ca.linspace(0, T, N)
+plt.plot(time, y)
+plt.show()
 
 ############################################################################################
 ############################################################################################
