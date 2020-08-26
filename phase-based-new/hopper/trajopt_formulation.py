@@ -9,9 +9,114 @@ from hopper_model import Hopper
 from terrain import Terrain
 # import helper_functions as hf 
 
-##################################
-#### Remove ddpos ###############
-#################################
+##############################################################
+#### so far we were building trajectories afterwards
+#### now we will construct a trajectory first then optimise it
+##############################################################
+
+
+
+class NonlinearProgram():
+    def __init__(self, dt, steps, total_duration, model='hopper', terrain='flat'):
+        super().__init__()
+        self.dt             = dt
+        self.num_phases     = steps
+        self.total_duration = total_duration
+        
+        self.num_knot_points = int(total_duration/dt)
+
+        if model == 'hopper':
+            self.model = Hopper()
+            self.time_phases = {}
+        
+        self.terrain = Terrain(type=terrain)
+
+        self.opti   = ca.Opti()
+
+        self.q     = []
+        self.q_dot = []
+        self.r     = []
+        self.r_dot = [] 
+        self.p     = [] 
+        self.f     = [] 
+
+        self.ceq = []
+        self.ciq = []
+
+        self.contructSplines()
+        self.setVariables()
+        self.setConstraints()
+        self.setBounds()
+
+    def contructSplines(self):
+        delta_T = ca.MX.sym('delta_T',1)
+        t = ca.MX.sym('t', 1)
+
+        x0  = ca.MX.sym( 'x0_1', 2)
+        x1  = ca.MX.sym( 'x1_1', 2)
+        dx0 = ca.MX.sym('dx0_1', 2)
+        dx1 = ca.MX.sym('dx1_1', 2)
+
+        a0 = x0
+        a1 = dx0
+        a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+        a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+
+        x = a0 + a1*t + a2*(t**2) + a3*(t**3)
+
+        f = ca.Function('f', [delta_T, t, x0, x1, dx0, dx1], [x], ['delta_T', 't', 'x0', 'x1', 'dx0', 'dx1'], ['x'])
+
+        y = []
+        y_super = []
+        T = ca.MX.sym('T',1)
+        delta_T = T/3
+        x0_1  = x0  
+        x1_1  = x1  
+        dx0_1 = dx0 
+        dx1_1 = dx1 
+
+        x0_2  = x1_1
+        x1_2  = ca.MX.sym( 'x1_2', 1)
+        dx0_2 = dx1_1
+        dx1_2 = ca.MX.sym('dx1_2', 1)
+
+        x0_3  = x1_2
+        x1_3  = ca.MX.sym( 'x1_3', 1)
+        dx0_3 = dx1_2
+        dx1_3 = ca.MX.sym('dx1_3', 1)
+
+        for i in range(3):
+            if i == 0:
+                x0  =  x0_1
+                x1  =  x1_1
+                dx0 = dx0_1
+                dx1 = dx1_1
+                y.append(f(delta_T, t, x0, x1, dx0, dx1))
+            elif i == 1:
+                x0  =  x0_2 
+                x1  =  x1_2 
+                dx0 = dx0_2
+                dx1 = dx1_2
+                y.append(f(delta_T, t, x0, x1, dx0, dx1))
+            else:
+                x0  =  x0_3 
+                x1  =  x1_3 
+                dx0 = dx0_3
+                dx1 = dx1_3
+                y.append(f(delta_T, t, x0, x1, dx0, dx1))
+
+        Y = ca.vcat(y)
+        self.phase_spline = ca.Function("F", [x0_1, x1_1, dx0_1, dx1_1,
+                                              x1_2, dx1_2, x1_3, dx1_3, T, t], [Y])
+
+    # def setVariables(self):
+    #     for knot_point in range(self.num_knot_points):
+
+
+
+
+
+
 
 class NLP():
     def __init__(self, knot_points_per_phase, steps, total_duration, model='hopper', terrain='flat'):
@@ -250,6 +355,7 @@ class NLP():
                 
 
         # self.opti.minimize(traj)
+
 # test check for sanity
 
 # test_problem = NLP(knot_points_per_phase=40, steps=3, total_duration=2, model='hopper')            
