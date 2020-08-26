@@ -15,8 +15,6 @@ from terrain import Terrain
 #### Also you parametrize feet and force with a spline, and calculate values at knot points
 ##############################################################
 
-
-
 class NonlinearProgram():
     def __init__(self, dt, steps, total_duration, model='hopper', terrain='flat'):
         super().__init__()
@@ -44,12 +42,12 @@ class NonlinearProgram():
         self.ceq = []
         self.ciq = []
 
-        self.contructSplines()
+        self.contructPhaseSpline()
         self.setVariables()
         # self.setConstraints()
         # self.setBounds()
 
-    def contructSplines(self):
+    def contructPhaseSpline(self):
         delta_T = ca.MX.sym('delta_T',1)
         t = ca.MX.sym('t', 1)
 
@@ -65,7 +63,7 @@ class NonlinearProgram():
 
         x = a0 + a1*t + a2*(t**2) + a3*(t**3)
 
-        f = ca.Function('f', [delta_T, t, x0, x1, dx0, dx1], [x], ['delta_T', 't', 'x0', 'x1', 'dx0', 'dx1'], ['x'])
+        f = ca.Function('f', [delta_T, t, x0, dx0, x1, dx1], [x])
 
         y = []
         y_super = []
@@ -77,14 +75,14 @@ class NonlinearProgram():
         dx1_1 = dx1 
 
         x0_2  = x1_1
-        x1_2  = ca.MX.sym( 'x1_2', 1)
+        x1_2  = ca.MX.sym( 'x1_2', 2)
         dx0_2 = dx1_1
-        dx1_2 = ca.MX.sym('dx1_2', 1)
+        dx1_2 = ca.MX.sym('dx1_2', 2)
 
         x0_3  = x1_2
-        x1_3  = ca.MX.sym( 'x1_3', 1)
+        x1_3  = ca.MX.sym( 'x1_3', 2)
         dx0_3 = dx1_2
-        dx1_3 = ca.MX.sym('dx1_3', 1)
+        dx1_3 = ca.MX.sym('dx1_3', 2)
 
         for i in range(3):
             if i == 0:
@@ -92,23 +90,23 @@ class NonlinearProgram():
                 x1  =  x1_1
                 dx0 = dx0_1
                 dx1 = dx1_1
-                y.append(f(delta_T, t, x0, x1, dx0, dx1))
+                y.append(f(delta_T, t, x0, dx0, x1, dx1))
             elif i == 1:
                 x0  =  x0_2 
                 x1  =  x1_2 
                 dx0 = dx0_2
                 dx1 = dx1_2
-                y.append(f(delta_T, t, x0, x1, dx0, dx1))
+                y.append(f(delta_T, t, x0, dx0, x1, dx1))
             else:
                 x0  =  x0_3 
                 x1  =  x1_3 
                 dx0 = dx0_3
                 dx1 = dx1_3
-                y.append(f(delta_T, t, x0, x1, dx0, dx1))
+                y.append(f(delta_T, t, x0, dx0, x1, dx1))
 
         Y = ca.vcat(y)
-        self.phase_spline = ca.Function("F", [x0_1, x1_1, dx0_1, dx1_1,
-                                              x1_2, dx1_2, x1_3, dx1_3, T, t], [Y])
+        self.phase_spline = ca.Function("F", [T, t, x0_1, dx0_1, x1_1, dx1_1,
+                                              x1_2, dx1_2, x1_3, dx1_3], [Y])
 
     def setVariables(self):
         # parametrize full spline for feet and force
@@ -120,15 +118,38 @@ class NonlinearProgram():
 
             t = ca.MX.sym('t', 1)
 
-            p0_1 ,  f0_1 = self.opti.variable(2), self.opti.variable(2) #  'p0_1',  'f0_1'
-            p1_1 ,  f1_1 = self.opti.variable(2), self.opti.variable(2) #  'p1_1',  'f1_1'
-            dp0_1, df0_1 = self.opti.variable(2), self.opti.variable(2) # 'dp0_1', 'df0_1'
-            dp1_1, df1_1 = self.opti.variable(2), self.opti.variable(2) # 'dp1_1', 'df1_1'
+            p1_2 ,  f1_2 = self.opti.variable(2), self.opti.variable(2) # ' p1_2 ', ' f1_2 '
+            dp1_2, df1_2 = self.opti.variable(2), self.opti.variable(2) # 'dp1_2', 'df1_2'
+
+            p1_3 ,  f1_3 = self.opti.variable(2), self.opti.variable(2) # ' p1_3 ', 'f1_3 '
+            dp1_3, df1_3 = self.opti.variable(2), self.opti.variable(2) # 'dp1_3', 'df1_3'
+
+            start_p0_1 , start_f0_1  =  p1_2 , f1_2
+            start_p1_1 , start_f1_1  =  p1_3 , f1_3
+            start_dp0_1, start_df0_1 = dp1_2, df1_2
+            start_dp1_1, start_df1_1 = dp1_3, df1_3
+
+            if phase == 0:
+                p0_1 ,  f0_1 = self.opti.variable(2), self.opti.variable(2) #  'p0_1',  'f0_1'
+                p1_1 ,  f1_1 = self.opti.variable(2), self.opti.variable(2) #  'p1_1',  'f1_1'
+                dp0_1, df0_1 = self.opti.variable(2), self.opti.variable(2) # 'dp0_1', 'df0_1'
+                dp1_1, df1_1 = self.opti.variable(2), self.opti.variable(2) # 'dp1_1', 'df1_1'
+            else:
+                p0_1 ,  f0_1 = start_p0_1 , start_f0_1 
+                p1_1 ,  f1_1 = start_p1_1 , start_f1_1 
+                dp0_1, df0_1 = start_dp0_1, start_df0_1
+                dp1_1, df1_1 = start_dp1_1, start_df1_1
+
+            self.p.append(self.phase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
+                                                        p1_2, dp1_2, p1_3, dp1_3))
+            self.f.append(self.phase_spline(delta_T, t, f0_1, df0_1, f1_1, df1_1,
+                                                        f1_2, df1_2, f1_3, df1_3))                                                  
 
 # test check for sanity
 
 test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
-print((test_problem.time_phases))
+print((test_problem.p))
+print((test_problem.f))
 
 
 
