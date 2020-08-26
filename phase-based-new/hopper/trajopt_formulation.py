@@ -15,15 +15,16 @@ from terrain import Terrain
 #### Also you parametrize feet and force with a spline, and calculate values at knot points
 ##############################################################
 
+
 class NonlinearProgram():
     def __init__(self, dt, steps, total_duration, model='hopper', terrain='flat'):
         super().__init__()
         self.dt             = dt
         self.num_phases     = steps
         self.total_duration = total_duration
-        
-        self.num_knot_points = int(total_duration/dt)
-
+                
+        self.phase_knot_points = int(total_duration/dt)
+        print(self.phase_knot_points)
         if model == 'hopper':
             self.model = Hopper()
             self.time_phases = []
@@ -66,8 +67,9 @@ class NonlinearProgram():
 
         f = ca.Function('f', [delta_T, t, x0, dx0, x1, dx1], [x])
 
-        y = []
-        y_super = []
+        y1 = []
+        y2 = []
+        y3 = []
         T = ca.MX.sym('T',1)
         delta_T = T/3
         x0_1  = x0  
@@ -91,34 +93,34 @@ class NonlinearProgram():
                 x1  =  x1_1
                 dx0 = dx0_1
                 dx1 = dx1_1
-                y.append(f(delta_T, t, x0, dx0, x1, dx1))
+                y1 = (f(delta_T, t, x0, dx0, x1, dx1))
             elif i == 1:
                 x0  =  x0_2 
                 x1  =  x1_2 
                 dx0 = dx0_2
                 dx1 = dx1_2
-                y.append(f(delta_T, t, x0, dx0, x1, dx1))
+                y2 = (f(delta_T, t, x0, dx0, x1, dx1))
             else:
                 x0  =  x0_3 
                 x1  =  x1_3 
                 dx0 = dx0_3
                 dx1 = dx1_3
-                y.append(f(delta_T, t, x0, dx0, x1, dx1))
+                y3 = (f(delta_T, t, x0, dx0, x1, dx1))
 
-        Y = ca.vcat(y)
         self.phase_spline = ca.Function("F", [T, t, x0_1, dx0_1, x1_1, dx1_1,
-                                              x1_2, dx1_2, x1_3, dx1_3], [Y])
+                                              x1_2, dx1_2, x1_3, dx1_3], [y1, y2, y3])
         self.dphase_spline = self.phase_spline.jacobian()
 
     def setVariables(self):
-        # parametrize full spline for feet and force
+        N = self.phase_knot_points
         for phase in range(self.num_phases):
+            # parametrize phase spline for feet and force
             self.time_phases.append(self.opti.variable(1))
             delta_T = self.time_phases[-1]
 
             self.ciq.append(delta_T>=0)
 
-            t = ca.MX.sym('t', 1)
+            t = 0
 
             p1_2 ,  f1_2 = self.opti.variable(2), self.opti.variable(2) # ' p1_2 ', ' f1_2 '
             dp1_2, df1_2 = self.opti.variable(2), self.opti.variable(2) # 'dp1_2', 'df1_2'
@@ -141,21 +143,50 @@ class NonlinearProgram():
                 p1_1 ,  f1_1 = start_p1_1 , start_f1_1 
                 dp0_1, df0_1 = start_dp0_1, start_df0_1
                 dp1_1, df1_1 = start_dp1_1, start_df1_1
+        
+            # set rest of the optimization variables now
+            for knot_point in range(self.phase_knot_points):
+                self.r.append(self.opti.variable(2))
+                self.r_dot.append(self.opti.variable(2))
 
-            self.p.append(self.phase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
-                                                        p1_2, dp1_2, p1_3, dp1_3))
-            self.dp.append(self.dphase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
-                                                          p1_2, dp1_2, p1_3, dp1_3, True)[:,-1])                                            
-            self.f.append(self.phase_spline(delta_T, t, f0_1, df0_1, f1_1, df1_1,
-                                                        f1_2, df1_2, f1_3, df1_3))                                                  
+                self.q.append(self.opti.variable(1))
+                self.q_dot.append(self.opti.variable(1))
 
-    # def setContactConstraints(self):        
+                self.p.append(self.phase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
+                                                            p1_2, dp1_2, p1_3, dp1_3))
+                self.dp.append(self.dphase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
+                                                            p1_2, dp1_2, p1_3, dp1_3, 0,0,0)[:,-1])                                            
+                self.f.append(self.phase_spline(delta_T, t, f0_1, df0_1, f1_1, df1_1,
+                                                            f1_2, df1_2, f1_3, df1_3))                                                  
+
+
+                r     = self.r[-1]
+                r_dot = self.r_dot[-1]
+                q     = self.q[-1]
+                q_dot = self.q_dot[-1]
+
+                if knot_point <= (N-1)/3:
+                    pe  = self.p [-1][0]
+                    dpe = self.dp[-1][0]
+                    f   = self.f [-1][0]
+                elif (N-1)/3 < knot_point <= 2*(N-1)/3:
+                    pe  = self.p [-1][1]
+                    dpe = self.dp[-1][1]
+                    f   = self.f [-1][1]
+                else:
+                    pe  = self.p [-1][2]
+                    dpe = self.dp[-1][2]
+                    f   = self.f [-1][2] 
+
+                self.model.setState(r, r_dot, q, q_dot, pe, f)
+                t += self.dt
+                # self.model.kinematic_model()
 
 # test check for sanity
 
 test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
-# print((test_problem.p))
-# print((test_problem.f))
+print(len(test_problem.p))
+print(len(test_problem.q))
 
 
 
