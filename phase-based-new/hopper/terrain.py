@@ -48,6 +48,6 @@ class Terrain():
 
 # test check for sanity
 
-test_terrain = Terrain(type='stairs')
+# test_terrain = Terrain(type='stairs')
 
-print(test_terrain.heightMap(2), test_terrain.heightMapNormalVector(2))
+# print(test_terrain.heightMap(2), test_terrain.heightMapNormalVector(2))
