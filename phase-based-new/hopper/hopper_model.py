@@ -76,15 +76,15 @@ class Hopper():
 
 # test check for sanity
 
-test_hopper = Hopper()
-q     = ca.MX.sym('q    ', 1, 1)
-q_dot = ca.MX.sym('q_dot', 1, 1)
-r     = ca.MX.sym('r    ', 2, 1)
-r_dot = ca.MX.sym('r_dot', 2, 1)
-pe    = ca.MX.sym('pe   ', 2, 1)
-f     = ca.MX.sym('f    ', 2, 1)
+# test_hopper = Hopper()
+# q     = ca.MX.sym('q    ', 1, 1)
+# q_dot = ca.MX.sym('q_dot', 1, 1)
+# r     = ca.MX.sym('r    ', 2, 1)
+# r_dot = ca.MX.sym('r_dot', 2, 1)
+# pe    = ca.MX.sym('pe   ', 2, 1)
+# f     = ca.MX.sym('f    ', 2, 1)
 
-test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+# test_hopper.setState(r, r_dot, q, q_dot, pe, f)
 
 # print(test_hopper.centeroidal_dynamics(r, r_dot, q, q_dot, pe, f))
 
