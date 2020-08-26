@@ -113,11 +113,6 @@ class NonlinearProgram():
     #     for knot_point in range(self.num_knot_points):
 
 
-
-
-
-
-
 class NLP():
     def __init__(self, knot_points_per_phase, steps, total_duration, model='hopper', terrain='flat'):
         super().__init__()
