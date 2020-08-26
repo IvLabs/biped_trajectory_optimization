@@ -19,8 +19,7 @@ class Hopper():
         self.gravity_vector = ca.MX.zeros(2)
         self.gravity_vector[1] = self.gravity
         
-        self.b = ca.mmax(self.length*3)
-        self.a = ca.mmax(self.length)
+        self.b = ca.DM([ca.mmax(self.length*2),ca.mmax(self.length)])
 
     def setState(self, r, r_dot, q, q_dot, pe, f):
         self.q     = ca.reshape(q    , 1, 1)
@@ -31,11 +30,32 @@ class Hopper():
         self.f     = ca.reshape(f    , 2, 1)
 
         self.r_ddot, self.q_ddot = self.getCenteroidalDynamics()
+        self.kinematic_constraint = self.getKinematicsConstraint()
 
-        self.centeroidal_dynamics = ca.Function('CD', [r, r_dot, q, q_dot, pe, f], 
-                                                      [self.r_ddot, self.q_ddot], 
-                                                      ['r','r_dot','q','q_dot','pe','f'],
-                                                      ['r_ddot','q_ddot'])
+        self.kinematic_model = ca.Function('Box', [r, r_dot, q, q_dot, pe], 
+                                                  [self.kinematic_constraint],
+                                                  ['r','r_dot','q','q_dot','pe'],
+                                                  ['constraint'])
+
+        self.dynamics_model = ca.Function('CD', [r, r_dot, q, q_dot, pe, f], 
+                                                [self.r_ddot, self.q_ddot], 
+                                                ['r','r_dot','q','q_dot','pe','f'],
+                                                ['r_ddot','q_ddot'])
+
+    def getKinematicsConstraint(self):
+        q     = self.q    
+        q_dot = self.q_dot
+        r     = self.r    
+        r_dot = self.r_dot
+        pe    = self.pe
+
+        self.R_q = ca.MX.zeros(2,2)
+        self.R_q[0,0],self.R_q[0,1] = ca.cos(q), -ca.sin(q)
+        self.R_q[1,0],self.R_q[1,1] = ca.sin(q),  ca.cos(q)
+
+        self.p_n = (self.R_q @ r) - 5*np.sum(self.length)*ca.DM.ones(2)/2 
+        
+        return ca.fabs(self.R_q @ (r - pe) - self.p_n) <= self.b
 
     def getCenteroidalDynamics(self):
         q     = self.q    
@@ -56,15 +76,15 @@ class Hopper():
 
 # test check for sanity
 
-# test_hopper = Hopper()
-# q     = ca.MX.sym('q    ', 1, 1)
-# q_dot = ca.MX.sym('q_dot', 1, 1)
-# r     = ca.MX.sym('r    ', 2, 1)
-# r_dot = ca.MX.sym('r_dot', 2, 1)
-# pe    = ca.MX.sym('pe   ', 2, 1)
-# f     = ca.MX.sym('f    ', 2, 1)
+test_hopper = Hopper()
+q     = ca.MX.sym('q    ', 1, 1)
+q_dot = ca.MX.sym('q_dot', 1, 1)
+r     = ca.MX.sym('r    ', 2, 1)
+r_dot = ca.MX.sym('r_dot', 2, 1)
+pe    = ca.MX.sym('pe   ', 2, 1)
+f     = ca.MX.sym('f    ', 2, 1)
 
-# test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+test_hopper.setState(r, r_dot, q, q_dot, pe, f)
 
 # print(test_hopper.centeroidal_dynamics(r, r_dot, q, q_dot, pe, f))
 

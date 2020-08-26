@@ -23,9 +23,12 @@ class Terrain():
             self.df = self.f.jacobian()
         elif type == 'stairs': # smooth
             self.terrain_factor = 50
-            y_pos = x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))))
-            y_pos /= abs(self.terrain_factor)
-            self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
+            self.order = 4
+            f = ca.Function('smooth_stair', [x_pos],[(self.terrain_factor*x_pos - ca.sin(self.terrain_factor*x_pos))/self.terrain_factor], ['x'],['y'])
+            # y_pos = x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))))
+            # y_pos /= abs(self.terrain_factor)
+            # self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
+            self.f = f.fold(self.order)
             self.df = self.f.jacobian()
 
     def heightMap(self, x):
@@ -45,6 +48,6 @@ class Terrain():
 
 # test check for sanity
 
-# test_terrain = Terrain(type='stairs')
+test_terrain = Terrain(type='stairs')
 
-# print(test_terrain.heightMap(2), test_terrain.heightMapNormalVector(2))
+print(test_terrain.heightMap(2), test_terrain.heightMapNormalVector(2))
