@@ -106,6 +106,8 @@ for i in range(3):
 Y = ca.vcat(y)
 F = ca.Function("F", [x0_1, x1_1, dx0_1, dx1_1,
                     x1_2, dx1_2, x1_3, dx1_3, T, t], [Y])
+dphase_spline = F.jacobian()
+print(dphase_spline()['jac'][:,-1])
 
 T = 0.5
 del_t = T/3
@@ -114,6 +116,15 @@ N = 10
 x = ca.linspace(0, T, N)
 # x = x.reshape(N, 1) 
 y_plot = []
+
+print(dphase_spline(x0_1, x1_1, dx0_1, dx1_1,
+                    x1_2, dx1_2, x1_3, dx1_3, T, x[2], True))
+a0 = x0_1
+a1 = dx0_1
+a2 = -(del_t**(-2))*(3*(x0_1 - x1_1) + del_t*(2*dx0_1 + dx1_1))
+a3 = (del_t**(-3))*(2*(x0_1 - x1_1) + del_t*(dx0_1 + dx1_1))
+
+print(a1 + 2*a2*x[2] + 3*a3*(x[2]**2))
 # for j in range(2):
 for i in range(x.numel()):
     if i <= (N-1)/3:

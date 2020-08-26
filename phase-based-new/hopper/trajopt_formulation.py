@@ -36,7 +36,8 @@ class NonlinearProgram():
         self.q_dot = []
         self.r     = []
         self.r_dot = [] 
-        self.p     = [] 
+        self.p     = []
+        self.dp    = [] 
         self.f     = [] 
 
         self.ceq = []
@@ -107,7 +108,8 @@ class NonlinearProgram():
         Y = ca.vcat(y)
         self.phase_spline = ca.Function("F", [T, t, x0_1, dx0_1, x1_1, dx1_1,
                                               x1_2, dx1_2, x1_3, dx1_3], [Y])
-
+        self.dphase_spline = self.phase_spline.jacobian()
+        print(self.dphase_spline)
     def setVariables(self):
         # parametrize full spline for feet and force
         for phase in range(self.num_phases):
@@ -142,14 +144,17 @@ class NonlinearProgram():
 
             self.p.append(self.phase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
                                                         p1_2, dp1_2, p1_3, dp1_3))
+                                                        
             self.f.append(self.phase_spline(delta_T, t, f0_1, df0_1, f1_1, df1_1,
                                                         f1_2, df1_2, f1_3, df1_3))                                                  
+
+    # def setContactConstraints(self):        
 
 # test check for sanity
 
 test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
-print((test_problem.p))
-print((test_problem.f))
+# print((test_problem.p))
+# print((test_problem.f))
 
 
 
