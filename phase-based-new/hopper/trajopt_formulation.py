@@ -219,6 +219,8 @@ class NonlinearProgram():
 
                 t += self.dt
 
+        self.ceq.append(sum(self.time_phases) == self.total_duration)
+
     def printInfo(self):
         print('####################################')
         print('####################################')
@@ -244,8 +246,12 @@ class NonlinearProgram():
         print('number of    dpe(t) variables = ', len(self.dp),    ', is symbolic = ', self.dp[0].is_symbolic())
         print('number of      f(t) variables = ', len(self.f),     ', is symbolic = ', self.f[0].is_symbolic())
         
-        print('\n------------------------------------')
+        print('\n---------Constraints----------')
 
+        print('number of equality constraints   = ', len(self.ceq))
+        print('number of inequality constraints = ', len(self.ciq))
+
+        print('\nFinished the Non-linear Program')
 
         print('####################################')
         print('####################################')
