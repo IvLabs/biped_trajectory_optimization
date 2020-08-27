@@ -14,8 +14,6 @@ from terrain import Terrain
 #### now we will construct a trajectory first then optimise it
 #### Also you parametrize feet and force with a spline, and calculate values at knot points
 ##############################################################
-
-
 class NonlinearProgram():
     def __init__(self, dt, steps, total_duration, model='hopper', terrain='flat'):
         super().__init__()
@@ -237,6 +235,118 @@ class NonlinearProgram():
 
         return [p1,p2,p3], [dp1,dp2,dp3], [f1,f2,f3]
     
+    def setBaseSpline(self, delta_T, t, x0_1, x1_1, x1_2, x1_3, dx0_1, dx1_1, dx1_2, dx1_3):
+        r0_1 ,  q0_1 =  x0_1 
+        r1_1 ,  q1_1 =  x1_1 
+        r1_2 ,  q1_2 =  x1_2 
+        r1_3 ,  q1_3 =  x1_3 
+        dr0_1, dq0_1 = dx0_1
+        dr1_1, dq1_1 = dx1_1
+        dr1_2, dq1_2 = dx1_2
+        dr1_3, dq1_3 = dx1_3
+
+        r0_2 ,  q0_2 =  r1_1,  q1_1 
+        dr0_2, dq0_2 = dr1_1, dq1_1
+        r0_3 ,  q0_3 =  r1_2,  q1_2 
+        dr0_3, dq0_3 = dr1_2, dq1_2
+
+        for i in range(3):
+            if i == 0:
+                x0  =  r0_1
+                x1  =  r1_1
+                dx0 = dr0_1
+                dx1 = dr1_1
+                
+                a0 = x0
+                a1 = dx0
+                a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+                a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+
+                r1   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+                dr1  = a1 + 2*a2*t + 3*a3*(t**2)
+                ddr1 = 2*a2 + 6*a3*t
+
+                #################################################################
+
+                x0  =  q0_1
+                x1  =  q1_1
+                dx0 = dq0_1
+                dx1 = dq1_1
+                
+                a0 = x0
+                a1 = dx0
+                a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+                a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+
+                q1   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+                dq1  = a1 + 2*a2*t + 3*a3*(t**2)
+                ddq1 = 2*a2 + 6*a3*t
+
+
+            elif i == 1:
+                x0  =  r0_2 
+                x1  =  r1_2 
+                dx0 = dr0_2
+                dx1 = dr1_2
+
+                a0 = x0
+                a1 = dx0
+                a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+                a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+
+                r2   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+                dr2  = a1 + 2*a2*t + 3*a3*(t**2)
+                ddr2 = 2*a2 + 6*a3*t
+
+                #################################################################
+
+                x0  =  q0_2 
+                x1  =  q1_2 
+                dx0 = dq0_2
+                dx1 = dq1_2
+
+                a0 = x0
+                a1 = dx0
+                a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+                a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+
+                q2   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+                dq2  = a1 + 2*a2*t + 3*a3*(t**2)
+                ddq2 = 2*a2 + 6*a3*t
+
+            else:
+                x0  =  r0_3 
+                x1  =  r1_3 
+                dx0 = dr0_3
+                dx1 = dr1_3
+
+                a0 = x0
+                a1 = dx0
+                a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+                a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+
+                r3   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+                dr3  = a1 + 2*a2*t + 3*a3*(t**2)
+                ddr3 = 2*a2 + 6*a3*t
+
+                #################################################################
+
+                x0  =  q0_3 
+                x1  =  q1_3 
+                dx0 = dq0_3
+                dx1 = dq1_3
+
+                a0 = x0
+                a1 = dx0
+                a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+                a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+
+                q3   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+                dq3  = a1 + 2*a2*t + 3*a3*(t**2)
+                ddq3 = 2*a2 + 6*a3*t
+
+        return [r1,r2,r3], [dr1,dr2,dr3], [ddr1,ddr2,ddr3], [q1,q2,q3], [dq1,dq2,dq3], [ddq1,ddq2,ddq3]
+
     def setVariables(self):
         N = self.phase_knot_points
         for phase in range(self.num_phases):
@@ -249,9 +359,9 @@ class NonlinearProgram():
             
             t = 0
 
-            p1_2 ,  f1_2 = self.opti.variable(2), self.opti.variable(2) # ' p1_2 ', ' f1_2 '
+            p1_2 ,  f1_2 = self.opti.variable(2), self.opti.variable(2) # ' p1_2 ', 'f1_2'
             dp1_2, df1_2 = self.opti.variable(2), self.opti.variable(2) # 'dp1_2', 'df1_2'
-            p1_3 ,  f1_3 = self.opti.variable(2), self.opti.variable(2) # ' p1_3 ', 'f1_3 '
+            p1_3 ,  f1_3 = self.opti.variable(2), self.opti.variable(2) # ' p1_3 ', 'f1_3'
             dp1_3, df1_3 = self.opti.variable(2), self.opti.variable(2) # 'dp1_3', 'df1_3'
             
             start_p0_1 , start_f0_1  =  p1_2 , f1_2
@@ -269,24 +379,55 @@ class NonlinearProgram():
                 p1_1 ,  f1_1 = start_p1_1 , start_f1_1 
                 dp0_1, df0_1 = start_dp0_1, start_df0_1
                 dp1_1, df1_1 = start_dp1_1, start_df1_1
-        
-            # set rest of the optimization variables now
+
+            ####################################################################################
+            r1_2 ,  q1_2 = self.opti.variable(2), self.opti.variable(1) # ' r1_2 ', 'q1_2'
+            dr1_2, dq1_2 = self.opti.variable(2), self.opti.variable(1) # 'dr1_2', 'dq1_2'
+            r1_3 ,  q1_3 = self.opti.variable(2), self.opti.variable(1) # ' r1_3 ', 'q1_3'
+            dr1_3, dq1_3 = self.opti.variable(2), self.opti.variable(1) # 'dr1_3', 'dq1_3'
+            
+            start_r0_1 , start_q0_1  =  r1_2 , q1_2
+            start_r1_1 , start_q1_1  =  r1_3 , q1_3
+            start_dr0_1, start_dq0_1 = dr1_2, dq1_2
+            start_dr1_1, start_dq1_1 = dr1_3, dq1_3
+
+            if phase == 0:
+                r0_1 ,  q0_1 = self.opti.variable(2), self.opti.variable(1) #  'r0_1',  'q0_1'
+                r1_1 ,  q1_1 = self.opti.variable(2), self.opti.variable(1) #  'r1_1',  'q1_1'
+                dr0_1, dq0_1 = self.opti.variable(2), self.opti.variable(1) # 'dr0_1', 'dq0_1'
+                dr1_1, dq1_1 = self.opti.variable(2), self.opti.variable(1) # 'dr1_1', 'dq1_1'
+            else:
+                r0_1 ,  q0_1 = start_r0_1 , start_q0_1 
+                r1_1 ,  q1_1 = start_r1_1 , start_q1_1 
+                dr0_1, dq0_1 = start_dr0_1, start_dq0_1
+                dr1_1, dq1_1 = start_dr1_1, start_dq1_1
+
+            # self.ceq.append(dr0_1 == 0)
+            # self.ceq.append(dq0_1 == 0)
+            # self.ceq.append(dp0_1 == 0)
+            # self.ceq.append(df0_1 == 0)
+
+            # self.ceq.append(dr1_3 == 0)
+            # self.ceq.append(dq1_3 == 0)
+            # self.ceq.append(dp1_3 == 0)
+            # self.ceq.append(df1_3 == 0)
+
             for knot_point in range(self.phase_knot_points):
-                self.r.append(self.opti.variable(2))
-                self.r_dot.append(self.opti.variable(2))
+                # self.r.append(self.opti.variable(2))
+                # self.r_dot.append(self.opti.variable(2))
 
-                self.q.append(self.opti.variable(1))
-                self.q_dot.append(self.opti.variable(1))
+                # self.q.append(self.opti.variable(1))
+                # self.q_dot.append(self.opti.variable(1))
 
-                r     = self.r[-1]
-                r_dot = self.r_dot[-1]
-                q     = self.q[-1]
-                q_dot = self.q_dot[-1]
+                # r     = self.r[-1]
+                # r_dot = self.r_dot[-1]
+                # q     = self.q[-1]
+                # q_dot = self.q_dot[-1]
 
-                if phase == 0 and knot_point == 0:
-                    self.ceq.append(r[0]==0)
-                elif phase == self.num_phases-1 and knot_point == self.phase_knot_points:
-                    self.ceq.append(r[0]==2)  
+                ######################################################################################
+
+
+                #####################################################################################
 
                 # temp_p = list(self.phase_spline(T=delta_T, t=t, x0_1=p0_1, dx0_1=dp0_1, 
                 #                                                 x1_1=p1_1, dx1_1=dp1_1,
@@ -303,6 +444,9 @@ class NonlinearProgram():
                 #                                                 x1_2=f1_2, dx1_2=df1_2, 
                 #                                                 x1_3=f1_3, dx1_3=df1_3).values())                                                  
 
+                temp_r, temp_dr, temp_ddr, temp_q, temp_dq, temp_ddq = self.setBaseSpline(self.dt, t, [r0_1, q0_1], [r1_1, q1_1], [r1_2, q1_2], [r1_3, q1_3],
+                                                                                  [dr0_1, dq0_1], [dr1_1, dq1_1], [dr1_2, dq1_2], [dr1_3, dq1_3])
+
                 temp_p, temp_dp, temp_f = self.setPhaseSpline(delta_T, t, [p0_1, f0_1], [p1_1, f1_1], [p1_2, f1_2], [p1_3, f1_3],
                                                                           [dp0_1, df0_1], [dp1_1, df1_1], [dp1_2, df1_2], [dp1_3, df1_3])
 
@@ -310,34 +454,68 @@ class NonlinearProgram():
                     pe  = temp_p [0]
                     dpe = temp_dp[0]
                     f   = temp_f [0]
+                    
+                    r      = temp_r  [0]
+                    r_dot  = temp_dr [0]
+                    r_ddot = temp_ddr[0]
+                    q      = temp_q  [0]
+                    q_dot  = temp_dq [0]
+                    q_ddot = temp_ddq[0]
+
                 elif (N-1)/3 < knot_point <= 2*(N-1)/3:
                     pe  = temp_p [1]
                     dpe = temp_dp[1]
                     f   = temp_f [1]
+
+                    r      = temp_r  [1]
+                    r_dot  = temp_dr [1]
+                    r_ddot = temp_ddr[1]
+                    q      = temp_q  [1]
+                    q_dot  = temp_dq [1]
+                    q_ddot = temp_ddq[1]
                 else:
                     pe  = temp_p [2]
                     dpe = temp_dp[2]
                     f   = temp_f [2] 
 
+                    r      = temp_r  [2]
+                    r_dot  = temp_dr [2]
+                    r_ddot = temp_ddr[2]
+                    q      = temp_q  [2]
+                    q_dot  = temp_dq [2]
+                    q_ddot = temp_ddq[2]
+
+                if phase == 0 and knot_point == 0:
+                    self.ceq.append(r[0]==0)
+                    self.ceq.append(q[0]==0)
+                elif phase == self.num_phases-1 and knot_point == self.phase_knot_points - 1:
+                    self.ceq.append(r[0]==0.5)
+
+
                 self.p.append(pe)
-
                 self.dp.append(dpe)
-
                 self.f.append(f)
-                # print(f)
+
+                self.r.append(r)
+                self.r_dot.append(r_dot)
+                self.r_ddot.append(r_ddot)
+                self.q.append(q)
+                self.q_dot.append(q_dot)
+                self.q_ddot.append(q_ddot)
 
                 self.model.setState(r, r_dot, q, q_dot, pe, f)
                 
                 # f = self.model.dynamics_model(r=r, r_dot=r_dot, q=q, q_dot=q_dot, pe=pe, f=f)
                 # r_ddot, q_ddot = f['r_ddot'], f['q_ddot']
 
-                self.r_ddot.append(self.model.r_ddot)
-                self.q_ddot.append(self.model.q_ddot)
+                self.ciq.append(self.model.r_ddot <= self.r_ddot[-1]);self.ciq.append(self.model.r_ddot >= self.r_ddot[-1])
+                self.ciq.append(self.model.q_ddot <= self.q_ddot[-1]);self.ciq.append(self.model.q_ddot >= self.q_ddot[-1])
 
                 # k = self.model.kinematic_model(r=r, r_dot=r_dot, q=q, q_dot=q_dot, pe=pe)
                 # self.ciq.append(k['constraint']) # kinematic constraint
 
                 self.ciq.append(self.model.kinematic_model)
+                self.ciq.append(self.terrain.heightMap(self.r[-1][0,0]) <= self.r[-1][1,0]) # pe_y > ground
                 
                 if phase%2 != 0: # no contact
                     self.ceq.append(self.f[-1] == 0) # foot force = 0
@@ -348,21 +526,23 @@ class NonlinearProgram():
                     self.ceq.append(self.p[-1][1]==self.terrain.heightMap(self.p[-1][0])) # foot not moving
                     self.ceq.append(self.dp[-1]==0) # no slip
 
+                self.opti.bounded(-np.pi/2,q,np.pi/2)
+
                 t += self.dt
 
         self.ceq.append(sum(self.time_phases) == self.total_duration)
 
     def setConstraints(self):
-        self.setCollocation()
+        # self.setCollocation()
         self.opti.subject_to(self.ceq)
         self.opti.subject_to(self.ciq)
     
     def setCollocation(self):
         for n in range(len(self.q)-1):
-            self.ceq.append((self.dt/2)*(self.r_dot[n] + self.r_dot[n+1]) == (self.r[n+1] - self.r[n]))
+            # self.ceq.append((self.dt/2)*(self.r_dot[n] + self.r_dot[n+1]) == (self.r[n+1] - self.r[n]))
             self.ceq.append((self.dt/2)*(self.r_ddot[n] + self.r_ddot[n+1]) == (self.r_dot[n+1] - self.r_dot[n]))
             
-            self.ceq.append((self.dt/2)*(self.q_dot[n] + self.q_dot[n+1]) == (self.q[n+1] - self.q[n]))
+            # self.ceq.append((self.dt/2)*(self.q_dot[n] + self.q_dot[n+1]) == (self.q[n+1] - self.q[n]))
             self.ceq.append((self.dt/2)*(self.q_ddot[n] + self.q_ddot[n+1]) == (self.q_dot[n+1] - self.q_dot[n]))
 
     def printInfo(self):
@@ -402,7 +582,7 @@ class NonlinearProgram():
 
 # test check for sanity
 
-test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
+# test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
 
 # print(len(test_problem.p))
 # print(len(test_problem.q))

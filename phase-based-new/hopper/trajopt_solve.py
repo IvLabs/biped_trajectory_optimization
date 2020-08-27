@@ -9,15 +9,16 @@ from trajopt_formulation import NonlinearProgram
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.5, steps=3, total_duration=3, model='hopper')
         p_opts = {"expand":True}
         s_opts = {"max_iter": 3000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
         sol = self.formulation.opti.solve_limited()
-        # self.sol_q1  = [] 
-        # self.sol_dq1 = []
+        self.sol_px  = [] 
+        self.sol_py  = [] 
+        self.sol_f  = []
         
         # self.sol_q2  = [] 
         # self.sol_dq2 = []
@@ -54,38 +55,59 @@ class TrajOptSolve():
         #         self.sol_u1.append(sol.value(self.formulation.u[str(step)][knot_point][0]))
         #         self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
 
-        # self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_q1))
+
+        for n in range(len(self.formulation.q)):
+            self.sol_f.append(np.linalg.norm(sol.value(self.formulation.f[n])))
+            self.sol_px.append((sol.value(self.formulation.p[n]))[0])
+            self.sol_py.append((sol.value(self.formulation.p[n]))[1])
+
+        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_f))
 
     def plot(self):
         fig = plt.figure()
         fig.tight_layout()
 
-        ax1 = fig.add_subplot(521)
-        ax1.plot(self.time, self.sol_q1, label='q1')
-        ax1.plot(self.time, self.sol_q2, label='q2')
-        ax1.plot(self.time, self.sol_q3, label='q3')
+        ax1 = fig.add_subplot(311)
+        ax1.plot(self.time, self.sol_f, 'ro', label='f')
+        ax1.grid()
         ax1.legend()
 
-        ax2 = fig.add_subplot(523)
-        ax2.plot(self.time, self.sol_dq1, label='dq1')
-        ax2.plot(self.time, self.sol_dq2, label='dq2')
-        ax2.plot(self.time, self.sol_dq3, label='dq3')
+        ax2 = fig.add_subplot(312)
+        ax2.plot(self.time, self.sol_px, 'bo', label='px')
+        ax2.grid()
         ax2.legend()
 
-        ax3 = fig.add_subplot(525)
-        ax3.plot(self.time, self.sol_u1, label='u1')
-        ax3.plot(self.time, self.sol_u2, label='u2')
+        ax3 = fig.add_subplot(313)
+        ax3.plot(self.time, self.sol_py, 'yo', label='py')
+        ax3.grid()
         ax3.legend()
 
-        ax4 = fig.add_subplot(522)
-        ax4.plot(self.time, self.sol_fx, label='fx')
-        ax4.plot(self.time, self.sol_fy, label='fy')
-        ax4.legend()
+        # ax1 = fig.add_subplot(521)
+        # ax1.plot(self.time, self.sol_q1, label='q1')
+        # ax1.plot(self.time, self.sol_q2, label='q2')
+        # ax1.plot(self.time, self.sol_q3, label='q3')
+        # ax1.legend()
 
-        ax5 = fig.add_subplot(524)
-        ax5.plot(self.time, self.sol_c3x, label='c3x')
-        ax5.plot(self.time, self.sol_c3y, label='c3y')
-        ax5.legend()
+        # ax2 = fig.add_subplot(523)
+        # ax2.plot(self.time, self.sol_dq1, label='dq1')
+        # ax2.plot(self.time, self.sol_dq2, label='dq2')
+        # ax2.plot(self.time, self.sol_dq3, label='dq3')
+        # ax2.legend()
+
+        # ax3 = fig.add_subplot(525)
+        # ax3.plot(self.time, self.sol_u1, label='u1')
+        # ax3.plot(self.time, self.sol_u2, label='u2')
+        # ax3.legend()
+
+        # ax4 = fig.add_subplot(522)
+        # ax4.plot(self.time, self.sol_fx, label='fx')
+        # ax4.plot(self.time, self.sol_fy, label='fy')
+        # ax4.legend()
+
+        # ax5 = fig.add_subplot(524)
+        # ax5.plot(self.time, self.sol_c3x, label='c3x')
+        # ax5.plot(self.time, self.sol_c3y, label='c3y')
+        # ax5.legend()
 
         plt.show()
 
@@ -163,5 +185,5 @@ class TrajOptSolve():
 
 problem = TrajOptSolve()
 problem.solve()
-# problem.plot()
+problem.plot()
 # problem.visualize()
