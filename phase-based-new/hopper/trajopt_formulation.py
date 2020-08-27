@@ -49,15 +49,15 @@ class NonlinearProgram():
         self.ceq = []
         self.ciq = []
 
-        self.kinematic_constraint = []
-        self.e_constraint         = []
-        self.f_constraint         = []
-        self.df_constraint        = []
-        self.dynamic_constraint   = []
+        # self.kinematic_constraint = []
+        # self.e_constraint         = []
+        # self.f_constraint         = []
+        # self.df_constraint        = []
+        # self.dynamic_constraint   = []
 
         self.contructPhaseSpline()
         self.setVariables()
-        # self.setConstraints()
+        self.setConstraints()
         # self.setBounds()
         self.printInfo()
 
@@ -131,6 +131,16 @@ class NonlinearProgram():
                                               ['T', 't', 'x0_1', 'dx0_1', 'x1_1', 'dx1_1',
                                               'x1_2', 'dx1_2', 'x1_3', 'dx1_3'], ['dy1', 'dy2', 'dy3'])
 
+    def setPhaseSpline(self, x0_1, x1_1, x1_2, x1_3, dx0_1, dx1_1, dx1_2, dx1_3):
+        p0_1 ,  f0_1 = x0_1 
+        p1_1 ,  f1_1 = x1_1
+        p1_2 ,  f1_2 = x1_2
+        p1_3 ,  f1_3 = x1_3
+        dp0_1, df0_1 = dx0_1
+        dp1_1, df1_1 = dx1_1
+        dp1_2, df1_2 = dx1_2
+        dp1_3, df1_3 = dx1_3
+
     def setVariables(self):
         N = self.phase_knot_points
         for phase in range(self.num_phases):
@@ -144,10 +154,9 @@ class NonlinearProgram():
 
             p1_2 ,  f1_2 = self.opti.variable(2), self.opti.variable(2) # ' p1_2 ', ' f1_2 '
             dp1_2, df1_2 = self.opti.variable(2), self.opti.variable(2) # 'dp1_2', 'df1_2'
-
             p1_3 ,  f1_3 = self.opti.variable(2), self.opti.variable(2) # ' p1_3 ', 'f1_3 '
             dp1_3, df1_3 = self.opti.variable(2), self.opti.variable(2) # 'dp1_3', 'df1_3'
-
+            
             start_p0_1 , start_f0_1  =  p1_2 , f1_2
             start_p1_1 , start_f1_1  =  p1_3 , f1_3
             start_dp0_1, start_df0_1 = dp1_2, df1_2
@@ -192,11 +201,11 @@ class NonlinearProgram():
                                                                 x1_2=f1_2, dx1_2=df1_2, 
                                                                 x1_3=f1_3, dx1_3=df1_3).values())                                                  
 
-                if knot_point <= (N-1)/3:
+                if knot_point <= (N)/3:
                     pe  = temp_p [0]
                     dpe = temp_dp[0]
                     f   = temp_f [0]
-                elif (N-1)/3 < knot_point <= 2*(N-1)/3:
+                elif (N)/3 < knot_point <= 2*(N)/3:
                     pe  = temp_p [1]
                     dpe = temp_dp[1]
                     f   = temp_f [1]
@@ -210,7 +219,7 @@ class NonlinearProgram():
                 self.dp.append(dpe)
 
                 self.f.append(f)
-                
+                print(f)
 
                 self.model.setState(r, r_dot, q, q_dot, pe, f)
                 
@@ -220,20 +229,24 @@ class NonlinearProgram():
                 self.q_ddot.append(q_ddot)
 
                 k = self.model.kinematic_model(r=r, r_dot=r_dot, q=q, q_dot=q_dot, pe=pe)
-                self.ciq.append(k['constraint']) # kinematic constraint
-
+                # self.ciq.append(k['constraint']) # kinematic constraint
+    
                 if phase%2 != 0: # no contact
                     self.ceq.append(self.f[-1] == 0) # foot force = 0
-                    self.ciq.append(self.terrain.heightMap(self.p[-1][0,0]) <= self.p[-1][1,0]) # pe_y > ground
-                else: # contact
-                    self.ciq.append((self.terrain.mu*self.f[-1][0])**2 - self.f[-1][1]**2 >= 0) # friction
-                    self.ciq.append(ca.dot(self.f[-1],self.p[-1]) >= 0) # pushing force
-                    self.ceq.append(self.p[-1][1]==self.terrain.heightMap(self.p[-1][0])) # foot not moving
-                    self.ceq.append(self.dp[-1]==0) # no slip
+                #     self.ciq.append(self.terrain.heightMap(self.p[-1][0,0]) <= self.p[-1][1,0]) # pe_y > ground
+                # else: # contact
+                #     # self.ciq.append((self.terrain.mu*self.f[-1][0])**2 - self.f[-1][1]**2 >= 0) # friction
+                #     self.ciq.append(ca.dot(self.f[-1],self.p[-1]) >= 0) # pushing force
+                #     self.ceq.append(self.p[-1][1]==self.terrain.heightMap(self.p[-1][0])) # foot not moving
+                #     # self.ceq.append(self.dp[-1]==0) # no slip
 
                 t += self.dt
 
         self.ceq.append(sum(self.time_phases) == self.total_duration)
+
+    def setConstraints(self):
+        self.opti.subject_to(self.ceq)
+        self.opti.subject_to(self.ciq)
 
     def printInfo(self):
         print('####################################')

@@ -4,57 +4,57 @@ import math
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
-from trajopt_formulation import NLP
+from trajopt_formulation import NonlinearProgram
 
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NLP(knot_points_per_phase=40, steps=3, total_duration=1, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')
         p_opts = {"expand":True}
         s_opts = {"max_iter": 3000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
         sol = self.formulation.opti.solve_limited()
-        self.sol_q1  = [] 
-        self.sol_dq1 = []
+        # self.sol_q1  = [] 
+        # self.sol_dq1 = []
         
-        self.sol_q2  = [] 
-        self.sol_dq2 = []
+        # self.sol_q2  = [] 
+        # self.sol_dq2 = []
         
-        self.sol_q3  = [] 
-        self.sol_dq3 = []
+        # self.sol_q3  = [] 
+        # self.sol_dq3 = []
 
-        self.sol_cx  = [] 
-        self.sol_cy  = [] 
+        # self.sol_cx  = [] 
+        # self.sol_cy  = [] 
 
-        self.sol_fx  = [] 
-        self.sol_fy  = []
+        # self.sol_fx  = [] 
+        # self.sol_fy  = []
 
-        self.sol_u1 = []
-        self.sol_u2 = []
+        # self.sol_u1 = []
+        # self.sol_u2 = []
 
-        for step in range(self.formulation.num_phases):
+        # for step in range(self.formulation.num_phases):
 
-            for knot_point in range(self.formulation.knot_points_per_phase):
-                self.sol_q1.append(sol.value(self.formulation.q[str(step)][knot_point][0]))
-                self.sol_q2.append(sol.value(self.formulation.q[str(step)][knot_point][1]))
-                self.sol_q3.append(sol.value(self.formulation.q[str(step)][knot_point][2]))
+        #     for knot_point in range(self.formulation.knot_points_per_phase):
+        #         self.sol_q1.append(sol.value(self.formulation.q[str(step)][knot_point][0]))
+        #         self.sol_q2.append(sol.value(self.formulation.q[str(step)][knot_point][1]))
+        #         self.sol_q3.append(sol.value(self.formulation.q[str(step)][knot_point][2]))
 
-                self.sol_dq1.append(sol.value(self.formulation.qdot[str(step)][knot_point][0]))
-                self.sol_dq2.append(sol.value(self.formulation.qdot[str(step)][knot_point][1]))
-                self.sol_dq3.append(sol.value(self.formulation.qdot[str(step)][knot_point][2]))
+        #         self.sol_dq1.append(sol.value(self.formulation.qdot[str(step)][knot_point][0]))
+        #         self.sol_dq2.append(sol.value(self.formulation.qdot[str(step)][knot_point][1]))
+        #         self.sol_dq3.append(sol.value(self.formulation.qdot[str(step)][knot_point][2]))
 
-                self.sol_fx.append(sol.value(self.formulation.f10[str(step)][knot_point][0]))
-                self.sol_fy.append(sol.value(self.formulation.f10[str(step)][knot_point][1]))
+        #         self.sol_fx.append(sol.value(self.formulation.f10[str(step)][knot_point][0]))
+        #         self.sol_fy.append(sol.value(self.formulation.f10[str(step)][knot_point][1]))
 
-                self.sol_c3x.append(sol.value(self.formulation.c3[str(step)][knot_point][0]))
-                self.sol_c3y.append(sol.value(self.formulation.c3[str(step)][knot_point][1]))
+        #         self.sol_c3x.append(sol.value(self.formulation.c3[str(step)][knot_point][0]))
+        #         self.sol_c3y.append(sol.value(self.formulation.c3[str(step)][knot_point][1]))
         
-                self.sol_u1.append(sol.value(self.formulation.u[str(step)][knot_point][0]))
-                self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
+        #         self.sol_u1.append(sol.value(self.formulation.u[str(step)][knot_point][0]))
+        #         self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
 
-        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_q1))
+        # self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_q1))
 
     def plot(self):
         fig = plt.figure()
@@ -163,5 +163,5 @@ class TrajOptSolve():
 
 problem = TrajOptSolve()
 problem.solve()
-problem.plot()
+# problem.plot()
 # problem.visualize()
