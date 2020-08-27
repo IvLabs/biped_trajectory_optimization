@@ -49,6 +49,12 @@ class NonlinearProgram():
         self.ceq = []
         self.ciq = []
 
+        self.kinematic_constraint = []
+        self.e_constraint         = []
+        self.f_constraint         = []
+        self.df_constraint        = []
+        self.dynamic_constraint   = []
+
         self.contructPhaseSpline()
         self.setVariables()
         # self.setConstraints()
@@ -132,7 +138,7 @@ class NonlinearProgram():
             self.time_phases.append(self.opti.variable(1))
             delta_T = self.time_phases[-1]
 
-            self.ciq.append(delta_T>=0)
+            self.ciq.append(delta_T>=0) # time is positive
 
             t = 0
 
@@ -214,8 +220,16 @@ class NonlinearProgram():
                 self.q_ddot.append(q_ddot)
 
                 k = self.model.kinematic_model(r=r, r_dot=r_dot, q=q, q_dot=q_dot, pe=pe)
-                kinematic_constraint = k['constraint']
-                self.ciq.append(kinematic_constraint)
+                self.ciq.append(k['constraint']) # kinematic constraint
+
+                if phase%2 != 0: # no contact
+                    self.ceq.append(self.f[-1] == 0) # foot force = 0
+                    self.ciq.append(self.terrain.heightMap(self.p[-1][0,0]) <= self.p[-1][1,0]) # pe_y > ground
+                else: # contact
+                    self.ciq.append((self.terrain.mu*self.f[-1][0])**2 - self.f[-1][1]**2 >= 0) # friction
+                    self.ciq.append(ca.dot(self.f[-1],self.p[-1]) >= 0) # pushing force
+                    self.ceq.append(self.p[-1][1]==self.terrain.heightMap(self.p[-1][0])) # foot not moving
+                    self.ceq.append(self.dp[-1]==0) # no slip
 
                 t += self.dt
 
@@ -250,7 +264,7 @@ class NonlinearProgram():
 
         print('number of equality constraints   = ', len(self.ceq))
         print('number of inequality constraints = ', len(self.ciq))
-
+        print('Total number of constraints      = ', len(self.ceq) + len(self.ciq))
         print('\nFinished the Non-linear Program')
 
         print('####################################')
