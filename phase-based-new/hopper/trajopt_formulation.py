@@ -24,7 +24,9 @@ class NonlinearProgram():
         self.total_duration = total_duration
                 
         self.phase_knot_points = int(total_duration/dt)
-        print(self.phase_knot_points)
+        
+        # print(self.phase_knot_points)
+
         if model == 'hopper':
             self.model = Hopper()
             self.time_phases = []
@@ -40,6 +42,9 @@ class NonlinearProgram():
         self.p     = []
         self.dp    = [] 
         self.f     = [] 
+
+        self.q_ddot = []
+        self.r_ddot = []
 
         self.ceq = []
         self.ciq = []
@@ -159,7 +164,6 @@ class NonlinearProgram():
                 self.f.append(self.phase_spline(delta_T, t, f0_1, df0_1, f1_1, df1_1,
                                                             f1_2, df1_2, f1_3, df1_3))                                                  
 
-
                 r     = self.r[-1]
                 r_dot = self.r_dot[-1]
                 q     = self.q[-1]
@@ -179,14 +183,34 @@ class NonlinearProgram():
                     f   = self.f [-1][2] 
 
                 self.model.setState(r, r_dot, q, q_dot, pe, f)
+                
+                f = self.model.dynamics_model(r=r, r_dot=r_dot, q=q, q_dot=q_dot, pe=pe, f=f)
+                r_ddot, q_ddot = f['r_ddot'], f['q_ddot']
+                self.r_ddot.append(r_ddot)
+                self.q_ddot.append(q_ddot)
+
+                k = self.model.kinematic_model(r=r, r_dot=r_dot, q=q, q_dot=q_dot, pe=pe)
+                kinematic_constraint = k['constraint']
+                self.ciq.append(kinematic_constraint)
+
                 t += self.dt
-                # self.model.kinematic_model()
+
+    def printInfo(self):
+        print('####################################')
+        print('####################################')
+
+        print('Formulating the Non-linear Program')
+
+
+        print('####################################')
+        print('####################################')
 
 # test check for sanity
 
 test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
-print(len(test_problem.p))
-print(len(test_problem.q))
+
+# print(len(test_problem.p))
+# print(len(test_problem.q))
 
 
 
