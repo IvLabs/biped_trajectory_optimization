@@ -31,7 +31,7 @@ class NonlinearProgram():
             self.model = Hopper()
             self.time_phases = []
         
-        self.terrain = Terrain(type=terrain)
+        self.terrain = Terrain(name=terrain)
 
         self.opti   = ca.Opti()
 
@@ -53,6 +53,7 @@ class NonlinearProgram():
         self.setVariables()
         # self.setConstraints()
         # self.setBounds()
+        self.printInfo()
 
     def contructPhaseSpline(self):
         delta_T = ca.MX.sym('delta_T',1)
@@ -69,12 +70,11 @@ class NonlinearProgram():
         a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
 
         x = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dx = a1 + 2*a2*t + 3*a3*(t**2)
 
-        f = ca.Function('f', [delta_T, t, x0, dx0, x1, dx1], [x])
+        f = ca.Function('f', [delta_T, t, x0, dx0, x1, dx1], [x], ['delta_T', 't', 'x0', 'dx0', 'x1', 'dx1'], ['x'])
+        df = ca.Function('f', [delta_T, t, x0, dx0, x1, dx1], [dx], ['delta_T', 't', 'x0', 'dx0', 'x1', 'dx1'], ['dx'])
 
-        y1 = []
-        y2 = []
-        y3 = []
         T = ca.MX.sym('T',1)
         delta_T = T/3
         x0_1  = x0  
@@ -98,23 +98,32 @@ class NonlinearProgram():
                 x1  =  x1_1
                 dx0 = dx0_1
                 dx1 = dx1_1
-                y1 = (f(delta_T, t, x0, dx0, x1, dx1))
+                y1  = f(delta_T=delta_T, t=t, x0=x0, dx0=dx0, x1=x1, dx1=dx1)['x']
+                dy1 = df(delta_T=delta_T, t=t, x0=x0, dx0=dx0, x1=x1, dx1=dx1)['dx']
             elif i == 1:
                 x0  =  x0_2 
                 x1  =  x1_2 
                 dx0 = dx0_2
                 dx1 = dx1_2
-                y2 = (f(delta_T, t, x0, dx0, x1, dx1))
+                y2  = f(delta_T=delta_T, t=t, x0=x0, dx0=dx0, x1=x1, dx1=dx1)['x']
+                dy2 = df(delta_T=delta_T, t=t, x0=x0, dx0=dx0, x1=x1, dx1=dx1)['dx']
             else:
                 x0  =  x0_3 
                 x1  =  x1_3 
                 dx0 = dx0_3
                 dx1 = dx1_3
-                y3 = (f(delta_T, t, x0, dx0, x1, dx1))
+                y3  = f(delta_T=delta_T, t=t, x0=x0, dx0=dx0, x1=x1, dx1=dx1)['x']
+                dy3 = df(delta_T=delta_T, t=t, x0=x0, dx0=dx0, x1=x1, dx1=dx1)['dx']
 
         self.phase_spline = ca.Function("F", [T, t, x0_1, dx0_1, x1_1, dx1_1,
-                                              x1_2, dx1_2, x1_3, dx1_3], [y1, y2, y3])
-        self.dphase_spline = self.phase_spline.jacobian()
+                                              x1_2, dx1_2, x1_3, dx1_3], [y1, y2, y3], 
+                                              ['T', 't', 'x0_1', 'dx0_1', 'x1_1', 'dx1_1',
+                                              'x1_2', 'dx1_2', 'x1_3', 'dx1_3'], ['y1', 'y2', 'y3'])
+        
+        self.dphase_spline = ca.Function("F", [T, t, x0_1, dx0_1, x1_1, dx1_1,
+                                              x1_2, dx1_2, x1_3, dx1_3], [dy1, dy2, dy3], 
+                                              ['T', 't', 'x0_1', 'dx0_1', 'x1_1', 'dx1_1',
+                                              'x1_2', 'dx1_2', 'x1_3', 'dx1_3'], ['dy1', 'dy2', 'dy3'])
 
     def setVariables(self):
         N = self.phase_knot_points
@@ -157,30 +166,45 @@ class NonlinearProgram():
                 self.q.append(self.opti.variable(1))
                 self.q_dot.append(self.opti.variable(1))
 
-                self.p.append(self.phase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
-                                                            p1_2, dp1_2, p1_3, dp1_3))
-                self.dp.append(self.dphase_spline(delta_T, t, p0_1, dp0_1, p1_1, dp1_1,
-                                                            p1_2, dp1_2, p1_3, dp1_3, 0,0,0)[:,-1])                                            
-                self.f.append(self.phase_spline(delta_T, t, f0_1, df0_1, f1_1, df1_1,
-                                                            f1_2, df1_2, f1_3, df1_3))                                                  
-
                 r     = self.r[-1]
                 r_dot = self.r_dot[-1]
                 q     = self.q[-1]
                 q_dot = self.q_dot[-1]
 
+                temp_p = list(self.phase_spline(T=delta_T, t=t, x0_1=p0_1, dx0_1=dp0_1, 
+                                                                x1_1=p1_1, dx1_1=dp1_1,
+                                                                x1_2=p1_2, dx1_2=dp1_2, 
+                                                                x1_3=p1_3, dx1_3=dp1_3).values())
+
+                temp_dp = list(self.dphase_spline(T=delta_T, t=t, x0_1=p0_1, dx0_1=dp0_1, 
+                                                                  x1_1=p1_1, dx1_1=dp1_1,
+                                                                  x1_2=p1_2, dx1_2=dp1_2, 
+                                                                  x1_3=p1_3, dx1_3=dp1_3).values())
+
+                temp_f = list(self.phase_spline(T=delta_T, t=t, x0_1=f0_1, dx0_1=df0_1, 
+                                                                x1_1=f1_1, dx1_1=df1_1,
+                                                                x1_2=f1_2, dx1_2=df1_2, 
+                                                                x1_3=f1_3, dx1_3=df1_3).values())                                                  
+
                 if knot_point <= (N-1)/3:
-                    pe  = self.p [-1][0]
-                    dpe = self.dp[-1][0]
-                    f   = self.f [-1][0]
+                    pe  = temp_p [0]
+                    dpe = temp_dp[0]
+                    f   = temp_f [0]
                 elif (N-1)/3 < knot_point <= 2*(N-1)/3:
-                    pe  = self.p [-1][1]
-                    dpe = self.dp[-1][1]
-                    f   = self.f [-1][1]
+                    pe  = temp_p [1]
+                    dpe = temp_dp[1]
+                    f   = temp_f [1]
                 else:
-                    pe  = self.p [-1][2]
-                    dpe = self.dp[-1][2]
-                    f   = self.f [-1][2] 
+                    pe  = temp_p [2]
+                    dpe = temp_dp[2]
+                    f   = temp_f [2] 
+
+                self.p.append(pe)
+
+                self.dp.append(dpe)
+
+                self.f.append(f)
+                
 
                 self.model.setState(r, r_dot, q, q_dot, pe, f)
                 
@@ -200,6 +224,27 @@ class NonlinearProgram():
         print('####################################')
 
         print('Formulating the Non-linear Program')
+        print('\n---------Hyper parameters-----------')
+        print('model = ', self.model.name)
+        print('terrain = ', self.terrain.name)
+        print('dt = ', self.dt)
+        print('number of steps = ', self.num_phases)
+        print('total duration = ', self.total_duration)
+
+        print('\n---------Parameters-----------')
+        print('number of      r(t) variables = ', len(self.r),      ', is symbolic = ', self.r[0].is_symbolic())
+        print('number of  r_dot(t) variables = ', len(self.r_dot),  ', is symbolic = ', self.r_dot[0].is_symbolic())
+        print('number of r_ddot(t) variables = ', len(self.r_ddot), ', is symbolic = ', self.r_ddot[0].is_symbolic())
+        
+        print('number of      q(t) variables = ', len(self.q),      ', is symbolic = ', self.q[0].is_symbolic())
+        print('number of  q_dot(t) variables = ', len(self.q_dot),  ', is symbolic = ', self.q_dot[0].is_symbolic())
+        print('number of q_ddot(t) variables = ', len(self.q_ddot), ', is symbolic = ', self.q_ddot[0].is_symbolic())
+        
+        print('number of     pe(t) variables = ', len(self.p),     ', is symbolic = ', self.p[0].is_symbolic())
+        print('number of    dpe(t) variables = ', len(self.dp),    ', is symbolic = ', self.dp[0].is_symbolic())
+        print('number of      f(t) variables = ', len(self.f),     ', is symbolic = ', self.f[0].is_symbolic())
+        
+        print('\n------------------------------------')
 
 
         print('####################################')

@@ -6,6 +6,7 @@ class Hopper():
     def __init__(self):
         super().__init__()
         self.num_ee  = 1
+        self.name    = 'hopper'
         self.length  = np.array([0.5,0.5,0.5])
         self.mass    = np.array([0.1,0.1,0.5])
         self.i_qcom  = np.zeros((1,1))
