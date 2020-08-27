@@ -245,7 +245,8 @@ class NonlinearProgram():
             delta_T = self.time_phases[-1]
 
             self.ciq.append(delta_T>=0) # time is positive
-
+            self.opti.set_initial(delta_T, self.total_duration/self.num_phases)
+            
             t = 0
 
             p1_2 ,  f1_2 = self.opti.variable(2), self.opti.variable(2) # ' p1_2 ', ' f1_2 '
@@ -282,6 +283,11 @@ class NonlinearProgram():
                 q     = self.q[-1]
                 q_dot = self.q_dot[-1]
 
+                if phase == 0 and knot_point == 0:
+                    self.ceq.append(r[0]==0)
+                elif phase == self.num_phases-1 and knot_point == self.phase_knot_points:
+                    self.ceq.append(r[0]==2)  
+
                 # temp_p = list(self.phase_spline(T=delta_T, t=t, x0_1=p0_1, dx0_1=dp0_1, 
                 #                                                 x1_1=p1_1, dx1_1=dp1_1,
                 #                                                 x1_2=p1_2, dx1_2=dp1_2, 
@@ -300,11 +306,11 @@ class NonlinearProgram():
                 temp_p, temp_dp, temp_f = self.setPhaseSpline(delta_T, t, [p0_1, f0_1], [p1_1, f1_1], [p1_2, f1_2], [p1_3, f1_3],
                                                                           [dp0_1, df0_1], [dp1_1, df1_1], [dp1_2, df1_2], [dp1_3, df1_3])
 
-                if knot_point <= (N)/3:
+                if knot_point <= (N-1)/3:
                     pe  = temp_p [0]
                     dpe = temp_dp[0]
                     f   = temp_f [0]
-                elif (N)/3 < knot_point <= 2*(N)/3:
+                elif (N-1)/3 < knot_point <= 2*(N-1)/3:
                     pe  = temp_p [1]
                     dpe = temp_dp[1]
                     f   = temp_f [1]
@@ -347,8 +353,17 @@ class NonlinearProgram():
         self.ceq.append(sum(self.time_phases) == self.total_duration)
 
     def setConstraints(self):
+        self.setCollocation()
         self.opti.subject_to(self.ceq)
         self.opti.subject_to(self.ciq)
+    
+    def setCollocation(self):
+        for n in range(len(self.q)-1):
+            self.ceq.append((self.dt/2)*(self.r_dot[n] + self.r_dot[n+1]) == (self.r[n+1] - self.r[n]))
+            self.ceq.append((self.dt/2)*(self.r_ddot[n] + self.r_ddot[n+1]) == (self.r_dot[n+1] - self.r_dot[n]))
+            
+            self.ceq.append((self.dt/2)*(self.q_dot[n] + self.q_dot[n+1]) == (self.q[n+1] - self.q[n]))
+            self.ceq.append((self.dt/2)*(self.q_ddot[n] + self.q_ddot[n+1]) == (self.q_dot[n+1] - self.q_dot[n]))
 
     def printInfo(self):
         print('####################################')
