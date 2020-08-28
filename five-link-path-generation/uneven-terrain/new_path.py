@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 2  
+f = 8  
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -151,9 +151,13 @@ def animate(i):
 
     p0 = start_pos[k]
 
-
-    ax.set_xlim([-3.+(i*(3*f/10)/len(timodel)), 3. + (i*(3*f/10)/len(timodel))])
-    ax.set_ylim([-3 + model.terrain_factor, 3 + model.terrain_factor])
+    if model.terrain == 'sin': 
+        ax.set_xlim([-3.+(i*(2*f/10)/len(timodel)), 3. + (i*(2*f/10)/len(timodel))])
+        ax.set_ylim([-3 + model.terrain_factor, 3 + model.terrain_factor])
+    else:
+        ax.set_xlim([-1.+0, 5. + 0])
+        ax.set_ylim([-1 +0, 5. + 0])
+    
     terrain = np.linspace(-15.+pos[4][i][0], 15.+pos[4][i][0],1000*f)
     terrain_y = np.asarray(model.f(x=terrain)['y'])
 
@@ -193,7 +197,7 @@ def animate(i):
 ani = animation.FuncAnimation(fig, animate, np.arange(0, len(q[:][0])), init_func=init,
                                interval=1, blit=True)
 
-# ani.save('sin_walk_10.mp4')
+ani.save('slope_walk_10.mp4')
 plt.show()
 
 # print(len(pos[0]))
