@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 20  
+f = 2  
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -88,66 +88,113 @@ timodel = np.linspace(0.0, f*model.T, len(q[:][0]))
 from matplotlib import animation
 from celluloid import Camera
 
-# fig = plt.figure()
-# ax = fig.add_subplot(111, autoscale_on=False)
+fig = plt.figure()
+ax = fig.add_subplot(111)
 
-# ax.grid()
+ax.grid()
 
-# time_template = 'time = %.1fs'
-# time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
-# p1, = ax.plot([], [], '-', color='r')
-# p2, = ax.plot([], [], '-', color='g')
-# p3, = ax.plot([], [], '-', color='b')
-# p4, = ax.plot([], [], '-', color='y')
-# p5, = ax.plot([], [], '-', color='c')
+time_template = 'time = %.1fs'
+time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
+step_template = 'step = %i'
+step_text = ax.text(0.05, 0.7, '', transform=ax.transAxes)
 
-# def init():
-#     p1.set_data([], [])
-#     p2.set_data([], [])
-#     p3.set_data([], [])
-#     p4.set_data([], [])
-#     p5.set_data([], [])
-#     time_text.set_text('')
-#     return p1, p2, p3, p4, p5, time_text
+u_template = 'Input torque in N-m = '
+u_text = ax.text(0.3, 0.9, '', transform=ax.transAxes)
 
-# k = 0
-# def animate(i):
-#     global k
-#     if i%model.N == 0:
-#         k += 1
-#         # print(k)
-#     if i == len(q[:])+1:
-#         k = 0    
-#     ax.set_xlim([-2.+pos[4][i][0], 2.+pos[4][i][0]])
-#     ax.set_ylim([-1+pos[4][i][1], 3+pos[4][i][1]])
-#     p0 = start_pos[k]
-#     p1x = [       p0[0],pos[0][i][0]]
-#     p2x = [pos[0][i][0],pos[1][i][0]]
-#     p3x = [pos[1][i][0],pos[2][i][0]]
-#     p4x = [pos[1][i][0],pos[3][i][0]]
-#     p5x = [pos[3][i][0],pos[4][i][0]]
+p1, = ax.plot([], [], '-', color='r', lw=3)
+p2, = ax.plot([], [], '-', color='g', lw=3)
+p3, = ax.plot([], [], '-', color='b', lw=10)
+p4, = ax.plot([], [], '-', color='y', lw=3)
+p5, = ax.plot([], [], '-', color='c', lw=3)
+te, = ax.plot([], [], '-', color='black', lw=3)
 
-#     p1y = [       p0[1],pos[0][i][1]]
-#     p2y = [pos[0][i][1],pos[1][i][1]]
-#     p3y = [pos[1][i][1],pos[2][i][1]]
-#     p4y = [pos[1][i][1],pos[3][i][1]]
-#     p5y = [pos[3][i][1],pos[4][i][1]]
+
+pe0, = ax.plot([], [], 'ro')
+pe5, = ax.plot([], [], 'co')
+
+
+# if model.terrain == 'sin':
+#     terrain_y = model.terrain_factor*ca.sin(terrain)
+# elif model.terrain == 'wedge':
+#     terrain_y = model.terrain_factor*terrain
+# elif model.terrain == 'smooth_stair':
+#     terrain_y = model.terrain_factor*terrain
+    
+k = 0
+def init():
+    global k
+    p1.set_data([], [])
+    p2.set_data([], [])
+    p3.set_data([], [])
+    p4.set_data([], [])
+    p5.set_data([], [])
+    pe0.set_data([], [])
+    pe5.set_data([], [])
+    te.set_data([], [])
+    time_text.set_text('')
+    step_text.set_text('')
+    u_text.set_text('')
+    k = 0 
+    return p1, p2, p3, p4, p5, pe0, pe5, te, time_text, step_text, u_text
+
+def animate(i):
+    global k
+    # i -= 1
+    if i%model.N == 0:
+        k += 1
+        # print(k)
+    if i == len(q[:]):
+        k = 0    
+    # ax.set_xlim([-5.+pos[4][i][0], 5.+pos[4][i][0]])
+    # ax.set_ylim([-5, 5])
+    # terrain = np.linspace(-5.+pos[4][i][0], 5.+pos[4][i][0],1000*f)
+
+    p0 = start_pos[k]
+
+
+    ax.set_xlim([-3.+(i*(3*f/10)/len(timodel)), 3. + (i*(3*f/10)/len(timodel))])
+    ax.set_ylim([-3 + model.terrain_factor, 3 + model.terrain_factor])
+    terrain = np.linspace(-15.+pos[4][i][0], 15.+pos[4][i][0],1000*f)
+    terrain_y = np.asarray(model.f(x=terrain)['y'])
+
+    p1x = [       p0[0],pos[0][i][0]]
+    p2x = [pos[0][i][0],pos[1][i][0]]
+    p3x = [pos[1][i][0],pos[2][i][0]]
+    p4x = [pos[1][i][0],pos[3][i][0]]
+    p5x = [pos[3][i][0],pos[4][i][0]]
+
+    p1y = [       p0[1],pos[0][i][1]]
+    p2y = [pos[0][i][1],pos[1][i][1]]
+    p3y = [pos[1][i][1],pos[2][i][1]]
+    p4y = [pos[1][i][1],pos[3][i][1]]
+    p5y = [pos[3][i][1],pos[4][i][1]]
 
     
-#     p1.set_data(p1x, p1y)
-#     p2.set_data(p2x, p2y)
-#     p3.set_data(p3x, p3y)
-#     p4.set_data(p4x, p4y)
-#     p5.set_data(p5x, p5y)
-#     time_text.set_text(time_template % (i*20/len(timodel)))
+    p1.set_data(p1x, p1y)
+    p2.set_data(p2x, p2y)
+    p3.set_data(p3x, p3y)
+    p4.set_data(p4x, p4y)
+    p5.set_data(p5x, p5y)
+    te.set_data(terrain, terrain_y-0.1)
 
-#     return p1, p2, p3, p4, p5, time_text
+    pe0.set_data(p0[0], p0[1])
+    pe5.set_data(p5x[1], p5y[1])
 
-# ani = animation.FuncAnimation(fig, animate, np.arange(0, len(q[:][0])), init_func=init,
-#                                interval=20, blit=True)
+    time_text.set_text(time_template % (i*(3*f/10)/len(timodel)))
+    step_text.set_text(step_template % k)
+    # print(i, len(u[4][0]))
+    u_text.set_text(u_template + '[ ' + str(round(u[0][i],2)) + ', ' + 
+                                        str(round(u[1][i],2)) + ', ' + 
+                                        str(round(u[2][i],2)) + ', ' + 
+                                        str(round(u[3][i],2)) + ']')
+    # print(i)
+    return p1, p2, p3, p4, p5, pe0, pe5, te, time_text, step_text, u_text
 
-# # ani.save('spoiler.mp4')
-# plt.show()
+ani = animation.FuncAnimation(fig, animate, np.arange(0, len(q[:][0])), init_func=init,
+                               interval=1, blit=True)
+
+# ani.save('sin_walk_10.mp4')
+plt.show()
 
 # print(len(pos[0]))
 
@@ -174,74 +221,75 @@ from celluloid import Camera
 
 # anim.save('sine_wave.gif', writer='imagemagick')
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.grid()
-camodelra = Camera(fig)
-terrain = np.linspace(-2,f,1000*f)
-if model.terrain == 'sin':
-    terrain_y = model.terrain_factor*ca.sin(terrain)
-elif model.terrain == 'wedge':
-    terrain_y = model.terrain_factor*terrain
-elif model.terrain == 'smooth_stair':
-    k = -50
-    terrain_y = terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))))
-    terrain_y /= abs(k)
-k = 0
-# ax.set_xlim([-1., 7]) # sin
-ax.set_xlim([-1., 5]) # wedge
-ax.set_ylim([-1, 5]) # wedge
-# ax.set_ylim([-1, 3]) # sin
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# ax.grid()
+# camodelra = Camera(fig)
+
+# terrain = np.linspace(-2,f,1000*f)
+# if model.terrain == 'sin':
+#     terrain_y = model.terrain_factor*ca.sin(terrain)
+# elif model.terrain == 'wedge':
+#     terrain_y = model.terrain_factor*terrain
+# elif model.terrain == 'smooth_stair':
+#     k = -50
+#     terrain_y = terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k)) - ca.sin(terrain*k - ca.sin(terrain*k) - ca.sin(terrain*k - ca.sin(terrain*k))))
+#     terrain_y /= abs(k)
+# k = 0
+# # ax.set_xlim([-1., 7]) # sin
+# ax.set_xlim([-1., 5]) # wedge
+# ax.set_ylim([-1, 5]) # wedge
+# # ax.set_ylim([-1, 3]) # sin
 
 
-# ax.set_ylim([-3, 2]) # ss
-# ax.set_xlim([-1., 2]) # ss
+# # ax.set_ylim([-3, 2]) # ss
+# # ax.set_xlim([-1., 2]) # ss
 
-for i in range(f*model.N):
-    # print(i)    
-    p1 = [pos[0][i][0],pos[0][i][1]]
-    p2 = [pos[1][i][0],pos[1][i][1]]
-    p3 = [pos[2][i][0],pos[2][i][1]]
-    p4 = [pos[3][i][0],pos[3][i][1]]
-    p5 = [pos[4][i][0],pos[4][i][1]]
-    # plt.axes(xlim=(-2, 2), ylim=(-2, 2))
-    # plt.axes(xlim=(-2., 2.), ylim=(-0.1, 3))
-    # plt.plot([0,-p1[1]], [0,p1[0]],'r',[-p1[1],-p2[1]], [p1[0],p2[0]],'b',
-    #     [-p2[1],-p3[1]], [p2[0],p3[0]],'c',
-    #     [-p2[1],p4[1] - 2*p2[1]], [p2[0],2*p2[0]-p4[0]],'b',
-    #     [p4[1] - 2*p2[1],p5[1]], [2*p2[0]-p4[0],(p5[0] - 2*p2[0])],'r')
-    if i%model.N == 0:
-            p0 = start_pos[k]
-            # print(p0)
-            k += 1 
+# for i in range(f*model.N):
+#     # print(i)    
+#     p1 = [pos[0][i][0],pos[0][i][1]]
+#     p2 = [pos[1][i][0],pos[1][i][1]]
+#     p3 = [pos[2][i][0],pos[2][i][1]]
+#     p4 = [pos[3][i][0],pos[3][i][1]]
+#     p5 = [pos[4][i][0],pos[4][i][1]]
+#     # plt.axes(xlim=(-2, 2), ylim=(-2, 2))
+#     # plt.axes(xlim=(-2., 2.), ylim=(-0.1, 3))
+#     # plt.plot([0,-p1[1]], [0,p1[0]],'r',[-p1[1],-p2[1]], [p1[0],p2[0]],'b',
+#     #     [-p2[1],-p3[1]], [p2[0],p3[0]],'c',
+#     #     [-p2[1],p4[1] - 2*p2[1]], [p2[0],2*p2[0]-p4[0]],'b',
+#     #     [p4[1] - 2*p2[1],p5[1]], [2*p2[0]-p4[0],(p5[0] - 2*p2[0])],'r')
+#     if i%model.N == 0:
+#             p0 = start_pos[k]
+#             # print(p0)
+#             k += 1 
 
-    # plt.plot([p0[0],p1[1]], [p0[1],p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'g',
-    #         [p2[1],p3[1]], [p2[0],p3[0]],'b', [p2[1],p4[1]], [p2[0],p4[0]],'y',
-    #         [p4[1],p5[1]], [p4[0],p5[0]],'c')
-    # ax.set_xlim([-2.+p2[0], 2.+p2[0]])
-    # ax.set_ylim([-2+p2[1], 2+p2[1]])
-    ax.plot([p0[0],p1[0]], [p0[1],p1[1]],'r',[p1[0],p2[0]], [p1[1],p2[1]],'g',
-        [p2[0],p3[0]], [p2[1],p3[1]],'b', [p2[0],p4[0]], [p2[1],p4[1]],'y',
-        [p4[0],p5[0]], [p4[1],p5[1]],'c')
+#     # plt.plot([p0[0],p1[1]], [p0[1],p1[0]],'r',[p1[1],p2[1]], [p1[0],p2[0]],'g',
+#     #         [p2[1],p3[1]], [p2[0],p3[0]],'b', [p2[1],p4[1]], [p2[0],p4[0]],'y',
+#     #         [p4[1],p5[1]], [p4[0],p5[0]],'c')
+#     # ax.set_xlim([-2.+p2[0], 2.+p2[0]])
+#     # ax.set_ylim([-2+p2[1], 2+p2[1]])
+#     ax.plot([p0[0],p1[0]], [p0[1],p1[1]],'r',[p1[0],p2[0]], [p1[1],p2[1]],'g',
+#         [p2[0],p3[0]], [p2[1],p3[1]],'b', [p2[0],p4[0]], [p2[1],p4[1]],'y',
+#         [p4[0],p5[0]], [p4[1],p5[1]],'c')
 
-    # plt.plot([-2,6],[0,0],'g')  
+#     # plt.plot([-2,6],[0,0],'g')  
 
-    if model.terrain == 'sin':
-        ax.plot(terrain, terrain_y,'black')   # sin
-    if model.terrain == 'wedge':
-        ax.plot(terrain, terrain_y,'black')   # wedge 
-    if model.terrain == 'smooth_stair':
-        ax.plot(terrain, terrain_y,'black')   # smooth stair 
+#     if model.terrain == 'sin':
+#         ax.plot(terrain, terrain_y,'black')   # sin
+#     if model.terrain == 'wedge':
+#         ax.plot(terrain, terrain_y,'black')   # wedge 
+#     if model.terrain == 'smooth_stair':
+#         ax.plot(terrain, terrain_y,'black')   # smooth stair 
 
 
-    camodelra.snap()
-    ax.grid()
+#     camodelra.snap()
+#     ax.grid()
 
-    # plt.draw() 
-    # plt.pause(1e-5)
-    # ax.cla()
-animation = camodelra.animate(interval=60)
-# animation.save('path_sstairs_down_N_40_human.mp4')
+#     # plt.draw() 
+#     # plt.pause(1e-5)
+#     # ax.cla()
+# animation = camodelra.animate(interval=60)
+# # animation.save('path_sstairs_down_N_40_human.mp4')
 plt.show()
 
 

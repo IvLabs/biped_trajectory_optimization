@@ -12,33 +12,40 @@ class walker():
         x_pos = ca.MX.sym('x_pos', 1)
         self.step_max = 0.5; self.tauMax = 20
         if self.terrain == 'sin':
-            self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
+            # self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
             self.T = 0.25
             y_pos = self.terrain_factor*ca.sin(x_pos)
             self.f = ca.Function('terrain_sin',[x_pos],[y_pos],['x'],['y'])
             self.df = self.f.jacobian()
         elif self.terrain == 'wedge':
-            self.T = 0.25
+            self.T = 0.2
             y_pos = self.terrain_factor*x_pos
             self.f = ca.Function('terrain_wedge',[x_pos],[y_pos],['x'],['y'])
             self.df = self.f.jacobian()
             # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
         elif self.terrain == 'smooth_stair':
-            self.T = 0.25
-            k = -50
-            self.step_max = abs(k)*0.01/2
-            y_pos = x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))))
-            y_pos /= abs(k)
-            self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
-            self.df = self.f.jacobian()
-            print(self.f(x=0.), self.df(x=0.))
-            
+            self.T = 0.2
+            # k = -50
+            # self.step_max = abs(k)*0.01/2
+            # y_pos = x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))))
+            # y_pos /= abs(k)
+            # self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
+            # self.df = self.f.jacobian()
+            # print(self.f(x=0.), self.df(x=0.))
+            self.order = 4
+            terrain_factor = 20
+            f = ca.Function('smooth_stair', [x_pos],[(terrain_factor*x_pos - ca.sin(terrain_factor*x_pos))/terrain_factor], ['x'],['y'])
+            # y_pos = x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))))
+            # y_pos /= abs(self.terrain_factor)
+            # self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
+            self.f = f.fold(self.order)
+            self.df = self.f.jacobian()            
         
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
-        self.mass = ca.MX([0.25,0.25,0.25,0.25,0.25])
+        self.mass = ca.MX([0.1,0.1,0.6,0.1,0.1])
         self.inertia = self.mass * (self.length**2) /12
-        self.gravity = 10
+        self.gravity = 9.81
         self.h = self.T/self.N
         self.goal = [start_angles, start_angular_vel]
         self.ini_goal = self.goal[0].to_DM()
