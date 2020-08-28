@@ -6,7 +6,7 @@ class walker():
         # set our parameters of optimization
         self.opti = ca.Opti()
         self.terrain_factor = 1.
-        self.terrain = ['sin','wedge','smooth_stair'][1]
+        self.terrain = ['sin','wedge','smooth_stair'][2]
         self.N = 40; self.T = .08
         # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
         x_pos = ca.MX.sym('x_pos', 1)
@@ -24,7 +24,7 @@ class walker():
             self.df = self.f.jacobian()
             # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
         elif self.terrain == 'smooth_stair':
-            self.T = 0.2
+            self.T = 0.25
             # k = -50
             # self.step_max = abs(k)*0.01/2
             # y_pos = x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))))
@@ -385,8 +385,8 @@ class nlp(walker):
                         # (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
                         ])
 
-            ceq.extend([(walker.x[i][2, 0] <= walker.pi/3)])
-            ceq.extend([(walker.x[i][2, 0] >= -walker.pi/3)])
+            ceq.extend([(walker.x[i][2, 0] <= walker.pi/2)])
+            ceq.extend([(walker.x[i][2, 0] >= -walker.pi/2)])
             # ceq.extend([(walker.x[i][1, 0] >= 0 )])
             # ceq.extend([(walker.x[i][1, 0] >= 0 )])
 
