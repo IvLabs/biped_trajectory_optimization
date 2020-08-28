@@ -26,7 +26,7 @@ class Hopper():
         self.q     = ca.reshape(q    , 1, 1)
         self.q_dot = ca.reshape(q_dot, 1, 1)
         self.r     = ca.reshape(r    , 2, 1)
-        self.r_dot = ca.reshape(r_dot , 2, 1)
+        self.r_dot = ca.reshape(r_dot ,2, 1)
         self.pe    = ca.reshape(pe   , 2, 1)
         self.f     = ca.reshape(f    , 2, 1)
 

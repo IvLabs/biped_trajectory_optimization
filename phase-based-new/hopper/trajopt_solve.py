@@ -55,7 +55,6 @@ class TrajOptSolve():
         #         self.sol_u1.append(sol.value(self.formulation.u[str(step)][knot_point][0]))
         #         self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
 
-
         for n in range(len(self.formulation.q)):
             self.sol_f.append(np.linalg.norm(sol.value(self.formulation.f[n])))
             self.sol_px.append((sol.value(self.formulation.p[n]))[0])
