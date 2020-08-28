@@ -200,9 +200,9 @@ def animate(i):
     return p1, p2, p3, p4, p5, pe0, pe5, te, time_text, step_text, u_text
 
 ani = animation.FuncAnimation(fig, animate, np.arange(0, len(q[:][0])), init_func=init,
-                               interval=1, blit=True)
+                               interval=30, blit=True)
 
-ani.save('stairs_walk_10.mp4')
+ani.save('sin_walk_10.mp4')
 plt.show()
 
 # print(len(pos[0]))

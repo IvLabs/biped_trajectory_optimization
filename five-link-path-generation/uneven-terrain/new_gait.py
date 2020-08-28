@@ -6,7 +6,7 @@ class walker():
         # set our parameters of optimization
         self.opti = ca.Opti()
         self.terrain_factor = 1.
-        self.terrain = ['sin','wedge','smooth_stair'][2]
+        self.terrain = ['sin','wedge','smooth_stair'][0]
         self.N = 40; self.T = .08
         # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
         x_pos = ca.MX.sym('x_pos', 1)
