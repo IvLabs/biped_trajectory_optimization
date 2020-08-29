@@ -4,13 +4,14 @@ import casadi as ca
 class walker():
     def __init__(self, start_angles, start_angular_vel, start_pos):
         # set our parameters of optimization
+        self.type = ['human','ostrich'][0] 
         self.opti = ca.Opti()
-        self.terrain_factor = 0.
-        self.terrain = ['sin','wedge','smooth_stair'][0]
+        self.terrain_factor = 1.
+        self.terrain = ['sin','wedge','smooth_stair'][2]
         self.N = 40; self.T = .08
         # self.T = (self.T0)/(1 + np.tanh(self.heightMapNumericalSlope(start_pos[0])))
         x_pos = ca.MX.sym('x_pos', 1)
-        self.step_max = 0.5; self.tauMax = 20
+        self.step_max = 0.8; self.tauMax = 20
         if self.terrain == 'sin':
             # self.T = ((self.T)/(1 + np.tanh(np.sin(start_pos[0]+np.pi)))) + 2*self.T
             if self.terrain_factor == 0:
@@ -28,25 +29,25 @@ class walker():
             # self.T = 2*self.T*np.exp(-(1 + np.tanh(abs(self.terrain_factor)))) + 5*self.T
         elif self.terrain == 'smooth_stair':
             self.T = 0.25
-            # k = -50
-            # self.step_max = abs(k)*0.01/2
-            # y_pos = x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k)) - ca.sin(x_pos*k - ca.sin(x_pos*k) - ca.sin(x_pos*k - ca.sin(x_pos*k))))
-            # y_pos /= abs(k)
-            # self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
-            # self.df = self.f.jacobian()
-            # print(self.f(x=0.), self.df(x=0.))
-            self.order = 4
-            terrain_factor = 20
+            self.order = 3
+            self.terrain_factor = 20 
+
             f = ca.Function('smooth_stair', [x_pos],[(terrain_factor*x_pos - ca.sin(terrain_factor*x_pos))/terrain_factor], ['x'],['y'])
-            # y_pos = x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor)) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor) - ca.sin(x_pos*self.terrain_factor - ca.sin(x_pos*self.terrain_factor))))
-            # y_pos /= abs(self.terrain_factor)
-            # self.f = ca.Function('smooth_stair',[x_pos],[y_pos],['x'],['y'])
+            
+            # negative means down
+            # self.terrain_factor = -20     
+            # if self.type == 'human':
+            #     self.T = 0.3       
+            # else:
+            #     self.T = 0.5
+            # f = ca.Function('smooth_stair', [x_pos],[-(self.terrain_factor*x_pos - ca.sin(self.terrain_factor*x_pos))/self.terrain_factor], ['x'],['y'])
+            
             self.f = f.fold(self.order)
             self.df = self.f.jacobian()            
         
         self.pi = np.pi; 
         self.length = ca.MX([0.5,0.5,0.5,0.5,0.5])
-        self.mass = ca.MX([0.1,0.1,0.6,0.1,0.1])
+        self.mass = ca.MX([0.1,0.1,0.4,0.1,0.1])
         self.inertia = self.mass * (self.length**2) /12
         self.gravity = 9.81
         self.h = self.T/self.N
@@ -375,18 +376,23 @@ class nlp(walker):
             #     (ca.acos(ca.norm_2(walker.pos[i][1,:]-walker.pos[i][0,:])*ca.norm_2(walker.pos[i][0,:])/(ca.dot(walker.pos[i][1,:]-walker.pos[i][0,:],walker.pos[i][0,:]))) > 0)
             # ])
 
-            ceq.extend([
-                        # (ca.fabs(walker.x[i][0, 0]) < ca.fabs(walker.x[i][1, 0])),
-                        # (ca.fabs(walker.x[i][4, 0]) < ca.fabs(walker.x[i][3, 0])),
-                        # (ca.fabs(walker.x[i][0, 0]-walker.x[i][1, 0]) > 0),
-                        # (ca.fabs(walker.x[i][4, 0]-walker.x[i][3, 0]) > 0),
-                        
-                        (walker.x[i][0, 0] > walker.x[i][1, 0]), # human
-                        (walker.x[i][4, 0] < walker.x[i][3, 0]), # human
-                        
-                        # (walker.x[i][0, 0] < walker.x[i][1, 0]), # ostrich
-                        # (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
-                        ])
+            # ceq.extend([
+            #     # (ca.fabs(walker.x[i][0, 0]) < ca.fabs(walker.x[i][1, 0])),
+            #     # (ca.fabs(walker.x[i][4, 0]) < ca.fabs(walker.x[i][3, 0])),
+            #     # (ca.fabs(walker.x[i][0, 0]-walker.x[i][1, 0]) > 0),
+            #     # (ca.fabs(walker.x[i][4, 0]-walker.x[i][3, 0]) > 0),
+            #             ])
+
+            if walker.type == 'human':
+                ceq.extend([
+                    (walker.x[i][0, 0] > walker.x[i][1, 0]), # human
+                    (walker.x[i][4, 0] < walker.x[i][3, 0]), # human
+                ])
+            else:    
+                ceq.extend([
+                    (walker.x[i][0, 0] < walker.x[i][1, 0]), # ostrich
+                    (walker.x[i][4, 0] > walker.x[i][3, 0]), # ostrich
+                ])
 
             ceq.extend([(walker.x[i][2, 0] <= walker.pi/2)])
             ceq.extend([(walker.x[i][2, 0] >= -walker.pi/2)])

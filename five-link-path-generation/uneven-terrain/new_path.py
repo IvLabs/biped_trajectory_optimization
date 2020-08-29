@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 10
+f = 5
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -96,7 +96,7 @@ ax.grid()
 time_template = 'time = %.1fs'
 time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 step_template = 'step = %i'
-step_text = ax.text(0.05, 0.7, '', transform=ax.transAxes)
+step_text = ax.text(0.05, 0.8, '', transform=ax.transAxes)
 
 u_template = 'Input torque in N-m = '
 u_text = ax.text(0.3, 0.9, '', transform=ax.transAxes)
@@ -161,14 +161,26 @@ def animate(i):
         terrain = np.linspace(-15.+pos[4][i][0], 15.+pos[4][i][0],1000*f)
         terrain_y = np.asarray(model.f(x=terrain)['y'])
         te.set_data(terrain, terrain_y-0.1)
-    else:
-        ax.set_xlim([-1.+0, 5. + 0])
-        ax.set_ylim([-1 +0, 5. + 0])
-    
-        terrain = np.linspace(-15.+pos[4][i][0], 15.+pos[4][i][0],1000*f)
-        terrain_y = np.asarray(model.f(x=terrain)['y'])
+        time_text.set_text(time_template % (i*(10*f*model.T/3)/len(timodel)))
 
-        te.set_data(terrain+0.05, terrain_y-0.05)
+    else:
+        if model.terrain_factor < 0:
+            ax.set_xlim([-1.+(i*(2*f/10)/len(timodel)), 5. + (i*(2*f/10)/len(timodel))])
+            ax.set_ylim([-3 -(i*(2.2*f/10)/len(timodel)), 2 - (i*(2.2*f/10)/len(timodel))])
+            time_text.set_text(time_template % (i*(10*f*model.T/10)/len(timodel)))
+            terrain = np.linspace(-15.+pos[4][i][0], 15.+pos[4][i][0],1000*f)
+            terrain_y = np.asarray(model.f(x=terrain)['y'])
+            te.set_data(terrain-0.02, terrain_y-0.05)
+        
+        else:    
+            ax.set_xlim([-1.+0, 5. + 0])
+            ax.set_ylim([-1 +0, 5. + 0])
+            time_text.set_text(time_template % (i*(10*f*model.T/3)/len(timodel)))
+
+            terrain = np.linspace(-15.+pos[4][i][0], 15.+pos[4][i][0],1000*f)
+            terrain_y = np.asarray(model.f(x=terrain)['y'])
+            te.set_data(terrain+0.05, terrain_y-0.05)
+        
 
 
     p1x = [       p0[0],pos[0][i][0]]
@@ -193,7 +205,6 @@ def animate(i):
     pe0.set_data(p0[0], p0[1])
     pe5.set_data(p5x[1], p5y[1])
 
-    time_text.set_text(time_template % (i*(10*f*model.T/3)/len(timodel)))
     step_text.set_text(step_template % k)
     # print(i, len(u[4][0]))
     u_text.set_text(u_template + '[ ' + str(round(u[0][i],2)) + ', ' + 
@@ -206,7 +217,7 @@ def animate(i):
 ani = animation.FuncAnimation(fig, animate, np.arange(0, len(q[:][0])), init_func=init,
                                interval=30, blit=True)
 
-ani.save('flat_walk_10.mp4')
+ani.save('stairs_down_walk_10.mp4')
 plt.show()
 
 # print(len(pos[0]))
