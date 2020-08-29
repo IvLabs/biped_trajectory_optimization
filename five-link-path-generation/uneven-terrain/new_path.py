@@ -11,7 +11,7 @@ start_angles = ca.MX.zeros(5)
 start_pos = [[0,0]]
 start_angular_vel = ca.MX.zeros(5)
 q = []; dq = []; u = []; pos = []; time = []
-f = 8 
+f = 10
 for k in range(f):
     # try:
     model = walker(start_angles, start_angular_vel, start_pos[-1])        
@@ -152,8 +152,12 @@ def animate(i):
     p0 = start_pos[k]
 
     if model.terrain == 'sin': 
-        ax.set_xlim([-3.+(i*(2*f/10)/len(timodel)), 3. + (i*(2*f/10)/len(timodel))])
-        ax.set_ylim([-3 + model.terrain_factor, 3 + model.terrain_factor])
+        if model.terrain_factor == 0:
+            ax.set_xlim([-2.+0, 4. + 0])
+            ax.set_ylim([-3 + model.terrain_factor, 3 + model.terrain_factor])
+        else:
+            ax.set_xlim([-3.+(i*(2*f/10)/len(timodel)), 3. + (i*(2*f/10)/len(timodel))])
+            ax.set_ylim([-3 + model.terrain_factor, 3 + model.terrain_factor])
         terrain = np.linspace(-15.+pos[4][i][0], 15.+pos[4][i][0],1000*f)
         terrain_y = np.asarray(model.f(x=terrain)['y'])
         te.set_data(terrain, terrain_y-0.1)
@@ -189,7 +193,7 @@ def animate(i):
     pe0.set_data(p0[0], p0[1])
     pe5.set_data(p5x[1], p5y[1])
 
-    time_text.set_text(time_template % (i*(3*f/10)/len(timodel)))
+    time_text.set_text(time_template % (i*(10*f*model.T/3)/len(timodel)))
     step_text.set_text(step_template % k)
     # print(i, len(u[4][0]))
     u_text.set_text(u_template + '[ ' + str(round(u[0][i],2)) + ', ' + 
@@ -202,7 +206,7 @@ def animate(i):
 ani = animation.FuncAnimation(fig, animate, np.arange(0, len(q[:][0])), init_func=init,
                                interval=30, blit=True)
 
-ani.save('sin_walk_10.mp4')
+ani.save('flat_walk_10.mp4')
 plt.show()
 
 # print(len(pos[0]))
