@@ -67,7 +67,7 @@ class Hopper():
         self.p_n = self.R_q @ (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
         
         # y = ca.fabs(self.R_q @ (r - pe) - self.p_n) <= self.b
-        y = ca.fabs(self.R_q @ (r - pe) - self.p_n) <= self.b
+        y = ca.fabs(self.R_q @ (r - pe) - self.p_n)
 
         self.kinematic_model = ca.Function('Box', [r, r_dot, q, q_dot, pe], 
                                                   [y],
