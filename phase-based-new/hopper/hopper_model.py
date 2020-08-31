@@ -94,7 +94,7 @@ class Hopper():
         icom  = self.icom
 
         r_ddot = (f - mcom*g)/mcom
-        q_ddot = hf.crossProduct2D(f, r - pe)/icom 
+        q_ddot = hf.crossProduct2D(r - pe, f)/icom 
 
         # self.dynamics_model = ca.Function('CD', [r, r_dot, q, q_dot, pe, f], 
         #                                         [r_ddot, q_ddot], 
