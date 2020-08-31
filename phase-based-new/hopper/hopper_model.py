@@ -81,7 +81,7 @@ class Hopper():
         self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 
                                                   [y],
                                                   ['r', 'q','pe'],
-                                                  ['constraint'])
+                                                  ['constraint violation'])
         # return y
 
     def setCenteroidalDynamics(self):
