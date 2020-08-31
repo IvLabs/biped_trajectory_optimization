@@ -17,7 +17,7 @@ class Hopper():
         self.mcom = np.sum(self.mass).reshape(1,1)
         self.icom = np.max(self.inertia).reshape(1,1)
 
-        self.gravity_vector = ca.MX.zeros(2)
+        self.gravity_vector = ca.DM.zeros(2)
         self.gravity_vector[1] = self.gravity
         
         self.b = ca.DM([ca.mmax(self.length*2),ca.mmax(self.length)])
@@ -63,7 +63,8 @@ class Hopper():
         self.R_q[0,0],self.R_q[0,1] = ca.cos(q), -ca.sin(q)
         self.R_q[1,0],self.R_q[1,1] = ca.sin(q),  ca.cos(q)
 
-        self.p_n = (self.R_q @ r) - 5*np.sum(self.length)*ca.DM.ones(2)/2 
+        # self.p_n = (self.R_q @ r) - 5*np.sum(self.length)*ca.DM.ones(2)/2 
+        self.p_n = self.R_q @ (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
         
         y = ca.fabs(self.R_q @ (r - pe) - self.p_n) <= self.b
 
