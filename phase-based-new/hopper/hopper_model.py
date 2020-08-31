@@ -78,7 +78,7 @@ class Hopper():
         # # y = ca.fabs(self.R_q @ (r - pe) - self.p_n) <= self.b
         y = pe - pe_truth
 
-        self.kinematic_model = ca.Function('Box', [r, q, pe], 
+        self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 
                                                   [y],
                                                   ['r', 'q','pe'],
                                                   ['constraint'])
