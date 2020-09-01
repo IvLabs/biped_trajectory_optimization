@@ -383,39 +383,37 @@ class NonlinearProgram():
         self.f_polynomial = ca.Function('Force', [delta_T, t, f0, df0, f1, df1], [f, df], 
                                         ['delta_T', 't', 'f0', 'df0', 'f1', 'df1'], ['f', 'df'])
 
-        
+        q0  = ca.MX.sym( 'q0_1', 3)
+        q1  = ca.MX.sym( 'q1_1', 3)
+        dq0 = ca.MX.sym('dq0_1', 3)
+        dq1 = ca.MX.sym('dq1_1', 3)
 
-        # q0  = ca.MX.sym( 'q0_1', 3)
-        # q1  = ca.MX.sym( 'q1_1', 3)
-        # dq0 = ca.MX.sym('dq0_1', 3)
-        # dq1 = ca.MX.sym('dq1_1', 3)
+        a0 = q0
+        a1 = dq0
+        a2 = -(delta_T**(-2))*(3*(q0 - q1) + delta_T*(2*dq0 + dq1))
+        a3 = (delta_T**(-3))*(2*(q0 - q1) + delta_T*(dq0 + dq1))
 
-        # a0 = q0
-        # a1 = dq0
-        # a2 = -(delta_T**(-2))*(3*(q0 - q1) + delta_T*(2*dq0 + dq1))
-        # a3 = (delta_T**(-3))*(2*(q0 - q1) + delta_T*(dq0 + dq1))
+        q = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dq = a1 + 2*a2*t + 3*a3*(t**2)
 
-        # q = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        # dq = a1 + 2*a2*t + 3*a3*(t**2)
+        self.q_polynomial = ca.Function('Joint Angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq], 
+                                        ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq'])
 
-        # self.q_polynomial = ca.Function('Joint Angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq], 
-        #                                 ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq'])
+        r0  = ca.MX.sym( 'r0_1', 2)
+        r1  = ca.MX.sym( 'r1_1', 2)
+        dr0 = ca.MX.sym('dr0_1', 2)
+        dr1 = ca.MX.sym('dr1_1', 2)
 
-        # r0  = ca.MX.sym( 'r0_1', 2)
-        # r1  = ca.MX.sym( 'r1_1', 2)
-        # dr0 = ca.MX.sym('dr0_1', 2)
-        # dr1 = ca.MX.sym('dr1_1', 2)
+        a0 = r0
+        a1 = dr0
+        a2 = -(delta_T**(-2))*(3*(r0 - r1) + delta_T*(2*dr0 + dr1))
+        a3 = (delta_T**(-3))*(2*(r0 - r1) + delta_T*(dr0 + dr1))
 
-        # a0 = r0
-        # a1 = dr0
-        # a2 = -(delta_T**(-2))*(3*(r0 - r1) + delta_T*(2*dr0 + dr1))
-        # a3 = (delta_T**(-3))*(2*(r0 - r1) + delta_T*(dr0 + dr1))
+        r = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dr = a1 + 2*a2*t + 3*a3*(t**2)
 
-        # r = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        # dr = a1 + 2*a2*t + 3*a3*(t**2)
-
-        # self.r_polynomial = ca.Function('COM', [delta_T, t, r0, dr0, r1, dr1], [r, dr], 
-        #                                 ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr'])
+        self.r_polynomial = ca.Function('COM', [delta_T, t, r0, dr0, r1, dr1], [r, dr], 
+                                        ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr'])
 
 
     def setVariables(self):
