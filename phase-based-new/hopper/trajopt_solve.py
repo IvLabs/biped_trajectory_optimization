@@ -9,9 +9,9 @@ from trajopt_formulation import NonlinearProgram
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NonlinearProgram(dt=0.5, steps=3, total_duration=3, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 3000}
+        s_opts = {"max_iter": 200}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):

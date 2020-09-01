@@ -73,11 +73,11 @@ class NonlinearProgram():
         # self.setSpline()
         
         self.setPolyCoefficients()
-        self.setModelConstraints()
-
         # self.contructPhaseSpline()
         # self.setVariables()
-        # self.setConstraints()
+
+        self.setConstraints()
+        self.setInitialGuess()
         # # self.setBounds()
         self.printInfo()
 
@@ -315,6 +315,7 @@ class NonlinearProgram():
 
             t += self.dt
 
+        self.opti.subject_to(sum(self.time_phases) == self.total_duration)
         # print(self.knot_points)
         # print(len(self.q))
         # print(len(self.p))
@@ -324,6 +325,13 @@ class NonlinearProgram():
         step_checker = 0
 
         for n in range(self.knot_points):
+            # Boundary Constraints
+            if n==0:
+                self.ceq.append(self.r[n] == 0)
+                self.ceq.append(self.q[n] == 0)
+            elif n==self.knot_points-1:
+                self.ceq.append(self.r[n] == 2)
+                
             # Body Constraints    
             self.model.setState(self.r[n], self.r_dot[n], 
                                 self.q[n], self.q_dot[n], self.p[n], self.f[n])
@@ -344,7 +352,24 @@ class NonlinearProgram():
                 self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
                 self.ceq.append(self.p_dot[n]==0) # no slip
 
+    def setConstraints(self):
+        self.setModelConstraints()
+        self.opti.subject_to(self.ceq)
+        self.opti.subject_to(self.ciq)
 
+    def setInitialGuess(self):
+
+        for n in range(self.knot_points):
+            self.opti.bounded(3*[-np.pi/2], self.q_variables[n], 3*[np.pi/2])
+
+            self.opti.set_initial(self.r_variables[n][0], (2*n)/(self.knot_points-1))
+            self.opti.set_initial(self.r_dot_variables[n][0], (2)/(self.knot_points-1))
+            
+            # self.opti.set_initial(self.q_variables[n][0], (2*n)/(self.knot_points-1))
+            self.opti.set_initial(self.p_variables[n][0], (2*n)/(self.knot_points-1))
+            self.opti.set_initial(self.f_variables[n][0], self.model.gravity*self.model.mcom)
+            
+    # Old code
 
     def contructPhaseSpline(self):
         delta_T = ca.MX.sym('delta_T',1)
@@ -818,11 +843,6 @@ class NonlinearProgram():
                 t += self.dt
 
         self.ceq.append(sum(self.time_phases) == self.total_duration)
-
-    def setConstraints(self):
-        # self.setCollocation()
-        self.opti.subject_to(self.ceq)
-        self.opti.subject_to(self.ciq)
     
     def setCollocation(self):
         for n in range(len(self.q)-1):
