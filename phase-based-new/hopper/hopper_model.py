@@ -114,32 +114,32 @@ class Hopper():
         
 # test check for sanity
 
-test_hopper = Hopper()
-q     = ca.MX.sym(    'q', 3, 1)
-q_dot = ca.MX.sym('q_dot', 3, 1)
-r     = ca.MX.sym(    'r', 2, 1)
-r_dot = ca.MX.sym('r_dot', 2, 1)
-pe    = ca.MX.sym(   'pe', 2, 1)
-f     = ca.MX.sym(    'f', 2, 1)
+# test_hopper = Hopper()
+# q     = ca.MX.sym(    'q', 3, 1)
+# q_dot = ca.MX.sym('q_dot', 3, 1)
+# r     = ca.MX.sym(    'r', 2, 1)
+# r_dot = ca.MX.sym('r_dot', 2, 1)
+# pe    = ca.MX.sym(   'pe', 2, 1)
+# f     = ca.MX.sym(    'f', 2, 1)
 
-test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+# test_hopper.setState(r, r_dot, q, q_dot, pe, f)
 
-print('-----Symbolic Test-------')
-print(test_hopper.kinematic_model(r, q, pe))
-print(test_hopper.dynamic_model(r, r_dot, pe, f))
+# print('-----Symbolic Test-------')
+# print(test_hopper.kinematic_model(r, q, pe))
+# print(test_hopper.dynamic_model(r, r_dot, pe, f))
 
-q     = ca.DM([np.pi/3]*3)
-q_dot = ca.DM([1.]*3)
-r     = ca.DM([2, 1])
-r_dot = ca.DM([.2, .1])
-pe    = ca.DM([2, 0])
-f     = ca.DM([test_hopper.mcom*test_hopper.gravity/np.sqrt(2), test_hopper.mcom*test_hopper.gravity/np.sqrt(2)])
+# q     = ca.DM([np.pi/3]*3)
+# q_dot = ca.DM([1.]*3)
+# r     = ca.DM([2, 1])
+# r_dot = ca.DM([.2, .1])
+# pe    = ca.DM([2, 0])
+# f     = ca.DM([test_hopper.mcom*test_hopper.gravity/np.sqrt(2), test_hopper.mcom*test_hopper.gravity/np.sqrt(2)])
 
-test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+# test_hopper.setState(r, r_dot, q, q_dot, pe, f)
 
-print('-----Numeric Test-------')
-print(test_hopper.kinematic_model(r, q, pe))
-print(test_hopper.dynamic_model(r, r_dot, pe, f))
+# print('-----Numeric Test-------')
+# print(test_hopper.kinematic_model(r, q, pe))
+# print(test_hopper.dynamic_model(r, r_dot, pe, f))
 
 
 ###############################################

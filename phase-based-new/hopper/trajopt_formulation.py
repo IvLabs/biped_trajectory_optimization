@@ -53,11 +53,11 @@ class NonlinearProgram():
         # self.df_constraint        = []
         # self.dynamic_constraint   = []
         self.setPolynomial()
-        self.contructPhaseSpline()
-        self.setVariables()
-        self.setConstraints()
-        # self.setBounds()
-        self.printInfo()
+        # self.contructPhaseSpline()
+        # self.setVariables()
+        # self.setConstraints()
+        # # self.setBounds()
+        # self.printInfo()
 
     def contructPhaseSpline(self):
         delta_T = ca.MX.sym('delta_T',1)
@@ -364,7 +364,7 @@ class NonlinearProgram():
         p = a0 + a1*t + a2*(t**2) + a3*(t**3)
         dp = a1 + 2*a2*t + 3*a3*(t**2)
 
-        self.pe_polynomial = ca.Function('End Effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
+        self.pe_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
                                         ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
 
         f0  = ca.MX.sym( 'f0_1', 2)
@@ -380,7 +380,7 @@ class NonlinearProgram():
         f = a0 + a1*t + a2*(t**2) + a3*(t**3)
         df = a1 + 2*a2*t + 3*a3*(t**2)
 
-        self.f_polynomial = ca.Function('Force', [delta_T, t, f0, df0, f1, df1], [f, df], 
+        self.f_polynomial = ca.Function('force', [delta_T, t, f0, df0, f1, df1], [f, df], 
                                         ['delta_T', 't', 'f0', 'df0', 'f1', 'df1'], ['f', 'df'])
 
         q0  = ca.MX.sym( 'q0_1', 3)
@@ -393,11 +393,11 @@ class NonlinearProgram():
         a2 = -(delta_T**(-2))*(3*(q0 - q1) + delta_T*(2*dq0 + dq1))
         a3 = (delta_T**(-3))*(2*(q0 - q1) + delta_T*(dq0 + dq1))
 
-        q = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        dq = a1 + 2*a2*t + 3*a3*(t**2)
-
-        self.q_polynomial = ca.Function('Joint Angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq], 
-                                        ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq'])
+        q   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dq  = a1 + 2*a2*t + 3*a3*(t**2)
+        ddq = 2*a2 + 6*a3*t
+        self.q_polynomial = ca.Function('joint_angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq, ddq], 
+                                        ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq', 'ddq'])
 
         r0  = ca.MX.sym( 'r0_1', 2)
         r1  = ca.MX.sym( 'r1_1', 2)
@@ -409,11 +409,12 @@ class NonlinearProgram():
         a2 = -(delta_T**(-2))*(3*(r0 - r1) + delta_T*(2*dr0 + dr1))
         a3 = (delta_T**(-3))*(2*(r0 - r1) + delta_T*(dr0 + dr1))
 
-        r = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        dr = a1 + 2*a2*t + 3*a3*(t**2)
+        r   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dr  = a1 + 2*a2*t + 3*a3*(t**2)
+        ddr = 2*a2 + 6*a3*t
 
-        self.r_polynomial = ca.Function('COM', [delta_T, t, r0, dr0, r1, dr1], [r, dr], 
-                                        ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr'])
+        self.r_polynomial = ca.Function('com', [delta_T, t, r0, dr0, r1, dr1], [r, dr, ddr], 
+                                        ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr', 'ddr'])
 
 
     def setVariables(self):
@@ -651,7 +652,7 @@ class NonlinearProgram():
 
 # test check for sanity
 
-# test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
+test_problem = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')            
 
 # print(len(test_problem.p))
 # print(len(test_problem.q))
