@@ -24,16 +24,30 @@ class Hopper():
         
         # self.b = ca.norm_2(ca.DM([ca.mmax(self.length*2),ca.mmax(self.length)]))
 
-    def setState(self, r, r_dot, q, q_dot, pe, f):
-        self.q     = ca.reshape(q    , 3, 1)
-        self.q_dot = ca.reshape(q_dot, 3, 1)
-        self.r     = ca.reshape(r    , 2, 1)
-        self.r_dot = ca.reshape(r_dot ,2, 1)
-        self.pe    = ca.reshape(pe   , 2, 1)
-        self.f     = ca.reshape(f    , 2, 1)
+    def setState(self, x, pe, f):
+
+        # self.q     = ca.reshape(q    , 3, 1)
+        # self.q_dot = ca.reshape(q_dot, 3, 1)
+        # self.r     = ca.reshape(r    , 2, 1)
+        # self.r_dot = ca.reshape(r_dot ,2, 1)
+        # self.pe    = ca.reshape(pe   , 2, 1)
+        # self.f     = ca.reshape(f    , 2, 1)
+
+        self.x     = x
+        # unpack for convinience
+        self.q     = ca.reshape(x[2:5] , 3, 1)
+        self.q_dot = ca.reshape(x[7:10], 3, 1)
+        self.r     = ca.reshape(x[0:2] , 2, 1)
+        self.r_dot = ca.reshape(x[5:7] , 2, 1)
+
+        self.pe    = ca.reshape(pe     , 2, 1)
+        self.f     = ca.reshape(f      , 2, 1)
 
         self.setKinematicsConstraint()
         self.setCenteroidalDynamics()
+
+        self.kinematic_constraint = self.kinematic_model(self.r, self.q, pe)
+        self.dx = self.dynamic_model(self.r, self.r_dot, pe, f)
 
         # self.r_ddot, self.q_ddot = self.getCenteroidalDynamics()
         # self.kinematic_model = self.getKinematicsConstraint()
@@ -114,32 +128,38 @@ class Hopper():
         
 # test check for sanity
 
-test_hopper = Hopper()
-q     = ca.MX.sym(    'q', 3, 1)
-q_dot = ca.MX.sym('q_dot', 3, 1)
-r     = ca.MX.sym(    'r', 2, 1)
-r_dot = ca.MX.sym('r_dot', 2, 1)
-pe    = ca.MX.sym(   'pe', 2, 1)
-f     = ca.MX.sym(    'f', 2, 1)
+# test_hopper = Hopper()
+# # q     = ca.MX.sym(    'q', 3, 1)
+# # q_dot = ca.MX.sym('q_dot', 3, 1)
+# # r     = ca.MX.sym(    'r', 2, 1)
+# # r_dot = ca.MX.sym('r_dot', 2, 1)
 
-test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+# x     = ca.MX.sym(    'x', 10, 1)
+# pe    = ca.MX.sym(   'pe',  2, 1)
+# f     = ca.MX.sym(    'f',  2, 1)
 
-print('-----Symbolic Test-------')
-print(test_hopper.kinematic_model(r, q, pe))
-print(test_hopper.dynamic_model(r, r_dot, pe, f))
+# # test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+# test_hopper.setState(x, pe, f)
 
-q     = ca.DM([np.pi/3]*3)
-q_dot = ca.DM([1.]*3)
-r     = ca.DM([2, 1])
-r_dot = ca.DM([.2, .1])
-pe    = ca.DM([2, 0])
-f     = ca.DM([test_hopper.mcom*test_hopper.gravity/np.sqrt(2), test_hopper.mcom*test_hopper.gravity/np.sqrt(2)])
+# print('-----Symbolic Test-------')
+# # print(test_hopper.kinematic_model(r, q, pe))
+# # print(test_hopper.dynamic_model(r, r_dot, pe, f))
 
-test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+# print(test_hopper.kinematic_constraint)
+# print(test_hopper.dx)
 
-print('-----Numeric Test-------')
-print(test_hopper.kinematic_model(r, q, pe))
-print(test_hopper.dynamic_model(r, r_dot, pe, f))
+# q     = ca.DM([np.pi/3]*3)
+# q_dot = ca.DM([1.]*3)
+# r     = ca.DM([2, 1])
+# r_dot = ca.DM([.2, .1])
+# pe    = ca.DM([2, 0])
+# f     = ca.DM([test_hopper.mcom*test_hopper.gravity/np.sqrt(2), test_hopper.mcom*test_hopper.gravity/np.sqrt(2)])
+
+# test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+
+# print('-----Numeric Test-------')
+# print(test_hopper.kinematic_model(r, q, pe))
+# print(test_hopper.dynamic_model(r, r_dot, pe, f))
 
 
 ###############################################
