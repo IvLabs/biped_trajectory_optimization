@@ -43,8 +43,9 @@ class NonlinearProgram():
         self.r     = []
         self.r_dot = [] 
         self.p     = []
-        self.dp    = [] 
+        self.p_dot = [] 
         self.f     = [] 
+        self.f_dot = [] 
 
         self.q_ddot = []
         self.r_ddot = []
@@ -56,7 +57,10 @@ class NonlinearProgram():
         self.q_dot_variables = []
         self.r_variables     = []
         self.r_dot_variables = []
+
         self.p_variables     = []
+        self.p_dot_variables = []
+        self.f_dot_variables = []
         self.f_variables     = []
 
         # self.kinematic_constraint = []
@@ -66,7 +70,9 @@ class NonlinearProgram():
         # self.dynamic_constraint   = []
 
         self.setPolynomial()
+        # self.setSpline()
         self.setPolyCoefficients()
+        self.setContactConstraints()
         # self.contructPhaseSpline()
         # self.setVariables()
         # self.setConstraints()
@@ -77,6 +83,7 @@ class NonlinearProgram():
         delta_T = ca.MX.sym('delta_T',1)
         t = ca.MX.sym('t', 1)
 
+        ############################################################
         p0  = ca.MX.sym( 'p0_1', 2)
         p1  = ca.MX.sym( 'p1_1', 2)
         dp0 = ca.MX.sym('dp0_1', 2)
@@ -90,9 +97,10 @@ class NonlinearProgram():
         p = a0 + a1*t + a2*(t**2) + a3*(t**3)
         dp = a1 + 2*a2*t + 3*a3*(t**2)
 
-        self.pe_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
+        self.p_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
                                         ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
 
+        ############################################################
         f0  = ca.MX.sym( 'f0_1', 2)
         f1  = ca.MX.sym( 'f1_1', 2)
         df0 = ca.MX.sym('df0_1', 2)
@@ -109,6 +117,7 @@ class NonlinearProgram():
         self.f_polynomial = ca.Function('force', [delta_T, t, f0, df0, f1, df1], [f, df], 
                                         ['delta_T', 't', 'f0', 'df0', 'f1', 'df1'], ['f', 'df'])
 
+        ############################################################
         q0  = ca.MX.sym( 'q0_1', 3)
         q1  = ca.MX.sym( 'q1_1', 3)
         dq0 = ca.MX.sym('dq0_1', 3)
@@ -125,6 +134,7 @@ class NonlinearProgram():
         self.q_polynomial = ca.Function('joint_angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq, ddq], 
                                         ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq', 'ddq'])
 
+        ############################################################
         r0  = ca.MX.sym( 'r0_1', 2)
         r1  = ca.MX.sym( 'r1_1', 2)
         dr0 = ca.MX.sym('dr0_1', 2)
@@ -142,10 +152,83 @@ class NonlinearProgram():
         self.r_polynomial = ca.Function('com', [delta_T, t, r0, dr0, r1, dr1], [r, dr, ddr], 
                                         ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr', 'ddr'])
 
+    def setSpline(self):
+        q_variables     = []
+        q_dot_variables = []
+        r_variables     = []
+        r_dot_variables = []
+        p_variables     = []
+        p_dot_variables = []
+        f_dot_variables = []
+        f_variables     = []
+        t = ca.MX.sym('t', 1)
+        delta_T = ca.MX.sym('delta_T',1)
+
+        r_poly = []
+        ############################################################
+        for n in range(self.knot_points):
+            if n == 0:
+                r_variables.append(    ca.MX.sym( 'r0'+str(n),2,1))
+                r_dot_variables.append(ca.MX.sym('dr0'+str(n),2,1))
+                r0, dr0 = r_variables[-1], r_dot_variables[-1]
+            else:
+                r0, dr0 = r_variables[-1], r_dot_variables[-1]
+            
+            r_variables.append(    ca.MX.sym( 'r1'+str(n),2,1))
+            r_dot_variables.append(ca.MX.sym('dr1'+str(n),2,1))
+            r1, dr1 = r_variables[-1], r_dot_variables[-1]
+
+            r_poly.append(self.r_polynomial(delta_T=delta_T, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)['r'])
+
+        input_variables = [delta_T, t]
+        r_variables.extend(r_dot_variables)
+        input_variables.extend(r_variables)
+        self.r_spline = ca.Function('com', input_variables, r_poly)
+
+        t = 0
+        delta_T = self.dt
+
+        q_variables     = []
+        q_dot_variables = []
+        r_variables     = []
+        r_dot_variables = []
+        p_variables     = []
+        p_dot_variables = []
+        f_dot_variables = []
+        f_variables     = []
+
+        r_poly = []
+        ############################################################
+        for n in range(self.knot_points):
+            if n == 0:
+                r_variables.append(    ca.DM([2,1]))
+                r_dot_variables.append(ca.DM([0,0]))
+                r0, dr0 = r_variables[-1], r_dot_variables[-1]
+            else:
+                r0, dr0 = r_variables[-1], r_dot_variables[-1]
+            
+            r_variables.append(    ca.DM([2,1]))
+            r_dot_variables.append(ca.DM([0,0]))
+            r1, dr1 = r_variables[-1], r_dot_variables[-1]
+            
+            r_poly.append(self.r_polynomial(delta_T=delta_T, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)['r'])
+            t += delta_T
+
+        input_variables = [delta_T, t]
+        r_variables.extend(r_dot_variables)
+        input_variables.extend(r_variables)
+        r_spline = self.r_spline(*input_variables)
+
+        print(r_poly)
+        print('\n')
+        print(r_spline)
+
     def setPolyCoefficients(self):
         # Set Base coefficients
         t = 0
+        # print(self.knot_points, self.knot_points/self.num_phases)
         for n in range(self.knot_points):
+            ############################################################
             if n == 0:
                 self.r_variables.append(self.opti.variable(2))
                 self.r_dot_variables.append(self.opti.variable(2))
@@ -159,14 +242,96 @@ class NonlinearProgram():
                         
             delta_T = self.dt
 
-            self.r_variables.append(self.opti.variable(2))
-            self.r_variables.append(self.opti.variable(2))
-
             r_poly = self.r_polynomial(delta_T=delta_T, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)
             self.r.append(r_poly['r'])
             self.r_dot.append(r_poly['dr'])
             self.r_ddot.append(r_poly['ddr'])
 
+            ############################################################
+            if n == 0:
+                self.q_variables.append(self.opti.variable(3))
+                self.q_dot_variables.append(self.opti.variable(3))
+                q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
+            else:
+                q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
+            
+            self.q_variables.append(self.opti.variable(3))
+            self.q_dot_variables.append(self.opti.variable(3))
+            q1, dq1 = self.q_variables[-1], self.q_dot_variables[-1]
+                        
+            delta_T = self.dt
+
+            q_poly = self.q_polynomial(delta_T=delta_T, t=t, q0=q0, dq0=dq0, q1=q1, dq1=dq1)
+            self.q.append(q_poly['q'])
+            self.q_dot.append(q_poly['dq'])
+            self.q_ddot.append(q_poly['ddq'])
+
+
+            ############################################################
+            if n == 0:
+                self.p_variables.append(self.opti.variable(2))
+                self.p_dot_variables.append(self.opti.variable(2))
+                p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
+            else:
+                p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
+            
+            self.p_variables.append(self.opti.variable(2))
+            self.p_dot_variables.append(self.opti.variable(2))
+            p1, dp1 = self.p_variables[-1], self.p_dot_variables[-1]
+                        
+            if n%int(self.knot_points/self.num_phases) == 0:
+                self.time_phases.append(self.opti.variable(1))
+                self.opti.subject_to(self.time_phases[-1] > 0)
+                self.opti.set_initial(self.time_phases[-1], self.total_duration/self.num_phases)
+                delta_T = self.time_phases[-1]/(self.knot_points/self.num_phases)
+
+            p_poly = self.p_polynomial(delta_T=delta_T, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)
+            self.p.append(p_poly['p'])
+            self.p_dot.append(p_poly['dp'])
+
+            ############################################################
+            if n == 0:
+                self.f_variables.append(self.opti.variable(2))
+                self.f_dot_variables.append(self.opti.variable(2))
+                f0, df0 = self.f_variables[-1], self.f_dot_variables[-1]
+            else:
+                f0, df0 = self.f_variables[-1], self.f_dot_variables[-1]
+            
+            self.f_variables.append(self.opti.variable(2))
+            self.f_dot_variables.append(self.opti.variable(2))
+            f1, df1 = self.f_variables[-1], self.f_dot_variables[-1]
+                        
+            if n%int(self.knot_points/self.num_phases) == 0:
+                self.time_phases.append(self.opti.variable(1))
+                self.opti.subject_to(self.time_phases[-1] > 0)
+                self.opti.set_initial(self.time_phases[-1], self.total_duration/self.num_phases)
+                delta_T = self.time_phases[-1]/(self.knot_points/self.num_phases)
+
+            f_poly = self.f_polynomial(delta_T=delta_T, t=t, f0=f0, df0=df0, f1=f1, df1=df1)
+            self.f.append(f_poly['f'])
+            self.f_dot.append(f_poly['df'])
+
+            t += self.dt
+
+        print(self.knot_points)
+        print(len(self.q))
+        print(len(self.p))
+
+    def setContactConstraints(self):
+        step_checker = 0
+        for n in range(self.knot_points):
+
+            if n%int(self.knot_points/self.num_phases) == 0 and n > 0:
+                step_checker += 1
+
+            if step_checker%2 != 0: # no contact
+                self.ceq.append(self.f[n] == 0) # foot force = 0
+                self.ciq.append(self.terrain.heightMap(self.p[n][0,0]) <= self.p[n][1,0]) # pe_y > ground
+            else: # contact
+                self.ciq.append((self.terrain.mu*self.f[n][0,0])**2 - self.f[n][1,0]**2 >= 0) # friction
+                self.ciq.append(ca.dot(self.f[n],self.p[n]) >= 0) # pushing force
+                self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
+                self.ceq.append(self.p_dot[n]==0) # no slip
 
     def contructPhaseSpline(self):
         delta_T = ca.MX.sym('delta_T',1)
