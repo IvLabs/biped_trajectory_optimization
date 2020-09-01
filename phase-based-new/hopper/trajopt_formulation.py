@@ -6,7 +6,10 @@ import casadi as ca
 
 from hopper_model import Hopper
 
+# from terrain import Terrain
+
 from terrain import Terrain
+
 # import helper_functions as hf 
 
 ##############################################################
@@ -20,7 +23,9 @@ class NonlinearProgram():
         self.dt             = dt
         self.num_phases     = steps
         self.total_duration = total_duration
-                
+
+        self.knot_points = int(total_duration/dt)
+
         self.phase_knot_points = int(total_duration/dt)
         
         # print(self.phase_knot_points)
@@ -47,17 +52,121 @@ class NonlinearProgram():
         self.ceq = []
         self.ciq = []
 
+        self.q_variables     = []
+        self.q_dot_variables = []
+        self.r_variables     = []
+        self.r_dot_variables = []
+        self.p_variables     = []
+        self.f_variables     = []
+
         # self.kinematic_constraint = []
         # self.e_constraint         = []
         # self.f_constraint         = []
         # self.df_constraint        = []
         # self.dynamic_constraint   = []
+
         self.setPolynomial()
+        self.setPolyCoefficients()
         # self.contructPhaseSpline()
         # self.setVariables()
         # self.setConstraints()
         # # self.setBounds()
         # self.printInfo()
+
+    def setPolynomial(self):
+        delta_T = ca.MX.sym('delta_T',1)
+        t = ca.MX.sym('t', 1)
+
+        p0  = ca.MX.sym( 'p0_1', 2)
+        p1  = ca.MX.sym( 'p1_1', 2)
+        dp0 = ca.MX.sym('dp0_1', 2)
+        dp1 = ca.MX.sym('dp1_1', 2)
+
+        a0 = p0
+        a1 = dp0
+        a2 = -(delta_T**(-2))*(3*(p0 - p1) + delta_T*(2*dp0 + dp1))
+        a3 = (delta_T**(-3))*(2*(p0 - p1) + delta_T*(dp0 + dp1))
+
+        p = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dp = a1 + 2*a2*t + 3*a3*(t**2)
+
+        self.pe_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
+                                        ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
+
+        f0  = ca.MX.sym( 'f0_1', 2)
+        f1  = ca.MX.sym( 'f1_1', 2)
+        df0 = ca.MX.sym('df0_1', 2)
+        df1 = ca.MX.sym('df1_1', 2)
+
+        a0 = f0
+        a1 = df0
+        a2 = -(delta_T**(-2))*(3*(f0 - f1) + delta_T*(2*df0 + df1))
+        a3 = (delta_T**(-3))*(2*(f0 - f1) + delta_T*(df0 + df1))
+
+        f = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        df = a1 + 2*a2*t + 3*a3*(t**2)
+
+        self.f_polynomial = ca.Function('force', [delta_T, t, f0, df0, f1, df1], [f, df], 
+                                        ['delta_T', 't', 'f0', 'df0', 'f1', 'df1'], ['f', 'df'])
+
+        q0  = ca.MX.sym( 'q0_1', 3)
+        q1  = ca.MX.sym( 'q1_1', 3)
+        dq0 = ca.MX.sym('dq0_1', 3)
+        dq1 = ca.MX.sym('dq1_1', 3)
+
+        a0 = q0
+        a1 = dq0
+        a2 = -(delta_T**(-2))*(3*(q0 - q1) + delta_T*(2*dq0 + dq1))
+        a3 = (delta_T**(-3))*(2*(q0 - q1) + delta_T*(dq0 + dq1))
+
+        q   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dq  = a1 + 2*a2*t + 3*a3*(t**2)
+        ddq = 2*a2 + 6*a3*t
+        self.q_polynomial = ca.Function('joint_angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq, ddq], 
+                                        ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq', 'ddq'])
+
+        r0  = ca.MX.sym( 'r0_1', 2)
+        r1  = ca.MX.sym( 'r1_1', 2)
+        dr0 = ca.MX.sym('dr0_1', 2)
+        dr1 = ca.MX.sym('dr1_1', 2)
+
+        a0 = r0
+        a1 = dr0
+        a2 = -(delta_T**(-2))*(3*(r0 - r1) + delta_T*(2*dr0 + dr1))
+        a3 = (delta_T**(-3))*(2*(r0 - r1) + delta_T*(dr0 + dr1))
+
+        r   = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dr  = a1 + 2*a2*t + 3*a3*(t**2)
+        ddr = 2*a2 + 6*a3*t
+
+        self.r_polynomial = ca.Function('com', [delta_T, t, r0, dr0, r1, dr1], [r, dr, ddr], 
+                                        ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr', 'ddr'])
+
+    def setPolyCoefficients(self):
+        # Set Base coefficients
+        t = 0
+        for n in range(self.knot_points):
+            if n == 0:
+                self.r_variables.append(self.opti.variable(2))
+                self.r_dot_variables.append(self.opti.variable(2))
+                r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
+            else:
+                r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
+            
+            self.r_variables.append(self.opti.variable(2))
+            self.r_dot_variables.append(self.opti.variable(2))
+            r1, dr1 = self.r_variables[-1], self.r_dot_variables[-1]
+                        
+            delta_T = self.dt
+
+            self.r_variables.append(self.opti.variable(2))
+            self.r_variables.append(self.opti.variable(2))
+
+            r_poly = self.r_polynomial(delta_T=delta_T, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)
+            self.r.append(r_poly['r'])
+            self.r_dot.append(r_poly['dr'])
+            self.r_ddot.append(r_poly['ddr'])
+
 
     def contructPhaseSpline(self):
         delta_T = ca.MX.sym('delta_T',1)
@@ -346,76 +455,6 @@ class NonlinearProgram():
                 ddq3 = 2*a2 + 6*a3*t
 
         return [r1,r2,r3], [dr1,dr2,dr3], [ddr1,ddr2,ddr3], [q1,q2,q3], [dq1,dq2,dq3], [ddq1,ddq2,ddq3]
-
-    def setPolynomial(self):
-        delta_T = ca.MX.sym('delta_T',1)
-        t = ca.MX.sym('t', 1)
-
-        p0  = ca.MX.sym( 'p0_1', 2)
-        p1  = ca.MX.sym( 'p1_1', 2)
-        dp0 = ca.MX.sym('dp0_1', 2)
-        dp1 = ca.MX.sym('dp1_1', 2)
-
-        a0 = p0
-        a1 = dp0
-        a2 = -(delta_T**(-2))*(3*(p0 - p1) + delta_T*(2*dp0 + dp1))
-        a3 = (delta_T**(-3))*(2*(p0 - p1) + delta_T*(dp0 + dp1))
-
-        p = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        dp = a1 + 2*a2*t + 3*a3*(t**2)
-
-        self.pe_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
-                                        ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
-
-        f0  = ca.MX.sym( 'f0_1', 2)
-        f1  = ca.MX.sym( 'f1_1', 2)
-        df0 = ca.MX.sym('df0_1', 2)
-        df1 = ca.MX.sym('df1_1', 2)
-
-        a0 = f0
-        a1 = df0
-        a2 = -(delta_T**(-2))*(3*(f0 - f1) + delta_T*(2*df0 + df1))
-        a3 = (delta_T**(-3))*(2*(f0 - f1) + delta_T*(df0 + df1))
-
-        f = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        df = a1 + 2*a2*t + 3*a3*(t**2)
-
-        self.f_polynomial = ca.Function('force', [delta_T, t, f0, df0, f1, df1], [f, df], 
-                                        ['delta_T', 't', 'f0', 'df0', 'f1', 'df1'], ['f', 'df'])
-
-        q0  = ca.MX.sym( 'q0_1', 3)
-        q1  = ca.MX.sym( 'q1_1', 3)
-        dq0 = ca.MX.sym('dq0_1', 3)
-        dq1 = ca.MX.sym('dq1_1', 3)
-
-        a0 = q0
-        a1 = dq0
-        a2 = -(delta_T**(-2))*(3*(q0 - q1) + delta_T*(2*dq0 + dq1))
-        a3 = (delta_T**(-3))*(2*(q0 - q1) + delta_T*(dq0 + dq1))
-
-        q   = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        dq  = a1 + 2*a2*t + 3*a3*(t**2)
-        ddq = 2*a2 + 6*a3*t
-        self.q_polynomial = ca.Function('joint_angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq, ddq], 
-                                        ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq', 'ddq'])
-
-        r0  = ca.MX.sym( 'r0_1', 2)
-        r1  = ca.MX.sym( 'r1_1', 2)
-        dr0 = ca.MX.sym('dr0_1', 2)
-        dr1 = ca.MX.sym('dr1_1', 2)
-
-        a0 = r0
-        a1 = dr0
-        a2 = -(delta_T**(-2))*(3*(r0 - r1) + delta_T*(2*dr0 + dr1))
-        a3 = (delta_T**(-3))*(2*(r0 - r1) + delta_T*(dr0 + dr1))
-
-        r   = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        dr  = a1 + 2*a2*t + 3*a3*(t**2)
-        ddr = 2*a2 + 6*a3*t
-
-        self.r_polynomial = ca.Function('com', [delta_T, t, r0, dr0, r1, dr1], [r, dr, ddr], 
-                                        ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr', 'ddr'])
-
 
     def setVariables(self):
         N = self.phase_knot_points

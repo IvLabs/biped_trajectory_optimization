@@ -1,5 +1,6 @@
 import numpy as np
 import casadi as ca
+
 import helper_functions as hf
 
 class Hopper():
