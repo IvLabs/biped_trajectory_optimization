@@ -37,8 +37,9 @@ class Hopper():
         self.setCenteroidalDynamics()
 
         # self.r_ddot, self.q_ddot = self.getCenteroidalDynamics()
-        # self.kinematic_model = self.getKinematicsConstraint()
-
+        self.kinematic_constraints = self.kinematic_model(r=self.r, q=self.q, pe=self.pe)
+        self.dynamic_constraints = self.dynamic_model(r=self.r, r_dot=self.r_dot, pe=self.pe, f=self.f)
+        
         # self.kinematic_model = ca.Function('Box', [r, r_dot, q, q_dot, pe], 
         #                                           [self.kinematic_constraint],
         #                                           ['r','r_dot','q','q_dot','pe'],

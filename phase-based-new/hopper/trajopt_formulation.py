@@ -71,13 +71,15 @@ class NonlinearProgram():
 
         self.setPolynomial()
         # self.setSpline()
+        
         self.setPolyCoefficients()
-        self.setContactConstraints()
+        self.setModelConstraints()
+
         # self.contructPhaseSpline()
         # self.setVariables()
         # self.setConstraints()
         # # self.setBounds()
-        # self.printInfo()
+        self.printInfo()
 
     def setPolynomial(self):
         delta_T = ca.MX.sym('delta_T',1)
@@ -313,14 +315,23 @@ class NonlinearProgram():
 
             t += self.dt
 
-        print(self.knot_points)
-        print(len(self.q))
-        print(len(self.p))
+        # print(self.knot_points)
+        # print(len(self.q))
+        # print(len(self.p))
 
-    def setContactConstraints(self):
+    def setModelConstraints(self):
+
         step_checker = 0
-        for n in range(self.knot_points):
 
+        for n in range(self.knot_points):
+            # Body Constraints    
+            self.model.setState(self.r[n], self.r_dot[n], 
+                                self.q[n], self.q_dot[n], self.p[n], self.f[n])
+            self.ceq.append(self.model.kinematic_constraints['constraint violation'] == 0)
+            self.ceq.append(self.model.dynamic_constraints['r_ddot'] == self.r_ddot[n])
+            self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n])
+
+            # Environmental Constraints
             if n%int(self.knot_points/self.num_phases) == 0 and n > 0:
                 step_checker += 1
 
@@ -332,6 +343,8 @@ class NonlinearProgram():
                 self.ciq.append(ca.dot(self.f[n],self.p[n]) >= 0) # pushing force
                 self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
                 self.ceq.append(self.p_dot[n]==0) # no slip
+
+
 
     def contructPhaseSpline(self):
         delta_T = ca.MX.sym('delta_T',1)
@@ -841,7 +854,7 @@ class NonlinearProgram():
         print('number of q_ddot(t) variables = ', len(self.q_ddot), ', is symbolic = ', self.q_ddot[0].is_symbolic())
         
         print('number of     pe(t) variables = ', len(self.p),     ', is symbolic = ', self.p[0].is_symbolic())
-        print('number of    dpe(t) variables = ', len(self.dp),    ', is symbolic = ', self.dp[0].is_symbolic())
+        print('number of    dpe(t) variables = ', len(self.p_dot), ', is symbolic = ', self.p_dot[0].is_symbolic())
         print('number of      f(t) variables = ', len(self.f),     ', is symbolic = ', self.f[0].is_symbolic())
         
         print('\n---------Constraints----------')
