@@ -52,7 +52,7 @@
 ## Trajectory Optimization on some basic systems
 ### cartpole on python using CasADi
 
-![](basic_tasks/catpole-python/cartpole.gif) ![](basic_tasks/catpole-python/Graph.png)
+![](basic-tasks/catpole-python/cartpole.gif) ![](basic-tasks/catpole-python/Graph.png)
 
 ### [simple pendulum](basic-tasks/simple_pendulum.m)
 
