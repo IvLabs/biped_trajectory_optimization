@@ -44,9 +44,14 @@ class Terrain():
         tangent_vector[1, 0] = self.df(x=x)['jac']
         normal_vector = ca.MX.ones(2, 1)
         normal_vector[0, 0] = -tangent_vector[1, 0]
-        normal_vector = normal_vector/ca.norm_2(normal_vector)
+        normal_vector /= ca.norm_2(normal_vector)
         return normal_vector
 
+    def heightMapTangentVector(self, x):
+        tangent_vector = ca.MX.ones(2, 1)
+        tangent_vector[1, 0] = self.df(x=x)['jac']
+        tangent_vector /= ca.norm_2(tangent_vector)
+        return tangent_vector
 
 # test check for sanity
 
