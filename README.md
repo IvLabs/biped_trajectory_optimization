@@ -26,38 +26,53 @@
 ### Human gait
 
 ![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/sin_walk_10.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/sin_walk_10.png) 
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/sin_walk_10.png) 
+
+### Ostrich gait
+
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/osin_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/osin_walk_10.png) 
+
 
 ## Dynamic Walking on staired terrain
 
 ### Human gait
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/sin_walk_10.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/sin_walk_10.png) 
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/stairs_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/stairs_walk_10.png) 
+
+### Ostrich gait
+
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/ostairs_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/ostairs_walk_10.png) 
 
 
 ## Dynamic Walking on sloped terrain
 
 ### Human gait
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_slope_1by2_N_40_human.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_slope_1by2_N_40_human_terminal.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/slope_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/slope_walk_10.png) 
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_slope_1by2_N_40_human.png) 
+### Ostrich gait
+
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/oslope_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/oslope_walk_10.png) 
 
 ## Dynamic Walking on flat terrain
 
 ### Human gait
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/path_human_terminal.gif)
+##### Test
+![](#five-link-path-generation/uneven-terrain/flat_walk_10.gif)
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/human/graph.png) 
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/flat_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/flat_walk_10.png) 
 
 ### Ostrich gait
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich/ostrich.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/ostrich/ostrich.png)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/oflat_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/oflat_walk_10.png) 
 
 
 ## Gait Generation for single step
