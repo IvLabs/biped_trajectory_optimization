@@ -9,7 +9,7 @@ from trajopt_formulation import NLP
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NLP(knot_points_per_phase=40, steps=3, total_duration=1, model='hopper')
+        self.formulation = NLP(knot_points_per_phase=80, steps=3, total_duration=1, model='hopper')
         p_opts = {"expand":True}
         s_opts = {"max_iter": 3000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
@@ -33,6 +33,25 @@ class TrajOptSolve():
 
         self.sol_u1 = []
         self.sol_u2 = []
+
+        # for knot_point in range(self.formulation.knot_points):
+        #     self.sol_q1.append(sol.value(self.formulation.q[knot_point][0]))
+        #     self.sol_q2.append(sol.value(self.formulation.q[knot_point][1]))
+        #     self.sol_q3.append(sol.value(self.formulation.q[knot_point][2]))
+
+        #     self.sol_dq1.append(sol.value(self.formulation.qdot[knot_point][0]))
+        #     self.sol_dq2.append(sol.value(self.formulation.qdot[knot_point][1]))
+        #     self.sol_dq3.append(sol.value(self.formulation.qdot[knot_point][2]))
+
+        #     self.sol_fx.append(sol.value(self.formulation.f10[knot_point][0]))
+        #     self.sol_fy.append(sol.value(self.formulation.f10[knot_point][1]))
+
+        #     self.sol_p0x.append(sol.value(self.formulation.p0[knot_point][0]))
+        #     self.sol_p0y.append(sol.value(self.formulation.p0[knot_point][1]))
+    
+        #     self.sol_u1.append(sol.value(self.formulation.u[knot_point][0]))
+        #     self.sol_u2.append(sol.value(self.formulation.u[knot_point][1]))
+
 
         for step in range(self.formulation.num_phases):
 

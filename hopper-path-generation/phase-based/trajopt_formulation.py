@@ -83,13 +83,13 @@ class NLP():
                 # self.opti.subject_to(self.model.dynamics['Constraint'])
                 
                 self.ceq.append(self.model.p['Constraint'])
-                self.ceq.append(self.model.dynamics['Constraint'])
+                # self.ceq.append(self.model.dynamics['Constraint'])
 
                 # self.opti.minimize(p0[1]**2)
                 # self.opti.minimize(ca.sumsqr(self.model.p['Leg'][1,:]))
 
-                # for i in range(3):
-                #     self.opti.subject_to((self.model.p['Leg'][1,i]) >= self.terrain.heightMap(self.model.p['Leg'][0,:]))                                                 
+                for i in range(3):
+                    self.opti.subject_to((self.model.p['Leg'][1,i]) >= self.terrain.heightMap(self.model.p['Leg'][0,:]))                                                 
 
                 # if j==0 and n==0:
                 #     self.setInitialBoundary()
@@ -101,20 +101,20 @@ class NLP():
                 # self.opti.subject_to(com_y<=self.model.b)
         
     def setConstraints(self):
-        self.setBoundary()
+        # self.setBoundary()
         self.setContactConstraints()
         self.setCollocationContraints()
 
         self.opti.subject_to(self.ceq)
 
-    def setBoundary(self):
+    # def setBoundary(self):
         # self.opti.subject_to(self.q [str(0)][0] == self.model.initial_q)
         # self.opti.subject_to(self.p0[str(0)][0] == np.zeros((2,1)))
         # self.opti.subject_to(self.q[str(self.num_phases-1)][-1] == self.model.final_q)
         # self.opti.subject_to(self.p0[str(self.num_phases-1)][-1][0] == 1)
         
-        self.ceq.append(self.q [str(0)][0] == self.model.initial_q)
-        self.ceq.append(self.p0[str(0)][0] == np.zeros((2,1)))
+        # self.ceq.append(self.q [str(0)][0] == self.model.initial_q)
+        # self.ceq.append(self.p0[str(0)][0] == np.zeros((2,1)))
 
     def setContactConstraints(self):
 
@@ -127,12 +127,12 @@ class NLP():
             # if step is odd  ==> No Contact
             for knot_point in range(self.knot_points_per_phase):
                 
-                if step > 0:
-                    # self.opti.subject_to(self.p0 [str(step-1)][-1] - self. p0[str(step)][0] == 0)
-                    # self.opti.subject_to(self.f10[str(step-1)][-1] - self.f10[str(step)][0] == 0)
+                # if step > 0:
+                #     # self.opti.subject_to(self.p0 [str(step-1)][-1] - self. p0[str(step)][0] == 0)
+                #     # self.opti.subject_to(self.f10[str(step-1)][-1] - self.f10[str(step)][0] == 0)
                     
-                    self.ceq.append(self.p0 [str(step-1)][-1] - self. p0[str(step)][0] == 0)
-                    self.ceq.append(self.f10[str(step-1)][-1] - self.f10[str(step)][0] == 0)
+                #     self.ceq.append(self.p0 [str(step-1)][-1] - self. p0[str(step)][0] == 0)
+                #     self.ceq.append(self.f10[str(step-1)][-1] - self.f10[str(step)][0] == 0)
 
                 if step%2 != 0:
                     f10 = self.f10[str(step)][knot_point]
@@ -161,9 +161,45 @@ class NLP():
     def setCollocationContraints(self):
         for step in range(self.num_phases):
             
-            h = self.time_phases[str(step)]/self.knot_points_per_phase
-
+            h = self.time_phases[str(step)]/self.knot_points_per_phase    
+            # h = 0.01
             for n in range(self.knot_points_per_phase-1):
+
+                if step>0 and n==0:
+                    q_1   , q_2    = self.q   [str(step-1)][-1], self.q   [str(step)][n]
+                    qdot_1, qdot_2 = self.qdot[str(step-1)][-1], self.qdot[str(step)][n]
+                    
+                    p0_1 , p0_2  = self.p0 [str(step-1)][-1], self.p0 [str(step)][n]
+                    dp0_1, dp0_2 = self.dp0[str(step-1)][-1], self.dp0[str(step)][n]
+                    
+                    u_1  , u_2   = self.u  [str(step-1)][-1], self.u  [str(step)][n]
+                    f10_1, f10_2 = self.f10[str(step-1)][-1], self.f10[str(step)][n]
+
+    
+                    self.ceq.append(q_2 - q_1== 0);self.ceq.append(qdot_2 - qdot_1== 0)
+                    self.ceq.append(p0_2-p0_1== 0);self.ceq.append(dp0_2-dp0_1== 0)
+                    self.ceq.append(u_2-u_1== 0);self.ceq.append(f10_2-f10_1== 0)
+
+
+                    # m_1 = Hopper()
+                    # m_1.setFullState(q=q_1, dq=qdot_1, 
+                    #                 p0=p0_1, dp0=dp0_1, 
+                    #                 u=u_1, f10=f10_1)
+                    
+                    # qddot_1 = m_1.dynamics['Leg']
+
+                    # m_2 = Hopper()
+                    # m_2.setFullState(q=q_2, dq=qdot_2, 
+                    #                 p0=p0_2, dp0=dp0_2, 
+                    #                 u=u_2, f10=f10_2)
+                    
+                    # qddot_2 = m_2.dynamics['Leg']
+
+                    # self.ceq.append((h/2) * (qdot_2  + qdot_1)  == (q_2 - q_1))
+                    # self.ceq.append((h/2) * (qddot_2 + qddot_1) == (qdot_2 - qdot_1))
+                    # self.ceq.append((h/2) * (dp0_2  + dp0_1) == (p0_2 - dp0_1))
+                    # self.ceq.append((h)*(self.model.gravity) == (dp0_2[1] - dp0_1[1]))
+                # else:
                 q_1   , q_2    = self.q   [str(step)][n], self.q   [str(step)][n+1]
                 qdot_1, qdot_2 = self.qdot[str(step)][n], self.qdot[str(step)][n+1]
                 
@@ -175,23 +211,17 @@ class NLP():
 
                 m_1 = Hopper()
                 m_1.setFullState(q=q_1, dq=qdot_1, 
-                                 p0=p0_1, dp0=dp0_1, 
-                                 u=u_1, f10=f10_1)
+                                p0=p0_1, dp0=dp0_1, 
+                                u=u_1, f10=f10_1)
                 
                 qddot_1 = m_1.dynamics['Leg']
 
                 m_2 = Hopper()
                 m_2.setFullState(q=q_2, dq=qdot_2, 
-                                 p0=p0_2, dp0=dp0_2, 
-                                 u=u_2, f10=f10_2)
+                                p0=p0_2, dp0=dp0_2, 
+                                u=u_2, f10=f10_2)
                 
                 qddot_2 = m_2.dynamics['Leg']
-
-                
-                # self.opti.subject_to( (h/2) * (qdot_2  + qdot_1)  == (q_2 - q_1) )
-                # self.opti.subject_to( (h/2) * (qddot_2 + qddot_1) == (qdot_2 - qdot_1) )
-                # self.opti.bounded( 0,(h/2) * (dp0_2  + dp0_1) - (p0_2 - dp0_1), 0)
-                # self.opti.bounded( 0, (h)*(self.model.gravity) - (dp0_2[1] - dp0_1[1]), 0)
 
                 self.ceq.append((h/2) * (qdot_2  + qdot_1)  == (q_2 - q_1))
                 self.ceq.append((h/2) * (qddot_2 + qddot_1) == (qdot_2 - qdot_1))

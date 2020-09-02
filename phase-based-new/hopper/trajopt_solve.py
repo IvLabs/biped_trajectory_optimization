@@ -4,88 +4,109 @@ import math
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
-from trajopt_formulation import NLP
+from trajopt_formulation import NonlinearProgram
 
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NLP(knot_points_per_phase=40, steps=3, total_duration=1, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.05, steps=3, total_duration=2, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 3000}
+        s_opts = {"max_iter": 100}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
         sol = self.formulation.opti.solve_limited()
-        self.sol_q1  = [] 
-        self.sol_dq1 = []
+        self.sol_rx  = [] 
+        self.sol_p  = [] 
+        self.sol_f  = []
         
-        self.sol_q2  = [] 
-        self.sol_dq2 = []
+        # self.sol_q2  = [] 
+        # self.sol_dq2 = []
         
-        self.sol_q3  = [] 
-        self.sol_dq3 = []
+        # self.sol_q3  = [] 
+        # self.sol_dq3 = []
 
-        self.sol_p0x  = [] 
-        self.sol_p0y  = [] 
+        # self.sol_cx  = [] 
+        # self.sol_cy  = [] 
 
-        self.sol_fx  = [] 
-        self.sol_fy  = []
+        # self.sol_fx  = [] 
+        # self.sol_fy  = []
 
-        self.sol_u1 = []
-        self.sol_u2 = []
+        # self.sol_u1 = []
+        # self.sol_u2 = []
 
-        for step in range(self.formulation.num_phases):
+        # for step in range(self.formulation.num_phases):
 
-            for knot_point in range(self.formulation.knot_points_per_phase):
-                self.sol_q1.append(sol.value(self.formulation.q[str(step)][knot_point][0]))
-                self.sol_q2.append(sol.value(self.formulation.q[str(step)][knot_point][1]))
-                self.sol_q3.append(sol.value(self.formulation.q[str(step)][knot_point][2]))
+        #     for knot_point in range(self.formulation.knot_points_per_phase):
+        #         self.sol_q1.append(sol.value(self.formulation.q[str(step)][knot_point][0]))
+        #         self.sol_q2.append(sol.value(self.formulation.q[str(step)][knot_point][1]))
+        #         self.sol_q3.append(sol.value(self.formulation.q[str(step)][knot_point][2]))
 
-                self.sol_dq1.append(sol.value(self.formulation.qdot[str(step)][knot_point][0]))
-                self.sol_dq2.append(sol.value(self.formulation.qdot[str(step)][knot_point][1]))
-                self.sol_dq3.append(sol.value(self.formulation.qdot[str(step)][knot_point][2]))
+        #         self.sol_dq1.append(sol.value(self.formulation.qdot[str(step)][knot_point][0]))
+        #         self.sol_dq2.append(sol.value(self.formulation.qdot[str(step)][knot_point][1]))
+        #         self.sol_dq3.append(sol.value(self.formulation.qdot[str(step)][knot_point][2]))
 
-                self.sol_fx.append(sol.value(self.formulation.f10[str(step)][knot_point][0]))
-                self.sol_fy.append(sol.value(self.formulation.f10[str(step)][knot_point][1]))
+        #         self.sol_fx.append(sol.value(self.formulation.f10[str(step)][knot_point][0]))
+        #         self.sol_fy.append(sol.value(self.formulation.f10[str(step)][knot_point][1]))
 
-                self.sol_p0x.append(sol.value(self.formulation.p0[str(step)][knot_point][0]))
-                self.sol_p0y.append(sol.value(self.formulation.p0[str(step)][knot_point][1]))
+        #         self.sol_c3x.append(sol.value(self.formulation.c3[str(step)][knot_point][0]))
+        #         self.sol_c3y.append(sol.value(self.formulation.c3[str(step)][knot_point][1]))
         
-                self.sol_u1.append(sol.value(self.formulation.u[str(step)][knot_point][0]))
-                self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
+        #         self.sol_u1.append(sol.value(self.formulation.u[str(step)][knot_point][0]))
+        #         self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
 
-        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_q1))
+        for n in range(len(self.formulation.q)):
+            self.sol_f.append(np.linalg.norm(sol.value(self.formulation.f[n])))
+            self.sol_p.append(np.linalg.norm(sol.value(self.formulation.p[n])))
+            self.sol_rx.append((sol.value(self.formulation.r[n]))[0])
+
+        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_f))
 
     def plot(self):
         fig = plt.figure()
         fig.tight_layout()
 
-        ax1 = fig.add_subplot(521)
-        ax1.plot(self.time, self.sol_q1, label='q1')
-        ax1.plot(self.time, self.sol_q2, label='q2')
-        ax1.plot(self.time, self.sol_q3, label='q3')
+        ax1 = fig.add_subplot(311)
+        ax1.plot(self.time, self.sol_f, 'ro', label='f')
+        ax1.grid()
         ax1.legend()
 
-        ax2 = fig.add_subplot(523)
-        ax2.plot(self.time, self.sol_dq1, label='dq1')
-        ax2.plot(self.time, self.sol_dq2, label='dq2')
-        ax2.plot(self.time, self.sol_dq3, label='dq3')
+        ax2 = fig.add_subplot(312)
+        ax2.plot(self.time, self.sol_p, 'bo', label='p')
+        ax2.grid()
         ax2.legend()
 
-        ax3 = fig.add_subplot(525)
-        ax3.plot(self.time, self.sol_u1, label='u1')
-        ax3.plot(self.time, self.sol_u2, label='u2')
+        ax3 = fig.add_subplot(313)
+        ax3.plot(self.time, self.sol_rx, 'yo', label='rx')
+        ax3.grid()
         ax3.legend()
 
-        ax4 = fig.add_subplot(522)
-        ax4.plot(self.time, self.sol_fx, label='fx')
-        ax4.plot(self.time, self.sol_fy, label='fy')
-        ax4.legend()
+        # ax1 = fig.add_subplot(521)
+        # ax1.plot(self.time, self.sol_q1, label='q1')
+        # ax1.plot(self.time, self.sol_q2, label='q2')
+        # ax1.plot(self.time, self.sol_q3, label='q3')
+        # ax1.legend()
 
-        ax5 = fig.add_subplot(524)
-        ax5.plot(self.time, self.sol_p0x, label='p0x')
-        ax5.plot(self.time, self.sol_p0y, label='p0y')
-        ax5.legend()
+        # ax2 = fig.add_subplot(523)
+        # ax2.plot(self.time, self.sol_dq1, label='dq1')
+        # ax2.plot(self.time, self.sol_dq2, label='dq2')
+        # ax2.plot(self.time, self.sol_dq3, label='dq3')
+        # ax2.legend()
+
+        # ax3 = fig.add_subplot(525)
+        # ax3.plot(self.time, self.sol_u1, label='u1')
+        # ax3.plot(self.time, self.sol_u2, label='u2')
+        # ax3.legend()
+
+        # ax4 = fig.add_subplot(522)
+        # ax4.plot(self.time, self.sol_fx, label='fx')
+        # ax4.plot(self.time, self.sol_fy, label='fy')
+        # ax4.legend()
+
+        # ax5 = fig.add_subplot(524)
+        # ax5.plot(self.time, self.sol_c3x, label='c3x')
+        # ax5.plot(self.time, self.sol_c3y, label='c3y')
+        # ax5.legend()
 
         plt.show()
 
@@ -97,11 +118,11 @@ class TrajOptSolve():
         ax = fig.add_subplot(111)
         ax.grid()
 
-        # lp0 = [self.sol_lpx[0], self.sol_lpy[0]]
-        # rp0 = [self.sol_rpx[0], self.sol_rpy[0]]
+        # lc3 = [self.sol_lpx[0], self.sol_lpy[0]]
+        # rc3 = [self.sol_rpx[0], self.sol_rpy[0]]
 
-        # l_link1_x = [lp0[0], l[0]*np.sin(self.sol_lq1[0]) + lp0[0]]
-        # l_link1_y = [lp0[1], l[0]*np.cos(self.sol_lq1[0]) + lp0[1]]
+        # l_link1_x = [lc3[0], l[0]*np.sin(self.sol_lq1[0]) + lc3[0]]
+        # l_link1_y = [lc3[1], l[0]*np.cos(self.sol_lq1[0]) + lc3[1]]
 
         # print(l_link1_x, l_link1_y)
 
@@ -125,18 +146,18 @@ class TrajOptSolve():
 
         def animate(i):
 
-            p0 = [self.sol_p0x[i], self.sol_p0y[i]]
+            c3 = [self.sol_c3x[i], self.sol_c3y[i]]
             
-            link1_x = [p0[0], l[0]*np.sin(self.sol_q1[i]) + p0[0]]
-            link1_y = [p0[1], l[0]*np.cos(self.sol_q1[i]) + p0[1]]
+            link1_x = [c3[0], l[0]*np.sin(self.sol_q1[i]) + c3[0]]
+            link1_y = [c3[1], l[0]*np.cos(self.sol_q1[i]) + c3[1]]
 
             link2_x = [link1_x[1], link1_x[1] + l[1]*np.sin(self.sol_q2[i])]
             link2_y = [link1_y[1], link1_y[1] + l[1]*np.cos(self.sol_q2[i])]
 
             link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
             link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
-            force_x = [p0[0], self.sol_fx[i]/math.sqrt(self.sol_fx[i]**2 + self.sol_fy[i]**2) + p0[0]]
-            force_y = [p0[1], self.sol_fy[i]/math.sqrt(self.sol_fx[i]**2 + self.sol_fy[i]**2) + p0[1]]
+            force_x = [c3[0], (self.sol_fx[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[0]]
+            force_y = [c3[1], (self.sol_fy[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[1]]
             
             # ax.set_xlim([-2+l_link2_x[1], 2+l_link2_x[1]])
             # ax.set_ylim([-2+l_link2_y[1], 2+l_link2_y[1]])
@@ -152,7 +173,7 @@ class TrajOptSolve():
             p1.set_data(link1_x, link1_y)
             p2.set_data(link2_x, link2_y)
             p3.set_data(link3_x, link3_y)
-            feet.set_data(p0[0], p0[1])
+            feet.set_data(c3[0], c3[1])
             force.set_data(force_x,force_y)
             return p1, p2, p3, feet, force, terrain
 
@@ -164,4 +185,4 @@ class TrajOptSolve():
 problem = TrajOptSolve()
 problem.solve()
 problem.plot()
-problem.visualize()
+# problem.visualize()
