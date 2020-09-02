@@ -41,121 +41,125 @@ a0 = x0
 a1 = dx0
 a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
 a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+a4 = -(delta_T**(-4))*((x0 - x1) + delta_T*(dx1))
 
-x = a0 + a1*t + a2*(t**2) + a3*(t**3)
+x = a0 + a1*t + a2*(t**2) + a3*(t**3) 
+# x = a0 + a1*t + a2*(t**2) + a3*(t**3) + a4*(t**4)
 
 f = ca.Function('f', [delta_T, t, x0, x1, dx0, dx1], [x], ['delta_T', 't', 'x0', 'x1', 'dx0', 'dx1'], ['x'])
 
-y = []
-y_super = []
-T = ca.MX.sym('T',1)
-delta_T = T/3
-x0_1  = x0  
-x1_1  = x1  
-dx0_1 = dx0 
-dx1_1 = dx1 
+# y = []
+# y_super = []
+# T = ca.MX.sym('T',1)
+# delta_T = T/3
+# x0_1  = x0  
+# x1_1  = x1  
+# dx0_1 = dx0 
+# dx1_1 = dx1 
 
-x0_2  = x1_1
-x1_2  = ca.MX.sym( 'x1_2', 1)
-dx0_2 = dx1_1
-dx1_2 = ca.MX.sym('dx1_2', 1)
+# x0_2  = x1_1
+# x1_2  = ca.MX.sym( 'x1_2', 1)
+# dx0_2 = dx1_1
+# dx1_2 = ca.MX.sym('dx1_2', 1)
 
-x0_3  = x1_2
-x1_3  = ca.MX.sym( 'x1_3', 1)
-dx0_3 = dx1_2
-dx1_3 = ca.MX.sym('dx1_3', 1)
+# x0_3  = x1_2
+# x1_3  = ca.MX.sym( 'x1_3', 1)
+# dx0_3 = dx1_2
+# dx1_3 = ca.MX.sym('dx1_3', 1)
 
-# for j in range(2):
-for i in range(3):
-    if i == 0:
-        x0  =  x0_1
-        x1  =  x1_1
-        dx0 = dx0_1
-        dx1 = dx1_1
-        y.append(f(delta_T, t, x0, x1, dx0, dx1))
-    elif i == 1:
-        x0  =  x0_2 
-        x1  =  x1_2 
-        dx0 = dx0_2
-        dx1 = dx1_2
-        y.append(f(delta_T, t, x0, x1, dx0, dx1))
-    else:
-        x0  =  x0_3 
-        x1  =  x1_3 
-        dx0 = dx0_3
-        dx1 = dx1_3
-        y.append(f(delta_T, t, x0, x1, dx0, dx1))
+# # for j in range(2):
+# for i in range(3):
+#     if i == 0:
+#         x0  =  x0_1
+#         x1  =  x1_1
+#         dx0 = dx0_1
+#         dx1 = dx1_1
+#         y.append(f(delta_T, t, x0, x1, dx0, dx1))
+#     elif i == 1:
+#         x0  =  x0_2 
+#         x1  =  x1_2 
+#         dx0 = dx0_2
+#         dx1 = dx1_2
+#         y.append(f(delta_T, t, x0, x1, dx0, dx1))
+#     else:
+#         x0  =  x0_3 
+#         x1  =  x1_3 
+#         dx0 = dx0_3
+#         dx1 = dx1_3
+#         y.append(f(delta_T, t, x0, x1, dx0, dx1))
 
-    # T = ca.MX.sym('T' + str(j+1), 1)
-    # delta_T = T/3
-    # x0_1  =  x0_3 
-    # x1_1  = dx1_3 
-    # dx0_1 =  x0_3 
-    # dx1_1 = dx1_3 
+#     # T = ca.MX.sym('T' + str(j+1), 1)
+#     # delta_T = T/3
+#     # x0_1  =  x0_3 
+#     # x1_1  = dx1_3 
+#     # dx0_1 =  x0_3 
+#     # dx1_1 = dx1_3 
 
-    # x0_2  = x1_1
-    # x1_2  = ca.MX.sym( 'x1_2' + str(j+1), 1)
-    # dx0_2 = dx1_1
-    # dx1_2 = ca.MX.sym('dx1_2' + str(j+1), 1)
+#     # x0_2  = x1_1
+#     # x1_2  = ca.MX.sym( 'x1_2' + str(j+1), 1)
+#     # dx0_2 = dx1_1
+#     # dx1_2 = ca.MX.sym('dx1_2' + str(j+1), 1)
 
-    # x0_3  = x1_2
-    # x1_3  = ca.MX.sym( 'x1_30' + str(j+1), 1)
-    # dx0_3 = dx1_2
-    # dx1_3 = ca.MX.sym('dx1_30' + str(j+1), 1)
+#     # x0_3  = x1_2
+#     # x1_3  = ca.MX.sym( 'x1_30' + str(j+1), 1)
+#     # dx0_3 = dx1_2
+#     # dx1_3 = ca.MX.sym('dx1_30' + str(j+1), 1)
 
-Y = ca.vcat(y)
-F = ca.Function("F", [x0_1, x1_1, dx0_1, dx1_1,
-                    x1_2, dx1_2, x1_3, dx1_3, T, t], [Y])
-dphase_spline = F.jacobian()
-print(dphase_spline()['jac'][:,-1])
+# Y = ca.vcat(y)
+# F = ca.Function("F", [x0_1, x1_1, dx0_1, dx1_1,
+#                     x1_2, dx1_2, x1_3, dx1_3, T, t], [Y])
+# dphase_spline = F.jacobian()
+# print(dphase_spline()['jac'][:,-1])
 
-T = 0.5
-del_t = T/3
-x0_1, x1_1, dx0_1, dx1_1, x1_2, dx1_2, x1_3, dx1_3 = 0, 3, 0, 0, 2, 5, 0, 0  
-N = 10
-x = ca.linspace(0, T, N)
-# x = x.reshape(N, 1) 
-y_plot = []
+# T = 0.5
+# del_t = T/3
+# x0_1, x1_1, dx0_1, dx1_1, x1_2, dx1_2, x1_3, dx1_3 = 0, 3, 0, 0, 2, 5, 0, 0  
+# N = 10
+# x = ca.linspace(0, T, N)
+# # x = x.reshape(N, 1) 
+# y_plot = []
 
-print(dphase_spline(x0_1, x1_1, dx0_1, dx1_1,
-                    x1_2, dx1_2, x1_3, dx1_3, T, x[2], True))
-a0 = x0_1
-a1 = dx0_1
-a2 = -(del_t**(-2))*(3*(x0_1 - x1_1) + del_t*(2*dx0_1 + dx1_1))
-a3 = (del_t**(-3))*(2*(x0_1 - x1_1) + del_t*(dx0_1 + dx1_1))
+# print(dphase_spline(x0_1, x1_1, dx0_1, dx1_1,
+#                     x1_2, dx1_2, x1_3, dx1_3, T, x[2], True))
+# a0 = x0_1
+# a1 = dx0_1
+# a2 = -(del_t**(-2))*(3*(x0_1 - x1_1) + del_t*(2*dx0_1 + dx1_1))
+# a3 = (del_t**(-3))*(2*(x0_1 - x1_1) + del_t*(dx0_1 + dx1_1))
 
-print(a1 + 2*a2*x[2] + 3*a3*(x[2]**2))
-# for j in range(2):
-for i in range(x.numel()):
-    if i <= (N-1)/3:
-        y_plot.append(F(x0_1, x1_1, dx0_1, dx1_1,
-                    x1_2, dx1_2, x1_3, dx1_3, T, x[i])[0])
-    elif (N-1)/3 < i <= 2*(N-1)/3:
-        y_plot.append(F(x0_1, x1_1, dx0_1, dx1_1,
-                    x1_2, dx1_2, x1_3, dx1_3, T, x[i-int((N-1)/3)])[1])
-    else:
-        y_plot.append(F(x0_1, x1_1, dx0_1, dx1_1,
-                    x1_2, dx1_2, x1_3, dx1_3, T, x[i-int(2*(N-1)/3)])[2])
+# print(a1 + 2*a2*x[2] + 3*a3*(x[2]**2))
+# # for j in range(2):
+# for i in range(x.numel()):
+#     if i <= (N-1)/3:
+#         y_plot.append(F(x0_1, x1_1, dx0_1, dx1_1,
+#                     x1_2, dx1_2, x1_3, dx1_3, T, x[i])[0])
+#     elif (N-1)/3 < i <= 2*(N-1)/3:
+#         y_plot.append(F(x0_1, x1_1, dx0_1, dx1_1,
+#                     x1_2, dx1_2, x1_3, dx1_3, T, x[i-int((N-1)/3)])[1])
+#     else:
+#         y_plot.append(F(x0_1, x1_1, dx0_1, dx1_1,
+#                     x1_2, dx1_2, x1_3, dx1_3, T, x[i-int(2*(N-1)/3)])[2])
     
 
-    # x0_1  =  x0_3 
-    # x1_1  = dx1_3 
-    # dx0_1 =  x0_3 
-    # dx1_1 = dx1_3 
+#     # x0_1  =  x0_3 
+#     # x1_1  = dx1_3 
+#     # dx0_1 =  x0_3 
+#     # dx1_1 = dx1_3 
 
-    # x0_2  = x1_1
-    # x1_2  = 3
-    # dx0_2 = dx1_1
-    # dx1_2 = 0
+#     # x0_2  = x1_1
+#     # x1_2  = 3
+#     # dx0_2 = dx1_1
+#     # dx1_2 = 0
 
-    # x0_3  = x1_2
-    # x1_3  = 0
-    # dx0_3 = dx1_2
-    # dx1_3 = 0
+#     # x0_3  = x1_2
+#     # x1_3  = 0
+#     # dx0_3 = dx1_2
+#     # dx1_3 = 0
 
-plt.plot(x, ca.vcat(y_plot), 'ro')
-plt.show()
+# plt.plot(x, ca.vcat(y_plot), 'ro')
+# plt.show()
 
+
+######################
 # delta_T = opti.variable(1)
 # t = 0.2
 # x0 = opti.variable(1)
@@ -165,46 +169,108 @@ plt.show()
 
 # print(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
 
+######################
 
-# t = 0.0
-# x0 = 0
-# x1 = 3
+
+t = 0.0
+x0 = 0
+x1 = 3
+dx0 = 0
+dx1 = 0  
+# x0 = 2
+# x1 = 0
 # dx0 = 0
 # dx1 = 0  
-# # x0 = 2
-# # x1 = 0
-# # dx0 = 0
-# # dx1 = 0  
-# y = []
-# N = 100
-# T = 0.5
-# delta_T = T/3
-# count = 0
-# while len(y) < N:
-#     y.append(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
-#     t += T/N
-#     if t >= T/3 and count == 0:
-#         # delta_T = T - delta_T
-#         x0 = x1
-#         x1 = 2
-#         dx0 = dx0
-#         dx1 = 5
-#         t = 0
-#         count += 1
-#     if t >= T/3 and count == 1:
-#         # delta_T = T - delta_T
-#         x0 = x1
-#         x1 = 0
-#         dx0 = dx0
-#         dx1 = 0
-#         t = 0
-#         count += 1    
-#         # print(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
-#     # print("x0 = " + str(x0) + ", x1 = " + str(x1) + ", dx0 = " + str(dx0) + ", dx1 = " + str(dx1) + ", y = "+ str(y[-1]))
-# time = ca.linspace(0, T, N)
-# plt.plot(time, y, label='real')
-# plt.legend()
-# plt.show()
+y = []
+N = 100
+T = 0.5
+delta_T = T/3
+count = 0
+while len(y) < N:
+    y.append(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
+    t += T/N
+    if t >= T/3 and count == 0:
+        # delta_T = T - delta_T
+        x0 = x1
+        x1 = 2
+        dx0 = dx0
+        dx1 = 5
+        t = 0
+        count += 1
+    if t >= T/3 and count == 1:
+        # delta_T = T - delta_T
+        x0 = x1
+        x1 = 0
+        dx0 = dx0
+        dx1 = 0
+        t = 0
+        count += 1    
+        # print(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
+    # print("x0 = " + str(x0) + ", x1 = " + str(x1) + ", dx0 = " + str(dx0) + ", dx1 = " + str(dx1) + ", y = "+ str(y[-1]))
+time = ca.linspace(0, T, N)
+plt.plot(time, y, label='cubic')
+plt.legend()
+
+
+delta_T = ca.MX.sym('delta_T',1)
+t = ca.MX.sym('t', 1)
+
+x0  = ca.MX.sym( 'x0_1', 1)
+x1  = ca.MX.sym( 'x1_1', 1)
+dx0 = ca.MX.sym('dx0_1', 1)
+dx1 = ca.MX.sym('dx1_1', 1)
+
+a0 = x0
+a1 = dx0
+a2 = -(delta_T**(-2))*(3*(x0 - x1) + delta_T*(2*dx0 + dx1))
+a3 = (delta_T**(-3))*(2*(x0 - x1) + delta_T*(dx0 + dx1))
+a4 = -(delta_T**(-2))*((3*x0 - x1) + delta_T*(2*dx0 + dx1))
+
+x = a0 + a1*t + a2*(t**2) + a3*(t**3) + a4*(t**4)
+
+f = ca.Function('f', [delta_T, t, x0, x1, dx0, dx1], [x], ['delta_T', 't', 'x0', 'x1', 'dx0', 'dx1'], ['x'])
+
+t = 0.0
+x0 = 0
+x1 = 3
+dx0 = 0
+dx1 = 0  
+# x0 = 2
+# x1 = 0
+# dx0 = 0
+# dx1 = 0  
+y = []
+N = 100
+T = 0.5
+delta_T = T/3
+count = 0
+while len(y) < N:
+    y.append(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
+    t += T/N
+    if t >= T/3 and count == 0:
+        # delta_T = T - delta_T
+        x0 = x1
+        x1 = 2
+        dx0 = dx0
+        dx1 = 5
+        t = 0
+        count += 1
+    if t >= T/3 and count == 1:
+        # delta_T = T - delta_T
+        x0 = x1
+        x1 = 0
+        dx0 = dx0
+        dx1 = 0
+        t = 0
+        count += 1    
+        # print(f(delta_T=delta_T, t=t, x0=x0, x1=x1, dx0=dx0, dx1=dx1)['x'])
+    # print("x0 = " + str(x0) + ", x1 = " + str(x1) + ", dx0 = " + str(dx0) + ", dx1 = " + str(dx1) + ", y = "+ str(y[-1]))
+time = ca.linspace(0, T, N)
+plt.plot(time, y, label='bi_quad')
+plt.legend()
+
+
+plt.show()
 
 ############################################################################################
 ############################################################################################
