@@ -3,8 +3,13 @@
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
   * [Dynamic Walking on sinusoidal terrain](#dynamic-walk-on-sinusoidal-terrain)
     + [Human gait](#human-gait)
+    + [Ostrich gait](#ostrich-gait)
+  * [Dynamic Walking on staired terrain](#dynamic-walk-on-staired-terrain)
+    + [Human gait](#human-gait)
+    + [Ostrich gait](#ostrich-gait)  
   * [Dynamic Walking on sloped terrain](#dynamic-walk-on-sloped-terrain)
     + [Human gait](#human-gait)    
+    + [Ostrich gait](#ostrich-gait)
   * [Dynamic Walking on flat terrain](#dynamic-walk-on-flat-terrain)
     + [Human gait](#human-gait)
     + [Ostrich gait](#ostrich-gait)
@@ -20,10 +25,16 @@
 
 ### Human gait
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.gif)
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human_terminal.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/sin_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/sin_walk_10.png) 
 
-![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/path_sin_40_human.png) 
+## Dynamic Walking on staired terrain
+
+### Human gait
+
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/aditya-shirwatkar/five-link-path-generation/uneven-terrain/sin_walk_10.gif)
+![](https://github.com/IvLabs/biped_trajectory_optimization/blob/master/five-link-path-generation/uneven-terrain/sin_walk_10.png) 
+
 
 ## Dynamic Walking on sloped terrain
 
