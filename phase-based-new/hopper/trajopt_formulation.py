@@ -43,8 +43,8 @@ class NonlinearProgram():
         self.q_dot = []
         self.r     = []
         self.r_dot = [] 
-        self.p     = []
-        self.p_dot = [] 
+        # self.p     = []
+        # self.p_dot = [] 
         self.f     = [] 
         self.f_dot = [] 
 
@@ -59,8 +59,8 @@ class NonlinearProgram():
         self.r_variables     = []
         self.r_dot_variables = []
 
-        self.p_variables     = []
-        self.p_dot_variables = []
+        # self.p_variables     = []
+        # self.p_dot_variables = []
         self.f_dot_variables = []
         self.f_variables     = []
 
@@ -91,21 +91,21 @@ class NonlinearProgram():
         t = ca.MX.sym('t', 1)
 
         ############################################################
-        p0  = ca.MX.sym( 'p0_1', 2)
-        p1  = ca.MX.sym( 'p1_1', 2)
-        dp0 = ca.MX.sym('dp0_1', 2)
-        dp1 = ca.MX.sym('dp1_1', 2)
+        # p0  = ca.MX.sym( 'p0_1', 2)
+        # p1  = ca.MX.sym( 'p1_1', 2)
+        # dp0 = ca.MX.sym('dp0_1', 2)
+        # dp1 = ca.MX.sym('dp1_1', 2)
 
-        a0 = p0
-        a1 = dp0
-        a2 = -(delta_T**(-2))*(3*(p0 - p1) + delta_T*(2*dp0 + dp1))
-        a3 = (delta_T**(-3))*(2*(p0 - p1) + delta_T*(dp0 + dp1))
+        # a0 = p0
+        # a1 = dp0
+        # a2 = -(delta_T**(-2))*(3*(p0 - p1) + delta_T*(2*dp0 + dp1))
+        # a3 = (delta_T**(-3))*(2*(p0 - p1) + delta_T*(dp0 + dp1))
 
-        p = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        dp = a1 + 2*a2*t + 3*a3*(t**2)
+        # p = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        # dp = a1 + 2*a2*t + 3*a3*(t**2)
 
-        self.p_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
-                                        ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
+        # self.p_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
+        #                                 ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
 
         ############################################################
         f0  = ca.MX.sym( 'f0_1', 2)
@@ -210,16 +210,16 @@ class NonlinearProgram():
 
 
             ############################################################
-            if n == 0:
-                self.p_variables.append(self.opti.variable(2))
-                self.p_dot_variables.append(self.opti.variable(2))
-                p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
-            else:
-                p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
+            # if n == 0:
+            #     self.p_variables.append(self.opti.variable(2))
+            #     self.p_dot_variables.append(self.opti.variable(2))
+            #     p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
+            # else:
+            #     p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
             
-            self.p_variables.append(self.opti.variable(2))
-            self.p_dot_variables.append(self.opti.variable(2))
-            p1, dp1 = self.p_variables[-1], self.p_dot_variables[-1]
+            # self.p_variables.append(self.opti.variable(2))
+            # self.p_dot_variables.append(self.opti.variable(2))
+            # p1, dp1 = self.p_variables[-1], self.p_dot_variables[-1]
                         
             # if n%int(self.knot_points/self.num_phases) == 0:
             #     self.time_phases.append(self.opti.variable(1))
@@ -227,9 +227,9 @@ class NonlinearProgram():
             #     self.opti.set_initial(self.time_phases[-1], self.total_duration/self.num_phases)
             #     delta_T = self.time_phases[-1]/(self.knot_points/self.num_phases)
 
-            p_poly = self.p_polynomial(delta_T=delta_T, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)
-            self.p.append(p_poly['p'])
-            self.p_dot.append(p_poly['dp'])
+            # p_poly = self.p_polynomial(delta_T=delta_T, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)
+            # self.p.append(p_poly['p'])
+            # self.p_dot.append(p_poly['dp'])
 
             ############################################################
             if n == 0:
@@ -275,8 +275,8 @@ class NonlinearProgram():
                 
             # Body Constraints    
             self.model.setState(self.r[n], self.r_dot[n], 
-                                self.q[n], self.q_dot[n], self.p[n], self.f[n])
-            self.ceq.append(ca.norm_2(self.model.kinematic_constraints['constraint violation']) == 0)
+                                self.q[n], self.q_dot[n], self.f[n])
+            # self.ceq.append(ca.norm_2(self.model.kinematic_constraints['constraint violation']) == 0)
             self.ceq.append(self.model.dynamic_constraints['r_ddot'] == self.r_ddot[n])
             self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n])
 
@@ -287,21 +287,21 @@ class NonlinearProgram():
             if n%int(self.knot_points/self.num_phases) == 0:
                 self.ceq.append(self.r_dot[n] == 0)
                 self.ceq.append(self.q_dot[n] == 0)
-                self.ceq.append(self.p_dot[n] == 0)
+                # self.ceq.append(self.p_dot[n] == 0)
                 self.ceq.append(self.f_dot[n] == 0)
 
-                last_p = self.p[n]
+                # last_p = self.p[n]
 
             if step_checker%2 != 0: # no contact
                 self.ceq.append(self.f[n] == 0) # foot force = 0
-                self.ciq.append(self.terrain.heightMap(self.p[n][0,0]) <= self.p[n][1,0]) # pe_y > ground
+                self.ciq.append(self.terrain.heightMap(self.model.pe[0,0]) <= self.model.pe[1,0]) # pe_y > ground
             else: # contact
                 # self.ciq.append((self.terrain.mu*self.f[n][0,0])**2 - self.f[n][1,0]**2 >= 0) # friction
-                self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.p[n][0,0])))) # friction
-                self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= 0) # pushing force
-                self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
-                # self.ceq.append( self.p[n][0,0]==last_p) # foot not moving
-                self.ceq.append(self.p_dot[n]==0) # no slip
+                self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
+                self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= 0) # pushing force
+                self.ceq.append( self.model.pe[1,0]==self.terrain.heightMap(self.model.pe[0,0])) # foot not moving
+                self.ceq.append( self.terrain.heightMap(self.model.pe[0,0]) == self.model.pe[1,0]) # foot not moving
+                # self.ceq.append(self.p_dot[n]==0) # no slip
 
     def setConstraints(self):
         self.setModelConstraints()

@@ -25,19 +25,18 @@ class Hopper():
         
         # self.b = ca.norm_2(ca.DM([ca.mmax(self.length*2),ca.mmax(self.length)]))
 
-    def setState(self, r, r_dot, q, q_dot, pe, f):
+    def setState(self, r, r_dot, q, q_dot, f):
         self.q     = ca.reshape(q    , 3, 1)
         self.q_dot = ca.reshape(q_dot, 3, 1)
         self.r     = ca.reshape(r    , 2, 1)
         self.r_dot = ca.reshape(r_dot ,2, 1)
-        self.pe    = ca.reshape(pe   , 2, 1)
         self.f     = ca.reshape(f    , 2, 1)
 
         self.setKinematicsConstraint()
         self.setCenteroidalDynamics()
 
         # self.r_ddot, self.q_ddot = self.getCenteroidalDynamics()
-        self.kinematic_constraints = self.kinematic_model(r=self.r, q=self.q, pe=self.pe)
+        self.pe = self.kinematic_model(r=self.r, q=self.q)['pe']
         self.dynamic_constraints = self.dynamic_model(r=self.r, r_dot=self.r_dot, pe=self.pe, f=self.f)
         
         # self.kinematic_model = ca.Function('Box', [r, r_dot, q, q_dot, pe], 
@@ -61,7 +60,7 @@ class Hopper():
         # q_dot = ca.MX.sym('q_dot', 1, 1)
         r     = ca.MX.sym(     'r', 2, 1)
         # r_dot = ca.MX.sym('r_dot', 2, 1)
-        pe    = ca.MX.sym(    'pe', 2, 1)
+        # pe    = ca.MX.sym(    'pe', 2, 1)
         
         p02,p12 = -self.length[2]*ca.sin(q[2])/2 + r[0,0], -self.length[2]*ca.cos(q[2])/2 + r[1,0]
         p01,p11 = -self.length[1]*ca.sin(q[1])   + p02   , -self.length[1]*ca.cos(q[1])   + p12
@@ -78,12 +77,12 @@ class Hopper():
         # self.p_n =  (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
         
         # # y = ca.fabs(self.R_q @ (r - pe) - self.p_n) <= self.b
-        y = pe - pe_truth
+        # y = pe - pe_truth
 
-        self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 
-                                                  [y],
-                                                  ['r', 'q','pe'],
-                                                  ['constraint violation'])
+        self.kinematic_model = ca.Function('FullKinematics', [r, q], 
+                                                  [pe_truth],
+                                                  ['r', 'q'],
+                                                  ['pe'])
         # return y
 
     def setCenteroidalDynamics(self):
@@ -121,10 +120,10 @@ class Hopper():
 # q_dot = ca.MX.sym('q_dot', 3, 1)
 # r     = ca.MX.sym(    'r', 2, 1)
 # r_dot = ca.MX.sym('r_dot', 2, 1)
-# pe    = ca.MX.sym(   'pe', 2, 1)
+# # pe    = ca.MX.sym(   'pe', 2, 1)
 # f     = ca.MX.sym(    'f', 2, 1)
 
-# test_hopper.setState(r, r_dot, q, q_dot, pe, f)
+# test_hopper.setState(r, r_dot, q, q_dot, f)
 
 # print('-----Symbolic Test-------')
 # print(test_hopper.kinematic_model(r, q, pe))
