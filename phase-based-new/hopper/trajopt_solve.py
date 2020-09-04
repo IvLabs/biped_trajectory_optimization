@@ -11,7 +11,7 @@ class TrajOptSolve():
         super().__init__()
         self.formulation = NonlinearProgram(dt=0.05, steps=5, total_duration=2, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 300}
+        s_opts = {"max_iter": 100}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
@@ -19,7 +19,7 @@ class TrajOptSolve():
         self.sol_q1  = [] 
         self.sol_q2  = [] 
         self.sol_q3  = [] 
-        self.sol_p  = [] 
+        self.sol_r  = [] 
         self.sol_f  = []
         
         # self.sol_q2  = [] 
@@ -59,7 +59,7 @@ class TrajOptSolve():
 
         for n in range(len(self.formulation.q)):
             self.sol_f.append(np.linalg.norm(sol.value(self.formulation.f[n])))
-            self.sol_p.append(np.linalg.norm(sol.value(self.formulation.p[n])))
+            self.sol_r.append(np.linalg.norm(sol.value(self.formulation.r[n])))
             self.sol_q1.append((sol.value(self.formulation.q[n]))[0])
             self.sol_q2.append((sol.value(self.formulation.q[n]))[1])
             self.sol_q3.append((sol.value(self.formulation.q[n]))[2])
@@ -76,7 +76,7 @@ class TrajOptSolve():
         ax1.legend()
 
         ax2 = fig.add_subplot(312)
-        ax2.plot(self.time, self.sol_p, 'bo', label='p')
+        ax2.plot(self.time, self.sol_r, 'bo', label='r')
         ax2.grid()
         ax2.legend()
 

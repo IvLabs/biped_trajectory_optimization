@@ -13,6 +13,15 @@ from terrain import Terrain
 
 # import helper_functions as hf 
 
+
+##############################################################
+#### Go back to the old method of calculating, no params, only knot points
+#### Have a speacial node between 2 phases so that two consecutive phases are related
+##############################################################
+
+
+
+
 ##############################################################
 #### so far we were building trajectories afterwards
 #### now we will construct a trajectory first then optimise it
@@ -296,8 +305,8 @@ class NonlinearProgram():
                 self.ceq.append(self.f[n] == 0) # foot force = 0
                 self.ciq.append(self.terrain.heightMap(self.model.pe[0,0]) <= self.model.pe[1,0]) # pe_y > ground
             else: # contact
-                # self.ciq.append((self.terrain.mu*self.f[n][0,0])**2 - self.f[n][1,0]**2 >= 0) # friction
-                self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
+                # self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
+                # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
                 self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= 0) # pushing force
                 self.ceq.append( self.model.pe[1,0]==self.terrain.heightMap(self.model.pe[0,0])) # foot not moving
                 self.ceq.append( self.terrain.heightMap(self.model.pe[0,0]) == self.model.pe[1,0]) # foot not moving
@@ -314,8 +323,8 @@ class NonlinearProgram():
         for n in range(self.knot_points):
             self.opti.bounded(3*[-np.pi/2], self.q_variables[n], 3*[np.pi/2])
 
-            # self.opti.set_initial(self.r_variables[n][0], (2*n)/(self.knot_points-1))            
-            # self.opti.set_initial(self.q_variables[n][0], (2*n)/(self.knot_points-1))
+            self.opti.set_initial(self.r_variables[n][0], (2*n)/(self.knot_points-1))            
+            self.opti.set_initial(self.q_variables[n][0], (2*n)/(self.knot_points-1))
             # self.opti.set_initial(self.p_variables[n][0], (2*n)/(self.knot_points-1))
 
             # if n%int(self.knot_points/self.num_phases) == 0 and n > 0:
@@ -323,8 +332,8 @@ class NonlinearProgram():
 
             # if step_checker%2 != 0: # no contact
             #     self.opti.set_initial(self.f_variables[n][0], 0)
-            #     self.opti.set_initial(self.p_variables[n][0], (2*n)/(self.knot_points-1))
-            #     self.opti.set_initial(self.p_variables[n][1], (2*(n-(2*(self.knot_points-1)/3)))*(n-((self.knot_points-1)/3))/(self.knot_points-1))
+            # #     self.opti.set_initial(self.p_variables[n][0], (2*n)/(self.knot_points-1))
+            # #     self.opti.set_initial(self.p_variables[n][1], (2*(n-(2*(self.knot_points-1)/3)))*(n-((self.knot_points-1)/3))/(self.knot_points-1))
             # else: # contact
             #     # self.opti.set_initial(self.p_dot_variables[n][0], (2)/(self.knot_points-1))
             #     self.opti.set_initial(self.f_variables[n][0], self.model.gravity*self.model.mcom)
@@ -936,8 +945,8 @@ class NonlinearProgram():
         print('number of  q_dot(t) variables = ', len(self.q_dot),  ', is symbolic = ', self.q_dot[0].is_symbolic())
         print('number of q_ddot(t) variables = ', len(self.q_ddot), ', is symbolic = ', self.q_ddot[0].is_symbolic())
         
-        print('number of     pe(t) variables = ', len(self.p),     ', is symbolic = ', self.p[0].is_symbolic())
-        print('number of    dpe(t) variables = ', len(self.p_dot), ', is symbolic = ', self.p_dot[0].is_symbolic())
+        # print('number of     pe(t) variables = ', len(self.p),     ', is symbolic = ', self.p[0].is_symbolic())
+        # print('number of    dpe(t) variables = ', len(self.p_dot), ', is symbolic = ', self.p_dot[0].is_symbolic())
         print('number of      f(t) variables = ', len(self.f),     ', is symbolic = ', self.f[0].is_symbolic())
         
         print('\n---------Constraints----------')
