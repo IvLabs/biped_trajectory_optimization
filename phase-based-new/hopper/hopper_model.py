@@ -36,7 +36,8 @@ class Hopper():
         self.setCenteroidalDynamics()
 
         # self.r_ddot, self.q_ddot = self.getCenteroidalDynamics()
-        self.pe = self.kinematic_model(r=self.r, q=self.q)['pe']
+        self.pe = self.kinematic_model(r=self.r, q=self.q, q_dot=self.q_dot)['pe']
+        self.pe_dot = self.kinematic_model(r=self.r, q=self.q, q_dot=self.q_dot)['pe_dot']
         self.dynamic_constraints = self.dynamic_model(r=self.r, r_dot=self.r_dot, pe=self.pe, f=self.f)
         
         # self.kinematic_model = ca.Function('Box', [r, r_dot, q, q_dot, pe], 
@@ -57,7 +58,7 @@ class Hopper():
         # pe    = self.pe
 
         q     = ca.MX.sym(     'q', 3, 1)
-        # q_dot = ca.MX.sym('q_dot', 1, 1)
+        q_dot = ca.MX.sym('q_dot', 3, 1)
         r     = ca.MX.sym(     'r', 2, 1)
         # r_dot = ca.MX.sym('r_dot', 2, 1)
         # pe    = ca.MX.sym(    'pe', 2, 1)
@@ -68,6 +69,7 @@ class Hopper():
         pe_truth = ca.MX.zeros(2, 1)
         pe_truth[0, 0],pe_truth[1, 0] = -self.length[0]*ca.sin(q[0]) + p01   , -self.length[1]*ca.cos(q[0]) + p11
 
+        pe_truth_dot = ca.jtimes(pe_truth, q, q_dot)
 
         # self.R_q = ca.MX.zeros(2,2)
         # self.R_q[0,0],self.R_q[0,1] = ca.cos(q), -ca.sin(q)
@@ -79,10 +81,10 @@ class Hopper():
         # # y = ca.fabs(self.R_q @ (r - pe) - self.p_n) <= self.b
         # y = pe - pe_truth
 
-        self.kinematic_model = ca.Function('FullKinematics', [r, q], 
-                                                  [pe_truth],
-                                                  ['r', 'q'],
-                                                  ['pe'])
+        self.kinematic_model = ca.Function('FullKinematics', [r, q, q_dot], 
+                                                  [pe_truth, pe_truth_dot],
+                                                  ['r', 'q', 'q_dot'],
+                                                  ['pe', 'pe_dot'])
         # return y
 
     def setCenteroidalDynamics(self):

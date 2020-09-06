@@ -9,9 +9,9 @@ from trajopt_formulation import NonlinearProgram
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NonlinearProgram(dt=0.05, steps=5, total_duration=2, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.05, steps=1, total_duration=1, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 100}
+        s_opts = {"max_iter": 300}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
@@ -19,8 +19,9 @@ class TrajOptSolve():
         self.sol_q1  = [] 
         self.sol_q2  = [] 
         self.sol_q3  = [] 
-        self.sol_r  = [] 
-        self.sol_f  = []
+        self.sol_rx  = [] 
+        self.sol_ry  = [] 
+        self.sol_f   = []
         
         # self.sol_q2  = [] 
         # self.sol_dq2 = []
@@ -59,7 +60,8 @@ class TrajOptSolve():
 
         for n in range(len(self.formulation.q)):
             self.sol_f.append(np.linalg.norm(sol.value(self.formulation.f[n])))
-            self.sol_r.append(np.linalg.norm(sol.value(self.formulation.r[n])))
+            self.sol_rx.append(sol.value(self.formulation.r[n])[0])
+            self.sol_ry.append(sol.value(self.formulation.r[n])[1])
             self.sol_q1.append((sol.value(self.formulation.q[n]))[0])
             self.sol_q2.append((sol.value(self.formulation.q[n]))[1])
             self.sol_q3.append((sol.value(self.formulation.q[n]))[2])
@@ -76,14 +78,14 @@ class TrajOptSolve():
         ax1.legend()
 
         ax2 = fig.add_subplot(312)
-        ax2.plot(self.time, self.sol_r, 'bo', label='r')
+        ax2.plot(self.time, (np.array(self.sol_rx)**2 + np.array(self.sol_ry)**2)**(1/2), 'bo', label='r')
         ax2.grid()
         ax2.legend()
 
         ax3 = fig.add_subplot(313)
-        ax3.plot(self.time, self.sol_q1, label='q1')
-        ax3.plot(self.time, self.sol_q2, label='q2')
-        ax3.plot(self.time, self.sol_q3, label='q3')
+        ax3.plot(self.time, self.sol_q1, 'o', label='q1')
+        ax3.plot(self.time, self.sol_q2, 'o', label='q2')
+        ax3.plot(self.time, self.sol_q3, 'o', label='q3')
         ax3.grid()
         ax3.legend()
 
@@ -138,8 +140,8 @@ class TrajOptSolve():
         feet, = ax.plot([],[],'yo')
         terrain, = ax.plot([],[],'black')
         force, = ax.plot([],[],'c') 
-        ax.set_xlim([-2, 2])
-        ax.set_ylim([-2, 2])
+        ax.set_xlim([-4, 4])
+        ax.set_ylim([-4, 4])
         
         def init():
             p1.set_data([], [])
@@ -152,7 +154,7 @@ class TrajOptSolve():
 
         def animate(i):
 
-            c3 = [self.sol_c3x[i], self.sol_c3y[i]]
+            c3 = [self.sol_rx[i], self.sol_ry[i]]
             
             link1_x = [c3[0], l[0]*np.sin(self.sol_q1[i]) + c3[0]]
             link1_y = [c3[1], l[0]*np.cos(self.sol_q1[i]) + c3[1]]
@@ -162,8 +164,8 @@ class TrajOptSolve():
 
             link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
             link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
-            force_x = [c3[0], (self.sol_fx[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[0]]
-            force_y = [c3[1], (self.sol_fy[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[1]]
+            # force_x = [c3[0], (self.sol_fx[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[0]]
+            # force_y = [c3[1], (self.sol_fy[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[1]]
             
             # ax.set_xlim([-2+l_link2_x[1], 2+l_link2_x[1]])
             # ax.set_ylim([-2+l_link2_y[1], 2+l_link2_y[1]])
@@ -180,8 +182,8 @@ class TrajOptSolve():
             p2.set_data(link2_x, link2_y)
             p3.set_data(link3_x, link3_y)
             feet.set_data(c3[0], c3[1])
-            force.set_data(force_x,force_y)
-            return p1, p2, p3, feet, force, terrain
+            # force.set_data(force_x,force_y)
+            return p1, p2, p3, feet, terrain
 
         ani = animation.FuncAnimation(fig, animate, np.arange(0, len(self.time)), init_func=init,
                                interval=60, blit=True)
@@ -191,4 +193,4 @@ class TrajOptSolve():
 problem = TrajOptSolve()
 problem.solve()
 problem.plot()
-# problem.visualize()
+problem.visualize()
