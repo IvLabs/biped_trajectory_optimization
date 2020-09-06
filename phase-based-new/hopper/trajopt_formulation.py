@@ -20,13 +20,12 @@ from terrain import Terrain
 ##############################################################
 
 
-
-
 ##############################################################
 #### so far we were building trajectories afterwards
 #### now we will construct a trajectory first then optimise it
 #### Also you parametrize feet and force with a spline, and calculate values at knot points
 ##############################################################
+
 class NonlinearProgram():
     def __init__(self, dt, steps, total_duration, model='hopper', terrain='flat'):
         super().__init__()
@@ -217,7 +216,6 @@ class NonlinearProgram():
             self.q_dot.append(q_poly['dq'])
             self.q_ddot.append(q_poly['ddq'])
 
-
             ############################################################
             # if n == 0:
             #     self.p_variables.append(self.opti.variable(2))
@@ -241,6 +239,7 @@ class NonlinearProgram():
             # self.p_dot.append(p_poly['dp'])
 
             ############################################################
+
             if n == 0:
                 self.f_variables.append(self.opti.variable(2))
                 self.f_dot_variables.append(self.opti.variable(2))
