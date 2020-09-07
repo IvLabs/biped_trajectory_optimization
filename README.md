@@ -46,7 +46,6 @@
 
 ## Gait Generation for single step
 ### using CasADi library in python
-
 ![](five-link-gait-generation/animation2.gif) ![](five-link-gait-generation/graph.png)
 
 ## Trajectory Optimization on some basic systems
