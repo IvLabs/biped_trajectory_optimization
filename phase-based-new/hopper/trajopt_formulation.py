@@ -297,7 +297,8 @@ class NonlinearProgram():
             #     # self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
             self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
             self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= 0) # pushing force
-            self.ceq.append( self.model.pe[1,0]==self.terrain.heightMap(self.model.pe[0,0])) # foot not moving
+            # self.ceq.append( self.model.pe[1,0]==self.terrain.heightMap(self.model.pe[0,0])) # foot not moving
+            self.ceq.append( self.model.pe[1,0]==0) # foot not moving
             self.ceq.append(self.model.pe_dot==0) # no slip
 
     def setConstraints(self):
