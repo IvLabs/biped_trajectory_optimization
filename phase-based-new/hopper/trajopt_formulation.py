@@ -51,8 +51,8 @@ class NonlinearProgram():
         self.q_dot = []
         self.r     = []
         self.r_dot = [] 
-        # self.p     = []
-        # self.p_dot = [] 
+        self.p     = []
+        self.p_dot = [] 
         self.f     = [] 
         self.f_dot = [] 
 
@@ -67,8 +67,8 @@ class NonlinearProgram():
         self.r_variables     = []
         self.r_dot_variables = []
 
-        # self.p_variables     = []
-        # self.p_dot_variables = []
+        self.p_variables     = []
+        self.p_dot_variables = []
         self.f_dot_variables = []
         self.f_variables     = []
 
@@ -99,21 +99,21 @@ class NonlinearProgram():
         t = ca.MX.sym('t', 1)
 
         ############################################################
-        # p0  = ca.MX.sym( 'p0_1', 2)
-        # p1  = ca.MX.sym( 'p1_1', 2)
-        # dp0 = ca.MX.sym('dp0_1', 2)
-        # dp1 = ca.MX.sym('dp1_1', 2)
+        p0  = ca.MX.sym( 'p0_1', 2)
+        p1  = ca.MX.sym( 'p1_1', 2)
+        dp0 = ca.MX.sym('dp0_1', 2)
+        dp1 = ca.MX.sym('dp1_1', 2)
 
-        # a0 = p0
-        # a1 = dp0
-        # a2 = -(delta_T**(-2))*(3*(p0 - p1) + delta_T*(2*dp0 + dp1))
-        # a3 = (delta_T**(-3))*(2*(p0 - p1) + delta_T*(dp0 + dp1))
+        a0 = p0
+        a1 = dp0
+        a2 = -(delta_T**(-2))*(3*(p0 - p1) + delta_T*(2*dp0 + dp1))
+        a3 = (delta_T**(-3))*(2*(p0 - p1) + delta_T*(dp0 + dp1))
 
-        # p = a0 + a1*t + a2*(t**2) + a3*(t**3)
-        # dp = a1 + 2*a2*t + 3*a3*(t**2)
+        p = a0 + a1*t + a2*(t**2) + a3*(t**3)
+        dp = a1 + 2*a2*t + 3*a3*(t**2)
 
-        # self.p_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
-        #                                 ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
+        self.p_polynomial = ca.Function('end_effector', [delta_T, t, p0, dp0, p1, dp1], [p, dp], 
+                                        ['delta_T', 't', 'p0', 'dp0', 'p1', 'dp1'], ['p', 'dp'])
 
         ############################################################
         f0  = ca.MX.sym( 'f0_1', 2)
@@ -133,10 +133,10 @@ class NonlinearProgram():
                                         ['delta_T', 't', 'f0', 'df0', 'f1', 'df1'], ['f', 'df'])
 
         ############################################################
-        q0  = ca.MX.sym( 'q0_1', 3)
-        q1  = ca.MX.sym( 'q1_1', 3)
-        dq0 = ca.MX.sym('dq0_1', 3)
-        dq1 = ca.MX.sym('dq1_1', 3)
+        q0  = ca.MX.sym( 'q0_1', 1)
+        q1  = ca.MX.sym( 'q1_1', 1)
+        dq0 = ca.MX.sym('dq0_1', 1)
+        dq1 = ca.MX.sym('dq1_1', 1)
 
         a0 = q0
         a1 = dq0
@@ -197,9 +197,17 @@ class NonlinearProgram():
         self.f_dot_variables.append(self.opti.variable(2))
         f0, df0 = self.f_variables[-1], self.f_dot_variables[-1]
 
+        self.p_variables.append(self.opti.variable(2))
+        self.p_dot_variables.append(self.opti.variable(2))
+        p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
+
         self.f_variables.append(self.opti.variable(2))
         self.f_dot_variables.append(self.opti.variable(2))
         f1, df1 = self.f_variables[-1], self.f_dot_variables[-1]
+
+        self.p_variables.append(self.opti.variable(2))
+        self.p_dot_variables.append(self.opti.variable(2))
+        p1, dp1 = self.p_variables[-1], self.p_dot_variables[-1]
 
         delta_T = self.time_phases[-1]
 
@@ -248,6 +256,11 @@ class NonlinearProgram():
             self.f.append(f_poly['f'])
             self.f_dot.append(f_poly['df'])
 
+            ###################################################################                                    
+            p_poly = self.p_polynomial(delta_T=delta_T, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)
+            self.p.append(p_poly['p'])
+            self.p_dot.append(p_poly['dp'])
+
             t += self.dt
 
         self.opti.subject_to(sum(self.time_phases) == self.total_duration)
@@ -272,7 +285,7 @@ class NonlinearProgram():
             # Body Constraints    
             self.model.setState(self.r[n], self.r_dot[n], 
                                 self.q[n], self.q_dot[n], self.f[n])
-            # self.ceq.append(ca.norm_2(self.model.kinematic_constraints['constraint violation']) == 0)
+            self.ceq.append((self.model.kinematic_constraint['constraint']) <= self.model.b)
             self.ceq.append(self.model.dynamic_constraints['r_ddot'] == self.r_ddot[n])
             self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n][2])
             # print(self.model.q.shape, n)
@@ -296,10 +309,10 @@ class NonlinearProgram():
             # else: # contact
             #     # self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
             # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
-            self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= 0) # pushing force
+            self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[0,0])) >= 0) # pushing force
             # self.ceq.append( self.model.pe[1,0]==self.terrain.heightMap(self.model.pe[0,0])) # foot not moving
             # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
-            self.ceq.append(self.model.pe_dot==0) # no slip
+            self.ceq.append(self.p_dot==0) # no slip
 
     def setConstraints(self):
         self.setModelConstraints()
