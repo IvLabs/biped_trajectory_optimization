@@ -273,8 +273,8 @@ class NonlinearProgram():
         step_checker = 0
         # self.opti.minimize(ca.sumsqr(sum(self.p_dot)) + ca.sumsqr(sum(self.f_dot)))
 
-        self.ceq.append(self.r[-1] == ca.DM([0.5,0]))
-        self.ceq.append(self.r[0] == ca.DM([-0.5,0]))
+        self.ceq.append(self.r[-1] == ca.DM([0.5,0.8]))
+        self.ceq.append(self.r[0] == ca.DM([-0.5,0.8]))
         self.ceq.append(self.q[0] == 0)
         angp = ca.DM([np.pi]*3)
         angn = ca.DM([-np.pi]*3)
