@@ -11,17 +11,19 @@ class TrajOptSolve():
         super().__init__()
         self.formulation = NonlinearProgram(dt=0.05, steps=1, total_duration=1, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 300}
+        s_opts = {"max_iter": 3000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
         sol = self.formulation.opti.solve_limited()
-        self.sol_q1  = [] 
-        self.sol_q2  = [] 
-        self.sol_q3  = [] 
+        self.sol_q  = [] 
+        # self.sol_q2  = [] 
+        # self.sol_q3  = [] 
         self.sol_rx  = [] 
         self.sol_ry  = [] 
         self.sol_f   = []
+        self.sol_px  = []
+        self.sol_py  = []
         
         # self.sol_q2  = [] 
         # self.sol_dq2 = []
@@ -60,11 +62,13 @@ class TrajOptSolve():
 
         for n in range(len(self.formulation.q)):
             self.sol_f.append(np.linalg.norm(sol.value(self.formulation.f[n])))
+            self.sol_px.append(sol.value(self.formulation.p[n])[0])
+            self.sol_py.append(sol.value(self.formulation.p[n])[1])
             self.sol_rx.append(sol.value(self.formulation.r[n])[0])
             self.sol_ry.append(sol.value(self.formulation.r[n])[1])
-            self.sol_q1.append((sol.value(self.formulation.q[n]))[0])
-            self.sol_q2.append((sol.value(self.formulation.q[n]))[1])
-            self.sol_q3.append((sol.value(self.formulation.q[n]))[2])
+            self.sol_q.append((sol.value(self.formulation.q[n])))
+            # self.sol_q2.append((sol.value(self.formulation.q[n]))[1])
+            # self.sol_q3.append((sol.value(self.formulation.q[n]))[2])
 
         self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_f))
 
@@ -83,9 +87,9 @@ class TrajOptSolve():
         ax2.legend()
 
         ax3 = fig.add_subplot(313)
-        ax3.plot(self.time, self.sol_q1, 'o', label='q1')
-        ax3.plot(self.time, self.sol_q2, 'o', label='q2')
-        ax3.plot(self.time, self.sol_q3, 'o', label='q3')
+        ax3.plot(self.time, (np.array(self.sol_px)**2 + np.array(self.sol_py)**2)**(1/2), 'o', label='pe')
+        # ax3.plot(self.time, self.sol_q2, 'o', label='q2')
+        # ax3.plot(self.time, self.sol_q3, 'o', label='q3')
         ax3.grid()
         ax3.legend()
 
@@ -138,6 +142,8 @@ class TrajOptSolve():
         p2, = ax.plot([],[],'g')
         p3,  = ax.plot([],[],'blue')
         feet, = ax.plot([],[],'yo')
+        com, = ax.plot([],[],'go')
+        base, = ax.plot([],[],'r', lw=5)
         terrain, = ax.plot([],[],'black')
         force, = ax.plot([],[],'c') 
         ax.set_xlim([-4, 4])
@@ -148,22 +154,25 @@ class TrajOptSolve():
             p2.set_data([], [])
             p3.set_data( [], [])
             feet.set_data([],[])
+            com.set_data([],[])
+            base.set_data([],[])
             force.set_data([],[])
             terrain.set_data([],[])
-            return p1, p2, p3, feet, force, terrain
+            return base, feet, com, force, terrain
 
         def animate(i):
 
             c3 = [self.sol_rx[i], self.sol_ry[i]]
+            pe = [self.sol_px[i], self.sol_py[i]]
             
-            link1_x = [c3[0], l[0]*np.sin(self.sol_q1[i]) + c3[0]]
-            link1_y = [c3[1], l[0]*np.cos(self.sol_q1[i]) + c3[1]]
+            base_x = [c3[0] - l[0]*np.sin(self.sol_q[i])/2, l[0]*np.sin(self.sol_q[i])/2 + c3[0]]
+            base_y = [c3[1] - l[0]*np.cos(self.sol_q[i])/2, l[0]*np.cos(self.sol_q[i])/2 + c3[1]]
 
-            link2_x = [link1_x[1], link1_x[1] + l[1]*np.sin(self.sol_q2[i])]
-            link2_y = [link1_y[1], link1_y[1] + l[1]*np.cos(self.sol_q2[i])]
+            # link2_x = [link1_x[1], link1_x[1] + l[1]*np.sin(self.sol_q2[i])]
+            # link2_y = [link1_y[1], link1_y[1] + l[1]*np.cos(self.sol_q2[i])]
 
-            link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
-            link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
+            # link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
+            # link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
             # force_x = [c3[0], (self.sol_fx[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[0]]
             # force_y = [c3[1], (self.sol_fy[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[1]]
             
@@ -178,12 +187,14 @@ class TrajOptSolve():
             terrain.set_data([-2, 2], [0, 0])
 
 
-            p1.set_data(link1_x, link1_y)
-            p2.set_data(link2_x, link2_y)
-            p3.set_data(link3_x, link3_y)
-            feet.set_data(c3[0], c3[1])
+            # p1.set_data(link1_x, link1_y)
+            # p2.set_data(link2_x, link2_y)
+            # p3.set_data(link3_x, link3_y)
+            base.set_data(base_x, base_y)
+            feet.set_data(pe[0], pe[1])
+            com.set_data(c3[0], c3[1])
             # force.set_data(force_x,force_y)
-            return p1, p2, p3, feet, terrain
+            return base, feet, com, terrain
 
         ani = animation.FuncAnimation(fig, animate, np.arange(0, len(self.time)), init_func=init,
                                interval=60, blit=True)

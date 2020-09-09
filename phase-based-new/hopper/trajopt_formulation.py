@@ -234,14 +234,14 @@ class NonlinearProgram():
 
             ############################################################
             if n == 0:
-                self.q_variables.append(self.opti.variable(3))
-                self.q_dot_variables.append(self.opti.variable(3))
+                self.q_variables.append(self.opti.variable(1))
+                self.q_dot_variables.append(self.opti.variable(1))
                 q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
             else:
                 q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
             
-            self.q_variables.append(self.opti.variable(3))
-            self.q_dot_variables.append(self.opti.variable(3))
+            self.q_variables.append(self.opti.variable(1))
+            self.q_dot_variables.append(self.opti.variable(1))
             q1, dq1 = self.q_variables[-1], self.q_dot_variables[-1]
                         
             # delta_T = self.dt
@@ -283,11 +283,11 @@ class NonlinearProgram():
             
                 
             # Body Constraints    
-            self.model.setState(self.r[n], self.r_dot[n], 
-                                self.q[n], self.q_dot[n], self.f[n])
+            self.model.setState(self.r[n], self.q[n], 
+                                self.p[n], self.f[n])
             self.ceq.append((self.model.kinematic_constraint['constraint']) <= self.model.b)
             self.ceq.append(self.model.dynamic_constraints['r_ddot'] == self.r_ddot[n])
-            self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n][2])
+            self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n])
             # print(self.model.q.shape, n)
             self.ciq.append(self.model.q<= angp)
             self.ciq.append(self.model.q>= angn)
@@ -307,12 +307,13 @@ class NonlinearProgram():
             #     self.ceq.append(self.f[n] == 0) # foot force = 0
             #     self.ciq.append(self.terrain.heightMap(self.model.pe[0,0]) <= self.model.pe[1,0]) # pe_y > ground
             # else: # contact
-            #     # self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
+            self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
             # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
-            self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[0,0])) >= 0) # pushing force
-            # self.ceq.append( self.model.pe[1,0]==self.terrain.heightMap(self.model.pe[0,0])) # foot not moving
+            self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= 0) # pushing force
+            self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
+            self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # foot not moving
             # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
-            self.ceq.append(self.p_dot==0) # no slip
+            self.ceq.append(self.p_dot[n]==0) # no slip
 
     def setConstraints(self):
         self.setModelConstraints()
