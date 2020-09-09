@@ -276,8 +276,8 @@ class NonlinearProgram():
         self.ceq.append(self.r[-1] == ca.DM([0.5,0.8]))
         self.ceq.append(self.r[0] == ca.DM([-0.5,0.8]))
         self.ceq.append(self.q[0] == 0)
-        angp = ca.DM([np.pi]*3)
-        angn = ca.DM([-np.pi]*3)
+        angp = ca.DM([np.pi/2]*3)
+        angn = ca.DM([-np.pi/2]*3)
         for n in range(self.knot_points):
 
             
@@ -307,11 +307,12 @@ class NonlinearProgram():
             #     self.ceq.append(self.f[n] == 0) # foot force = 0
             #     self.ciq.append(self.terrain.heightMap(self.model.pe[0,0]) <= self.model.pe[1,0]) # pe_y > ground
             # else: # contact
+            self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
             self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
             # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
             self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= 0) # pushing force
             self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
-            self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # foot not moving
+            self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
             # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
             self.ceq.append(self.p_dot[n]==0) # no slip
 
