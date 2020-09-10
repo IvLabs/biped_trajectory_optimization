@@ -120,6 +120,9 @@ class TrajOptSolve():
         self.spline_px = []
         self.spline_py = []
 
+        # f0, df0 = self.sol_f[0], self.sol_df[0]
+        # f1, df1 = self.sol_f[-1], self.sol_df[-1]
+
         for n in range(len(self.sol_q)-1):
             r0, dr0 = self.sol_r[n], self.sol_dr[n]
             r1, dr1 = self.sol_r[n+1], self.sol_dr[n+1]
@@ -127,25 +130,26 @@ class TrajOptSolve():
             q0, dq0 = self.sol_q[n], self.sol_dq[n]
             q1, dq1 = self.sol_q[n+1], self.sol_dq[n+1]
 
+            p0, dp0 = self.sol_p[n], self.sol_dp[n]
+            p1, dp1 = self.sol_p[n+1], self.sol_dp[n+1]
+
             f0, df0 = self.sol_f[n], self.sol_df[n]
             f1, df1 = self.sol_f[n+1], self.sol_df[n+1]
 
-            p0, dp0 = self.sol_p[n], self.sol_dp[n]
-            p1, dp1 = self.sol_p[n+1], self.sol_dp[n+1]
 
             t = 0
             while t<self.formulation.dt:
                 
                 self.spline_rx.append(self.formulation.r_polynomial(delta_T=self.formulation.dt, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)['r'][0])
                 self.spline_ry.append(self.formulation.r_polynomial(delta_T=self.formulation.dt, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)['r'][1])
-                self.spline_q.append(self.formulation.q_polynomial(delta_T=self.formulation.dt, t=t, q0=q0, dq0=dq0, q1=q1, dq1=dq1)['q'])   
-                self.spline_fx.append(self.formulation.f_polynomial(delta_T=self.formulation.dt, t=t, f0=r0, df0=df0, f1=f1, df1=df1)['f'][0])
-                self.spline_fy.append(self.formulation.f_polynomial(delta_T=self.formulation.dt, t=t, f0=r0, df0=df0, f1=f1, df1=df1)['f'][1])
+                self.spline_q.append(self.formulation.q_polynomial(delta_T=self.formulation.dt, t=t, q0=q0, dq0=dq0, q1=q1, dq1=dq1)['q'][0])   
+                self.spline_fx.append(self.formulation.f_polynomial(delta_T=self.formulation.dt, t=t, f0=f0, df0=df0, f1=f1, df1=df1)['f'][0])
+                self.spline_fy.append(self.formulation.f_polynomial(delta_T=self.formulation.dt, t=t, f0=f0, df0=df0, f1=f1, df1=df1)['f'][1])
                 self.spline_px.append(self.formulation.p_polynomial(delta_T=self.formulation.dt, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)['p'][0])
                 self.spline_py.append(self.formulation.p_polynomial(delta_T=self.formulation.dt, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)['p'][1])
 
                 t += self.formulation.dt/20
-        
+        print(self.spline_q[0])
         self.time_space = np.linspace(0,self.formulation.total_duration,len(self.spline_rx))
         # plt.plot(time_space, (np.array(self.spline_fx)**2 + np.array(self.spline_fy)**2)**(1/2), label='f')
         # plt.plot(time_space, (np.array(self.spline_rx)**2 + np.array(self.spline_ry)**2)**(1/2), label='r_bspline')
