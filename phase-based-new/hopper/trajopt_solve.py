@@ -1,6 +1,5 @@
 import numpy as np
 import casadi as ca
-import math
 from matplotlib import pyplot as plt
 from matplotlib import animation
 
@@ -21,7 +20,7 @@ class TrajOptSolve():
         # self.sol_q3  = [] 
         self.sol_rx  = [] 
         self.sol_ry  = [] 
-        self.sol_f   = []
+        # self.sol_f   = []
         self.sol_px  = []
         self.sol_py  = []
         
@@ -34,8 +33,8 @@ class TrajOptSolve():
         # self.sol_cx  = [] 
         # self.sol_cy  = [] 
 
-        # self.sol_fx  = [] 
-        # self.sol_fy  = []
+        self.sol_fx  = [] 
+        self.sol_fy  = []
 
         # self.sol_u1 = []
         # self.sol_u2 = []
@@ -61,7 +60,8 @@ class TrajOptSolve():
         #         self.sol_u2.append(sol.value(self.formulation.u[str(step)][knot_point][1]))
 
         for n in range(len(self.formulation.q)):
-            self.sol_f.append(np.linalg.norm(sol.value(self.formulation.f[n])))
+            self.sol_fx.append(sol.value(self.formulation.f[n])[0])
+            self.sol_fy.append(sol.value(self.formulation.f[n])[1])
             self.sol_px.append(sol.value(self.formulation.p[n])[0])
             self.sol_py.append(sol.value(self.formulation.p[n])[1])
             self.sol_rx.append(sol.value(self.formulation.r[n])[0])
@@ -77,7 +77,7 @@ class TrajOptSolve():
         fig.tight_layout()
 
         ax1 = fig.add_subplot(311)
-        ax1.plot(self.time, self.sol_f, 'ro', label='f')
+        ax1.plot(self.time, (np.array(self.sol_fx)**2 + np.array(self.sol_fy)**2)**(1/2), 'ro', label='f')
         ax1.grid()
         ax1.legend()
 
@@ -173,8 +173,8 @@ class TrajOptSolve():
 
             # link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
             # link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
-            # force_x = [c3[0], (self.sol_fx[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[0]]
-            # force_y = [c3[1], (self.sol_fy[i]+1e-3)/math.sqrt(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2) + c3[1]]
+            force_x = [pe[0], (self.sol_fx[i]+1e-3)/(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2)**(1/2) + pe[0]]
+            force_y = [pe[1], (self.sol_fy[i]+1e-3)/(1e-3+self.sol_fx[i]**2 + self.sol_fy[i]**2)**(1/2) + pe[1]]
             
             # ax.set_xlim([-2+l_link2_x[1], 2+l_link2_x[1]])
             # ax.set_ylim([-2+l_link2_y[1], 2+l_link2_y[1]])
@@ -193,8 +193,8 @@ class TrajOptSolve():
             base.set_data(base_x, base_y)
             feet.set_data(pe[0], pe[1])
             com.set_data(c3[0], c3[1])
-            # force.set_data(force_x,force_y)
-            return base, feet, com, terrain
+            force.set_data(force_x,force_y)
+            return base, feet, com, force, terrain
 
         ani = animation.FuncAnimation(fig, animate, np.arange(0, len(self.time)), init_func=init,
                                interval=60, blit=True)
