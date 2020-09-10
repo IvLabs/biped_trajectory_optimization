@@ -70,7 +70,28 @@ class TrajOptSolve():
             # self.sol_q2.append((sol.value(self.formulation.q[n]))[1])
             # self.sol_q3.append((sol.value(self.formulation.q[n]))[2])
 
-        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_f))
+        self.interpolate()
+
+    def interpolate(self):
+        self.time = np.linspace(0.0, self.formulation.total_duration, len(self.sol_q))
+
+        rx = ca.interpolant('LUT','bspline',[self.time],self.sol_rx)
+        ry = ca.interpolant('LUT','bspline',[self.time],self.sol_ry)
+        time_space = np.linspace(0.0, self.formulation.total_duration, 20*len(self.sol_q))
+        
+        self.spline_rx = rx(time_space)
+        self.spline_ry = ry(time_space)
+
+        fx = ca.interpolant('LUT','bspline',[self.time],self.sol_fx)
+        fy = ca.interpolant('LUT','bspline',[self.time],self.sol_fy)
+        time_space = np.linspace(0.0, self.formulation.total_duration, 20*len(self.sol_q))
+        
+        self.spline_fx = fx(time_space)
+        self.spline_fy = fy(time_space)
+
+        plt.plot(time_space, (np.array(self.spline_fx)**2 + np.array(self.spline_fy)**2)**(1/2))
+        plt.plot(time_space, (np.array(self.spline_rx)**2 + np.array(self.spline_ry)**2)**(1/2))
+        plt.show()
 
     def plot(self):
         fig = plt.figure()
@@ -146,8 +167,8 @@ class TrajOptSolve():
         base, = ax.plot([],[],'r', lw=5)
         terrain, = ax.plot([],[],'black')
         force, = ax.plot([],[],'c') 
-        ax.set_xlim([-4, 4])
-        ax.set_ylim([-4, 4])
+        ax.set_xlim([-2, 2])
+        ax.set_ylim([-2, 2])
         
         def init():
             p1.set_data([], [])
