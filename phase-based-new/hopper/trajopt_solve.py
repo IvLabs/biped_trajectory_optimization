@@ -263,8 +263,9 @@ class TrajOptSolve():
 
             # link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
             # link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
-            force_x = [pe[0], (self.spline_fx[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[0]]
-            force_y = [pe[1], (self.spline_fy[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[1]]
+            
+            # force_x = [pe[0], (self.spline_fx[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[0]]
+            # force_y = [pe[1], (self.spline_fy[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[1]]
             
             # ax.set_xlim([-2+l_link2_x[1], 2+l_link2_x[1]])
             # ax.set_ylim([-2+l_link2_y[1], 2+l_link2_y[1]])
@@ -283,8 +284,8 @@ class TrajOptSolve():
             base.set_data(base_x, base_y)
             feet.set_data(pe[0], pe[1])
             com.set_data(c3[0], c3[1])
-            force.set_data(force_x,force_y)
-            return base, feet, com, force, terrain
+            # force.set_data(force_x,force_y)
+            return base, feet, com, terrain # , force
 
         ani = animation.FuncAnimation(fig, animate, np.arange(0, len(self.time)), init_func=init,
                                interval=60, blit=True)
