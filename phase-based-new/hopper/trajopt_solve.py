@@ -8,7 +8,7 @@ from trajopt_formulation import NonlinearProgram
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NonlinearProgram(dt=0.05, steps=1, total_duration=0.5, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.05, steps=1, total_duration=0.2, model='hopper')
         p_opts = {"expand":True}
         s_opts = {"max_iter": 3000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
@@ -149,7 +149,6 @@ class TrajOptSolve():
                 self.spline_py.append(self.formulation.p_polynomial(delta_T=self.formulation.dt, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)['p'][1])
 
                 t += self.formulation.dt/20
-        print(self.spline_q[0])
         self.time_space = np.linspace(0,self.formulation.total_duration,len(self.spline_rx))
         # plt.plot(time_space, (np.array(self.spline_fx)**2 + np.array(self.spline_fy)**2)**(1/2), label='f')
         # plt.plot(time_space, (np.array(self.spline_rx)**2 + np.array(self.spline_ry)**2)**(1/2), label='r_bspline')
@@ -182,6 +181,14 @@ class TrajOptSolve():
         # ax3.plot(self.time, self.sol_q3, 'o', label='q3')
         ax3.grid()
         ax3.legend()
+
+        self.spline_rx = np.asarray(self.spline_rx)
+        self.spline_ry = np.asarray(self.spline_ry)
+        self.spline_q  = np.asarray(self.spline_q )
+        self.spline_fx = np.asarray(self.spline_fx)
+        self.spline_fy = np.asarray(self.spline_fy)
+        self.spline_px = np.asarray(self.spline_px)
+        self.spline_py = np.asarray(self.spline_py)
 
         # ax1 = fig.add_subplot(521)
         # ax1.plot(self.time, self.sol_q1, label='q1')
@@ -264,8 +271,8 @@ class TrajOptSolve():
             # link3_x = [link2_x[1],link2_x[1] + l[2]*np.sin(self.sol_q3[i])]
             # link3_y = [link2_y[1],link2_y[1] + l[2]*np.cos(self.sol_q3[i])]
             
-            # force_x = [pe[0], (self.spline_fx[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[0]]
-            # force_y = [pe[1], (self.spline_fy[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[1]]
+            force_x = [pe[0], (self.spline_fx[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[0]]
+            force_y = [pe[1], (self.spline_fy[i]+1e-3)/(1e-3+self.spline_fx[i]**2 + self.spline_fy[i]**2)**(1/2) + pe[1]]
             
             # ax.set_xlim([-2+l_link2_x[1], 2+l_link2_x[1]])
             # ax.set_ylim([-2+l_link2_y[1], 2+l_link2_y[1]])
@@ -284,10 +291,10 @@ class TrajOptSolve():
             base.set_data(base_x, base_y)
             feet.set_data(pe[0], pe[1])
             com.set_data(c3[0], c3[1])
-            # force.set_data(force_x,force_y)
-            return base, feet, com, terrain # , force
+            force.set_data(force_x,force_y)
+            return base, feet, com, force, terrain
 
-        ani = animation.FuncAnimation(fig, animate, np.arange(0, len(self.time)), init_func=init,
+        ani = animation.FuncAnimation(fig, animate, np.arange(0, len(self.time_space)), init_func=init,
                                interval=60, blit=True)
 
         plt.show()
