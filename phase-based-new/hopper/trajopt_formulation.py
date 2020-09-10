@@ -33,7 +33,7 @@ class NonlinearProgram():
         self.num_phases     = steps
         self.total_duration = total_duration
 
-        self.knot_points = int(total_duration/dt)
+        self.knot_points = 3
 
         self.phase_knot_points = int(total_duration/dt)
         
@@ -169,7 +169,7 @@ class NonlinearProgram():
 
     def setPolyCoefficients(self):
         # Set Base coefficients
-
+        self.contact_bool = []
         for step in range(self.num_phases):
             t = 0
             # print(self.knot_points, self.knot_points/self.num_phases)
@@ -226,6 +226,12 @@ class NonlinearProgram():
             delta_T = self.time_phases[-1]
 
             for n in range(self.knot_points):
+
+                if step%2 == 0:
+                    self.contact_bool.append('True')
+                else:
+                    self.contact_bool.append('False')
+
 
                 ############################################################
                 if n == 0:
@@ -287,12 +293,12 @@ class NonlinearProgram():
         step_checker = 0
         # self.opti.minimize(ca.sumsqr(sum(self.p_dot)) + ca.sumsqr(sum(self.f_dot)))
 
-        self.ceq.append(self.r[-1] == ca.DM([0.5,0.8]))
-        self.ceq.append(self.r[0] == ca.DM([-0.5,0.8]))
+        self.ceq.append(self.r[-1] == ca.DM([2,1.5]))
+        self.ceq.append(self.r[0] == ca.DM([-2,1.5]))
         self.ceq.append(self.q[0] == 0)
         angp = ca.DM([np.pi/2]*3)
         angn = ca.DM([-np.pi/2]*3)
-
+        jump_start = 0
         for n in range(len(self.r)):
     
             # Body Constraints    
@@ -305,10 +311,10 @@ class NonlinearProgram():
             self.ciq.append(self.model.q<= angp)
             self.ciq.append(self.model.q>= angn)
             # Environmental Constraints
-            if n%int(self.num_phases) == 0 and n > 0:
-                step_checker += 1
+            # if n%int(self.num_phases) == 0 and n > 0:
+            #     jump_start = 1
 
-            # if n%int(self.knot_points/self.num_phases) == 0:
+            # if n%int(self.num_phases) == 0:
             #     self.ceq.append(self.r_dot[n] == 0)
             #     self.ceq.append(self.q_dot[n] == 0)
             #     # self.ceq.append(self.p_dot[n] == 0)
@@ -316,17 +322,18 @@ class NonlinearProgram():
 
             #     # last_p = self.p[n]
 
-            if step_checker%2 != 0: # no contact
+            if self.contact_bool[n] == 'False': # no contact
                 self.ceq.append(self.f[n] == 0) # foot force = 0
-                self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
-                self.ceq.append( self.p[n][1,0]>=self.terrain.heightMap(self.p[n][0,0])) # com above ground
+                # self.ciq.append( self.r[n][1,0]>self.terrain.heightMap(self.r[n][0,0])) # com above ground
+                self.ciq.append( self.p[n][1,0]>self.terrain.heightMap(self.p[n][0,0])) # com above ground
+                # self.ciq.append( (self.p[n][1,0]**2)>0) 
             else: # contact
-                self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
-                self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
+                # self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
+                self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0])) - self.f[n][1,0] >= 0) # friction
                 # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
                 self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= 0) # pushing force
                 self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
-                self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
+                # self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
                 # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
                 self.ceq.append(self.p_dot[n]==0) # no slip
 

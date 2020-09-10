@@ -8,9 +8,9 @@ from trajopt_formulation import NonlinearProgram
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NonlinearProgram(dt=0.05, steps=3, total_duration=0.5, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.1, steps=5, total_duration=1, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 3000}
+        s_opts = {"max_iter": 1000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
@@ -91,7 +91,8 @@ class TrajOptSolve():
             self.sol_dry.append(sol.value(self.formulation.r_dot[n])[1])
             self.sol_dq.append((sol.value(self.formulation.q_dot[n])))
 
-        self.time_phases.append(sol.value(self.formulation.time_phases[0]))
+        for n in range(self.formulation.num_phases):
+            self.time_phases.append(sol.value(self.formulation.time_phases[n]))
         
         self.interpolate()
 
@@ -243,8 +244,8 @@ class TrajOptSolve():
         base, = ax.plot([],[],'r', lw=5)
         terrain, = ax.plot([],[],'black')
         force, = ax.plot([],[],'c') 
-        ax.set_xlim([-2, 2])
-        ax.set_ylim([-2, 2])
+        ax.set_xlim([-4, 4])
+        ax.set_ylim([-4, 4])
         
         def init():
             p1.set_data([], [])

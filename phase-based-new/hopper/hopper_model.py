@@ -23,7 +23,7 @@ class Hopper():
         self.gravity_vector = ca.DM.zeros(2)
         self.gravity_vector[1] = self.gravity
         
-        self.nominal_pe = ca.DM([ca.mmax(self.length), ca.mmax(self.length)])
+        self.nominal_pe = ca.DM([1.5*ca.mmax(self.length), 1.5*ca.mmax(self.length)])
 
         self.b = ca.DM([ca.mmax(self.length),ca.mmax(self.length)])
 
