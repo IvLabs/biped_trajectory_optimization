@@ -169,99 +169,113 @@ class NonlinearProgram():
 
     def setPolyCoefficients(self):
         # Set Base coefficients
-        t = 0
-        # print(self.knot_points, self.knot_points/self.num_phases)
-        
-        self.time_phases.append(self.opti.variable(1))
-        self.opti.subject_to(self.time_phases[-1] > 0)
-        self.opti.set_initial(self.time_phases[-1], self.total_duration/self.num_phases)
 
-        # self.r_variables.append(self.opti.variable(2))
-        # self.r_dot_variables.append(self.opti.variable(2))
+        for step in range(self.num_phases):
+            t = 0
+            # print(self.knot_points, self.knot_points/self.num_phases)
+            
+            self.time_phases.append(self.opti.variable(1))
+            self.opti.subject_to(self.time_phases[-1] > 0)
+            self.opti.set_initial(self.time_phases[-1], self.total_duration/self.num_phases)
 
-        # r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
+            # self.r_variables.append(self.opti.variable(2))
+            # self.r_dot_variables.append(self.opti.variable(2))
 
-        # self.r_variables.append(self.opti.variable(2))
-        # self.r_dot_variables.append(self.opti.variable(2))
-        # r1, dr1 = self.r_variables[-1], self.r_dot_variables[-1]
+            # r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
 
-        # self.q_variables.append(self.opti.variable(3))
-        # self.q_dot_variables.append(self.opti.variable(3))
-        # q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
+            # self.r_variables.append(self.opti.variable(2))
+            # self.r_dot_variables.append(self.opti.variable(2))
+            # r1, dr1 = self.r_variables[-1], self.r_dot_variables[-1]
 
-        # self.q_variables.append(self.opti.variable(3))
-        # self.q_dot_variables.append(self.opti.variable(3))
-        # q1, dq1 = self.q_variables[-1], self.q_dot_variables[-1]
+            # self.q_variables.append(self.opti.variable(3))
+            # self.q_dot_variables.append(self.opti.variable(3))
+            # q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
 
-        self.f_variables.append(self.opti.variable(2))
-        self.f_dot_variables.append(self.opti.variable(2))
-        f0, df0 = self.f_variables[-1], self.f_dot_variables[-1]
+            # self.q_variables.append(self.opti.variable(3))
+            # self.q_dot_variables.append(self.opti.variable(3))
+            # q1, dq1 = self.q_variables[-1], self.q_dot_variables[-1]
 
-        self.p_variables.append(self.opti.variable(2))
-        self.p_dot_variables.append(self.opti.variable(2))
-        p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
+            if step == 0:
+                self.f_variables.append(self.opti.variable(2))
+                self.f_dot_variables.append(self.opti.variable(2))
+                f0, df0 = self.f_variables[-1], self.f_dot_variables[-1]
 
-        self.f_variables.append(self.opti.variable(2))
-        self.f_dot_variables.append(self.opti.variable(2))
-        f1, df1 = self.f_variables[-1], self.f_dot_variables[-1]
+                self.p_variables.append(self.opti.variable(2))
+                self.p_dot_variables.append(self.opti.variable(2))
+                p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
 
-        self.p_variables.append(self.opti.variable(2))
-        self.p_dot_variables.append(self.opti.variable(2))
-        p1, dp1 = self.p_variables[-1], self.p_dot_variables[-1]
+                self.f_variables.append(self.opti.variable(2))
+                self.f_dot_variables.append(self.opti.variable(2))
+                f1, df1 = self.f_variables[-1], self.f_dot_variables[-1]
 
-        delta_T = self.time_phases[-1]
+                self.p_variables.append(self.opti.variable(2))
+                self.p_dot_variables.append(self.opti.variable(2))
+                p1, dp1 = self.p_variables[-1], self.p_dot_variables[-1]
+            else:
+                f0, df0 = self.f_variables[-1], self.f_dot_variables[-1]
+                p0, dp0 = self.p_variables[-1], self.p_dot_variables[-1]
 
-        for n in range(self.knot_points):
+                self.f_variables.append(self.opti.variable(2))
+                self.f_dot_variables.append(self.opti.variable(2))
+                f1, df1 = self.f_variables[-1], self.f_dot_variables[-1]
 
-            ############################################################
-            if n == 0:
+                self.p_variables.append(self.opti.variable(2))
+                self.p_dot_variables.append(self.opti.variable(2))
+                p1, dp1 = self.p_variables[-1], self.p_dot_variables[-1]
+                
+            delta_T = self.time_phases[-1]
+
+            for n in range(self.knot_points):
+
+                ############################################################
+                if n == 0:
+                    self.r_variables.append(self.opti.variable(2))
+                    self.r_dot_variables.append(self.opti.variable(2))
+                    r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
+                else:
+                    r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
+                
                 self.r_variables.append(self.opti.variable(2))
                 self.r_dot_variables.append(self.opti.variable(2))
-                r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
-            else:
-                r0, dr0 = self.r_variables[-1], self.r_dot_variables[-1]
-            
-            self.r_variables.append(self.opti.variable(2))
-            self.r_dot_variables.append(self.opti.variable(2))
-            r1, dr1 = self.r_variables[-1], self.r_dot_variables[-1]
-                        
-            # delta_T = self.dt
+                r1, dr1 = self.r_variables[-1], self.r_dot_variables[-1]
+                            
+                # delta_T = self.dt
 
-            r_poly = self.r_polynomial(delta_T=self.dt, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)
-            self.r.append(r_poly['r'])
-            self.r_dot.append(r_poly['dr'])
-            self.r_ddot.append(r_poly['ddr'])
+                r_poly = self.r_polynomial(delta_T=self.dt, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)
+                self.r.append(r_poly['r'])
+                self.r_dot.append(r_poly['dr'])
+                self.r_ddot.append(r_poly['ddr'])
 
-            ############################################################
-            if n == 0:
+                ############################################################
+                if n == 0:
+                    self.q_variables.append(self.opti.variable(1))
+                    self.q_dot_variables.append(self.opti.variable(1))
+                    q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
+                else:
+                    q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
+                
                 self.q_variables.append(self.opti.variable(1))
                 self.q_dot_variables.append(self.opti.variable(1))
-                q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
-            else:
-                q0, dq0 = self.q_variables[-1], self.q_dot_variables[-1]
-            
-            self.q_variables.append(self.opti.variable(1))
-            self.q_dot_variables.append(self.opti.variable(1))
-            q1, dq1 = self.q_variables[-1], self.q_dot_variables[-1]
-                        
-            # delta_T = self.dt
+                q1, dq1 = self.q_variables[-1], self.q_dot_variables[-1]
+                            
+                # delta_T = self.dt
 
-            q_poly = self.q_polynomial(delta_T=self.dt, t=t, q0=q0, dq0=dq0, q1=q1, dq1=dq1)
-            self.q.append(q_poly['q'])
-            self.q_dot.append(q_poly['dq'])
-            self.q_ddot.append(q_poly['ddq'])
+                q_poly = self.q_polynomial(delta_T=self.dt, t=t, q0=q0, dq0=dq0, q1=q1, dq1=dq1)
+                self.q.append(q_poly['q'])
+                self.q_dot.append(q_poly['dq'])
+                self.q_ddot.append(q_poly['ddq'])
 
-            ###################################################################                                    
-            f_poly = self.f_polynomial(delta_T=delta_T, t=t, f0=f0, df0=df0, f1=f1, df1=df1)
-            self.f.append(f_poly['f'])
-            self.f_dot.append(f_poly['df'])
+                ###################################################################                                    
+                f_poly = self.f_polynomial(delta_T=delta_T, t=t, f0=f0, df0=df0, f1=f1, df1=df1)
+                self.f.append(f_poly['f'])
+                self.f_dot.append(f_poly['df'])
 
-            ###################################################################                                    
-            p_poly = self.p_polynomial(delta_T=delta_T, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)
-            self.p.append(p_poly['p'])
-            self.p_dot.append(p_poly['dp'])
+                ###################################################################                                    
+                p_poly = self.p_polynomial(delta_T=delta_T, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)
+                self.p.append(p_poly['p'])
+                self.p_dot.append(p_poly['dp'])
 
-            t += self.dt
+                t += self.dt
 
         self.opti.subject_to(sum(self.time_phases) == self.total_duration)
         # print(self.knot_points)
@@ -278,10 +292,9 @@ class NonlinearProgram():
         self.ceq.append(self.q[0] == 0)
         angp = ca.DM([np.pi/2]*3)
         angn = ca.DM([-np.pi/2]*3)
-        for n in range(self.knot_points):
 
-            
-                
+        for n in range(len(self.r)):
+    
             # Body Constraints    
             self.model.setState(self.r[n], self.q[n], 
                                 self.p[n], self.f[n])
@@ -292,7 +305,7 @@ class NonlinearProgram():
             self.ciq.append(self.model.q<= angp)
             self.ciq.append(self.model.q>= angn)
             # Environmental Constraints
-            if n%int(self.knot_points/self.num_phases) == 0 and n > 0:
+            if n%int(self.num_phases) == 0 and n > 0:
                 step_checker += 1
 
             # if n%int(self.knot_points/self.num_phases) == 0:
@@ -303,18 +316,19 @@ class NonlinearProgram():
 
             #     # last_p = self.p[n]
 
-            # if step_checker%2 != 0: # no contact
-            #     self.ceq.append(self.f[n] == 0) # foot force = 0
-            #     self.ciq.append(self.terrain.heightMap(self.model.pe[0,0]) <= self.model.pe[1,0]) # pe_y > ground
-            # else: # contact
-            self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
-            self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
-            # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
-            self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= 0) # pushing force
-            self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
-            self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
-            # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
-            self.ceq.append(self.p_dot[n]==0) # no slip
+            if step_checker%2 != 0: # no contact
+                self.ceq.append(self.f[n] == 0) # foot force = 0
+                self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
+                self.ceq.append( self.p[n][1,0]>=self.terrain.heightMap(self.p[n][0,0])) # com above ground
+            else: # contact
+                self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
+                self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0]) - self.f[n][1,0]) >= 0) # friction
+                # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
+                self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= 0) # pushing force
+                self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
+                self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
+                # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
+                self.ceq.append(self.p_dot[n]==0) # no slip
 
     def setConstraints(self):
         self.setModelConstraints()
