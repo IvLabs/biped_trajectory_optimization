@@ -33,7 +33,7 @@ class NonlinearProgram():
         self.num_phases     = steps
         self.total_duration = total_duration
 
-        self.knot_points = 4
+        self.knot_points = 2
 
         self.phase_knot_points = int(total_duration/dt)
         
@@ -146,6 +146,11 @@ class NonlinearProgram():
         q   = a0 + a1*t + a2*(t**2) + a3*(t**3)
         dq  = a1 + 2*a2*t + 3*a3*(t**2)
         ddq = 2*a2 + 6*a3*t
+
+        # q   = a0*t + a1*(t**2) + a2*(t**3) + a3*(t**4)
+        # dq  = a0 + 2*a1*t + 3*a2*(t**2) + 4*a3*(t**3)
+        # ddq = 2*a1 + 6*a2*t + 12*a3*(t**2)
+
         self.q_polynomial = ca.Function('joint_angles', [delta_T, t, q0, dq0, q1, dq1], [q, dq, ddq], 
                                         ['delta_T', 't', 'q0', 'dq0', 'q1', 'dq1'], ['q', 'dq', 'ddq'])
 
@@ -163,6 +168,10 @@ class NonlinearProgram():
         r   = a0 + a1*t + a2*(t**2) + a3*(t**3)
         dr  = a1 + 2*a2*t + 3*a3*(t**2)
         ddr = 2*a2 + 6*a3*t
+
+        # r   = a0*t + a1*(t**2) + a2*(t**3) + a3*(t**4)
+        # dr  = a0 + 2*a1*t + 3*a2*(t**2) + 4*a3*(t**3)
+        # ddr = 2*a1 + 6*a2*t + 12*a3*(t**2)
 
         self.r_polynomial = ca.Function('com', [delta_T, t, r0, dr0, r1, dr1], [r, dr, ddr], 
                                         ['delta_T', 't', 'r0', 'dr0', 'r1', 'dr1'], ['r', 'dr', 'ddr'])
@@ -299,14 +308,34 @@ class NonlinearProgram():
         angp = ca.DM([np.pi/2]*3)
         angn = ca.DM([-np.pi/2]*3)
         jump_start = 0
+
+        for n in range(len(self.r)-1):
+            self.model.setState(self.r[n], self.q[n], 
+                                self.p[n], self.f[n])
+            
+            ddr1 = self.model.dynamic_constraints['r_ddot']
+            ddq1 = self.model.dynamic_constraints['q_ddot']
+            
+            self.model.setState(self.r[n+1], self.q[n+1], 
+                                self.p[n+1], self.f[n+1])
+
+
+            ddr2 = self.model.dynamic_constraints['r_ddot']
+            ddq2 = self.model.dynamic_constraints['q_ddot']
+
+            self.ceq.append( (ddr1 + ddr2)*self.dt/2== self.r_dot[n+1] - self.r_dot[n+1])
+            self.ceq.append( (ddq1 + ddq2)*self.dt/2== self.q_dot[n+1] - self.q_dot[n+1])
+            
+
         for n in range(len(self.r)):
     
             # Body Constraints    
             self.model.setState(self.r[n], self.q[n], 
                                 self.p[n], self.f[n])
             self.ceq.append((self.model.kinematic_constraint['constraint']) <= self.model.b)
-            self.ceq.append(self.model.dynamic_constraints['r_ddot'] == self.r_ddot[n])
-            self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n])
+            
+            # self.ceq.append(self.model.dynamic_constraints['r_ddot'] == self.r_ddot[n])
+            # self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n])
             # print(self.model.q.shape, n)
             self.ciq.append(self.model.q<= angp)
             self.ciq.append(self.model.q>= angn)
@@ -324,7 +353,7 @@ class NonlinearProgram():
 
             if self.contact_bool[n] == 'False': # no contact
                 self.ceq.append(self.f[n] == 0) # foot force = 0
-                # self.ciq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
+                self.ciq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
                 self.ciq.append( self.p[n][1,0]>self.terrain.heightMap(self.p[n][0,0])) # com above ground
                 # self.ciq.append( (self.p[n][1,0]**2)>0) 
             else: # contact
@@ -352,7 +381,6 @@ class NonlinearProgram():
         for n in range(len(self.r_variables)):
             self.opti.bounded(angn, self.q_variables[n], angp)
 
-            
             self.opti.set_initial(self.r_variables[n][0], (2*n)/(self.knot_points-1))            
             self.opti.set_initial(self.q_variables[n][0], (2*n)/(self.knot_points-1))
             

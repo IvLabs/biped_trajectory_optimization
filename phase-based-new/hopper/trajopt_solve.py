@@ -10,7 +10,7 @@ class TrajOptSolve():
         super().__init__()
         self.formulation = NonlinearProgram(dt=0.1, steps=3, total_duration=0.5, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 1000}
+        s_opts = {"max_iter": 500}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
@@ -121,6 +121,9 @@ class TrajOptSolve():
         self.spline_px = []
         self.spline_py = []
 
+        self.spline_ddrx = []
+        self.spline_ddry = []
+
         # f0, df0 = self.sol_f[0], self.sol_df[0]
         # f1, df1 = self.sol_f[-1], self.sol_df[-1]
 
@@ -149,6 +152,9 @@ class TrajOptSolve():
                 self.spline_px.append(self.formulation.p_polynomial(delta_T=self.formulation.dt, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)['p'][0])
                 self.spline_py.append(self.formulation.p_polynomial(delta_T=self.formulation.dt, t=t, p0=p0, dp0=dp0, p1=p1, dp1=dp1)['p'][1])
 
+                self.spline_ddrx.append(self.formulation.r_polynomial(delta_T=self.formulation.dt, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)['ddr'][0])
+                self.spline_ddry.append(self.formulation.r_polynomial(delta_T=self.formulation.dt, t=t, r0=r0, dr0=dr0, r1=r1, dr1=dr1)['ddr'][1])
+
                 t += self.formulation.dt/20
         self.time_space = np.linspace(0,self.formulation.total_duration,len(self.spline_rx))
         # plt.plot(time_space, (np.array(self.spline_fx)**2 + np.array(self.spline_fy)**2)**(1/2), label='f')
@@ -170,8 +176,10 @@ class TrajOptSolve():
         ax1.legend()
 
         ax2 = fig.add_subplot(312)
-        ax2.plot(self.time, (np.array(self.sol_rx)**2 + np.array(self.sol_ry)**2)**(1/2), 'bo', label='r')
-        ax2.plot(self.time_space, (np.array(self.spline_rx)**2 + np.array(self.spline_ry)**2)**(1/2), 'black')
+        # ax2.plot(self.time, (np.array(self.sol_rx)**2 + np.array(self.sol_ry)**2)**(1/2), 'bo', label='r')
+        # ax2.plot(self.time_space, (np.array(self.spline_rx)**2 + np.array(self.spline_ry)**2)**(1/2), 'black')
+
+        ax2.plot(self.time_space, (np.array(self.spline_ddrx)**2 + np.array(self.spline_ddry)**2)**(1/2), 'black')
         ax2.grid()
         ax2.legend()
 
@@ -190,6 +198,9 @@ class TrajOptSolve():
         self.spline_fy = np.asarray(self.spline_fy)
         self.spline_px = np.asarray(self.spline_px)
         self.spline_py = np.asarray(self.spline_py)
+
+        self.spline_ddrx = np.asarray(self.spline_ddrx)
+        self.spline_ddry = np.asarray(self.spline_ddry)
 
         # ax1 = fig.add_subplot(521)
         # ax1.plot(self.time, self.sol_q1, label='q1')
