@@ -33,7 +33,7 @@ class NonlinearProgram():
         self.num_phases     = steps
         self.total_duration = total_duration
 
-        self.knot_points = 3
+        self.knot_points = 4
 
         self.phase_knot_points = int(total_duration/dt)
         
@@ -324,7 +324,7 @@ class NonlinearProgram():
 
             if self.contact_bool[n] == 'False': # no contact
                 self.ceq.append(self.f[n] == 0) # foot force = 0
-                # self.ciq.append( self.r[n][1,0]>self.terrain.heightMap(self.r[n][0,0])) # com above ground
+                # self.ciq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
                 self.ciq.append( self.p[n][1,0]>self.terrain.heightMap(self.p[n][0,0])) # com above ground
                 # self.ciq.append( (self.p[n][1,0]**2)>0) 
             else: # contact
@@ -345,25 +345,17 @@ class NonlinearProgram():
     def setInitialGuess(self):
 
         step_checker = 0
-        # for n in range(self.knot_points):
-            # self.opti.bounded(3*[-np.pi/2], self.q_variables[n], 3*[np.pi/2])
+        # self.opti.minimize(ca.sumsqr(sum(self.p_dot)) + ca.sumsqr(sum(self.f_dot)))
+        angp = ca.DM([np.pi/2]*3)
+        angn = ca.DM([-np.pi/2]*3)
+        jump_start = 0
+        for n in range(len(self.r_variables)):
+            self.opti.bounded(angn, self.q_variables[n], angp)
 
-            # self.opti.set_initial(self.r_variables[n][0], (2*n)/(self.knot_points-1))            
-            # self.opti.set_initial(self.q_variables[n][0], (2*n)/(self.knot_points-1))
-            # self.opti.set_initial(self.p_variables[n][0], (2*n)/(self.knot_points-1))
-
-            # if n%int(self.knot_points/self.num_phases) == 0 and n > 0:
-            #     step_checker += 1
-
-            # if step_checker%2 != 0: # no contact
-            #     self.opti.set_initial(self.f_variables[n][0], 0)
-            # #     self.opti.set_initial(self.p_variables[n][0], (2*n)/(self.knot_points-1))
-            # #     self.opti.set_initial(self.p_variables[n][1], (2*(n-(2*(self.knot_points-1)/3)))*(n-((self.knot_points-1)/3))/(self.knot_points-1))
-            # else: # contact
-            #     # self.opti.set_initial(self.p_dot_variables[n][0], (2)/(self.knot_points-1))
-            #     self.opti.set_initial(self.f_variables[n][0], self.model.gravity*self.model.mcom)
-                # self.opti.set_initial(self.p_variables[n], 2*[0])
-
+            
+            self.opti.set_initial(self.r_variables[n][0], (2*n)/(self.knot_points-1))            
+            self.opti.set_initial(self.q_variables[n][0], (2*n)/(self.knot_points-1))
+            
     ######################################################################
 
     # def setPolynomial(self):

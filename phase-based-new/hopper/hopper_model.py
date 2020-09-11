@@ -8,8 +8,8 @@ class Hopper():
         super().__init__()
         self.num_ee  = 1
         self.name    = 'hopper'
-        self.length  = np.array([0.5,0.5,0.5])
-        self.mass    = np.array([0.25,0.25,2])
+        self.length  = np.array([1,1,1])
+        self.mass    = np.array([0.5,0.5,20])
         self.i_qcom  = np.zeros((1,1))
         self.f_qcom  = np.zeros((1,1))
 
@@ -21,7 +21,7 @@ class Hopper():
         self.icom = np.sum(self.inertia).reshape(1,1)
 
         self.gravity_vector = ca.DM.zeros(2)
-        self.gravity_vector[1] = self.gravity
+        self.gravity_vector[1,0] = self.gravity
         
         self.nominal_pe = ca.DM([1.5*ca.mmax(self.length), 1.5*ca.mmax(self.length)])
 
