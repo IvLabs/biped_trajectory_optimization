@@ -33,7 +33,7 @@ class NonlinearProgram():
         self.num_phases     = steps
         self.total_duration = total_duration
 
-        self.knot_points = 2
+        self.knot_points = 3
 
         self.phase_knot_points = int(total_duration/dt)
         
@@ -302,43 +302,60 @@ class NonlinearProgram():
         step_checker = 0
         # self.opti.minimize(ca.sumsqr(sum(self.p_dot)) + ca.sumsqr(sum(self.f_dot)))
 
-        self.ceq.append(self.r[-1] == ca.DM([2,1.5]))
-        self.ceq.append(self.r[0] == ca.DM([-2,1.5]))
+        self.ceq.append(self.r[-1][0] == 1)
+        self.ceq.append(self.r[0][0] == -1)
         self.ceq.append(self.q[0] == 0)
         angp = ca.DM([np.pi/2]*3)
         angn = ca.DM([-np.pi/2]*3)
-        jump_start = 0
+        # jump_start = 0
 
-        for n in range(len(self.r)-1):
-            self.model.setState(self.r[n], self.q[n], 
-                                self.p[n], self.f[n])
+        # for n in range(len(self.r)-1):
+        #     self.model.setState(self.r[n], self.q[n], 
+        #                         self.p[n], self.f[n])
             
-            ddr1 = self.model.dynamic_constraints['r_ddot']
-            ddq1 = self.model.dynamic_constraints['q_ddot']
+        #     ddr1 = self.model.dynamic_constraints['r_ddot']
+        #     ddq1 = self.model.dynamic_constraints['q_ddot']
             
-            self.model.setState(self.r[n+1], self.q[n+1], 
-                                self.p[n+1], self.f[n+1])
+        #     self.model.setState(self.r[n+1], self.q[n+1], 
+        #                         self.p[n+1], self.f[n+1])
 
 
-            ddr2 = self.model.dynamic_constraints['r_ddot']
-            ddq2 = self.model.dynamic_constraints['q_ddot']
+        #     ddr2 = self.model.dynamic_constraints['r_ddot']
+        #     ddq2 = self.model.dynamic_constraints['q_ddot']
 
-            self.ceq.append( (ddr1 + ddr2)*self.dt/2== self.r_dot[n+1] - self.r_dot[n+1])
-            self.ceq.append( (ddq1 + ddq2)*self.dt/2== self.q_dot[n+1] - self.q_dot[n+1])
+        #     self.ceq.append( (ddr1 + ddr2)*self.dt/2== self.r_dot[n+1] - self.r_dot[n])
+        #     self.ceq.append( (ddq1 + ddq2)*self.dt/2== self.q_dot[n+1] - self.q_dot[n])
             
+        #     self.ceq.append( (self.r_dot[n+1] + self.r_dot[n])*self.dt/2== self.r[n+1] - self.r[n])
+        #     self.ceq.append( (self.q_dot[n+1] + self.q_dot[n])*self.dt/2== self.q[n+1] - self.q[n])
 
         for n in range(len(self.r)):
     
             # Body Constraints    
             self.model.setState(self.r[n], self.q[n], 
                                 self.p[n], self.f[n])
-            self.ceq.append((self.model.kinematic_constraint['constraint']) <= self.model.b)
+
+
+            # self.ceq.append((self.model.kinematic_constraint['constraint']) <= self.model.b)
             
             # self.ceq.append(self.model.dynamic_constraints['r_ddot'] == self.r_ddot[n])
             # self.ceq.append(self.model.dynamic_constraints['q_ddot'] == self.q_ddot[n])
+            
             # print(self.model.q.shape, n)
+            
             self.ciq.append(self.model.q<= angp)
             self.ciq.append(self.model.q>= angn)
+            
+            kin_constr = self.model.kinematic_model(r=self.r[n], q=self.q[n], pe=self.p[n])
+            dyn_constr = self.model.dynamic_model(r=self.r[n], pe=self.p[n], f=self.f[n])
+
+            self.ceq.append(ca.fabs(kin_constr['constraint'])[0] < self.model.b[0])
+            self.ceq.append(ca.fabs(kin_constr['constraint'])[1] < self.model.b[1])
+            
+            self.ceq.append(dyn_constr['r_ddot'][0] == self.r_ddot[n][0])
+            self.ceq.append(dyn_constr['r_ddot'][1] == self.r_ddot[n][1])
+            self.ceq.append(dyn_constr['q_ddot'] == self.q_ddot[n])
+
             # Environmental Constraints
             # if n%int(self.num_phases) == 0 and n > 0:
             #     jump_start = 1
@@ -351,13 +368,17 @@ class NonlinearProgram():
 
             #     # last_p = self.p[n]
 
+            # self.ceq.append(self.f[n]*self.p[n] == 0)
+            self.ciq.append( (self.r[n][1,0] - self.model.nominal_pe[1,0]) >= self.terrain.heightMap(self.r[n][1,0] - self.model.nominal_pe[1,0])) # com above ground
+
             if self.contact_bool[n] == 'False': # no contact
                 self.ceq.append(self.f[n] == 0) # foot force = 0
-                self.ciq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
-                self.ciq.append( self.p[n][1,0]>self.terrain.heightMap(self.p[n][0,0])) # com above ground
+                self.ceq.append(self.f_dot[n] == 0) # foot force = 0
+                # self.ciq.append( self.r[n][1,0]>self.terrain.heightMap(self.r[n][0,0])) # com above ground
+                # self.ciq.append( self.p[n][1,0]>self.terrain.heightMap(self.p[n][0,0])) # com above ground
                 # self.ciq.append( (self.p[n][1,0]**2)>0) 
             else: # contact
-                # self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
+                self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
                 self.ciq.append((ca.fabs(self.terrain.mu*self.f[n][0,0])) - self.f[n][1,0] >= 0) # friction
                 # self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.model.pe[0,0])) >= ca.fabs(ca.dot(self.f[n],self.terrain.heightMapTangentVector(self.model.pe[0,0])))) # friction
                 self.ciq.append(ca.dot(self.f[n],self.terrain.heightMapNormalVector(self.p[n][0,0])) >= 0) # pushing force

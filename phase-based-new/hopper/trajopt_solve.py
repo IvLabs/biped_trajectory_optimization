@@ -8,9 +8,9 @@ from trajopt_formulation import NonlinearProgram
 class TrajOptSolve():
     def __init__(self):
         super().__init__()
-        self.formulation = NonlinearProgram(dt=0.1, steps=3, total_duration=0.5, model='hopper')
+        self.formulation = NonlinearProgram(dt=0.1, steps=3, total_duration=1, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 500}
+        s_opts = {"max_iter": 90}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
@@ -168,29 +168,6 @@ class TrajOptSolve():
         fig = plt.figure()
         fig.tight_layout()
 
-        ax1 = fig.add_subplot(311)
-        ax1.plot(self.time, (np.array(self.sol_fx)**2 + np.array(self.sol_fy)**2)**(1/2), 'ro', label='f')
-        ax1.plot(self.time_space, (np.array(self.spline_fx)**2 + np.array(self.spline_fy)**2)**(1/2), 'black')
-        
-        ax1.grid()
-        ax1.legend()
-
-        ax2 = fig.add_subplot(312)
-        # ax2.plot(self.time, (np.array(self.sol_rx)**2 + np.array(self.sol_ry)**2)**(1/2), 'bo', label='r')
-        # ax2.plot(self.time_space, (np.array(self.spline_rx)**2 + np.array(self.spline_ry)**2)**(1/2), 'black')
-
-        ax2.plot(self.time_space, (np.array(self.spline_ddrx)**2 + np.array(self.spline_ddry)**2)**(1/2), 'black')
-        ax2.grid()
-        ax2.legend()
-
-        ax3 = fig.add_subplot(313)
-        ax3.plot(self.time, (np.array(self.sol_px)**2 + np.array(self.sol_py)**2)**(1/2), 'o', label='pe')
-        ax3.plot(self.time_space, (np.array(self.spline_px)**2 + np.array(self.spline_py)**2)**(1/2), 'black')
-        # ax3.plot(self.time, self.sol_q2, 'o', label='q2')
-        # ax3.plot(self.time, self.sol_q3, 'o', label='q3')
-        ax3.grid()
-        ax3.legend()
-
         self.spline_rx = np.asarray(self.spline_rx)
         self.spline_ry = np.asarray(self.spline_ry)
         self.spline_q  = np.asarray(self.spline_q )
@@ -199,8 +176,41 @@ class TrajOptSolve():
         self.spline_px = np.asarray(self.spline_px)
         self.spline_py = np.asarray(self.spline_py)
 
+        self.sol_rx = np.asarray(self.sol_rx)
+        self.sol_ry = np.asarray(self.sol_ry)
+        self.sol_q  = np.asarray(self.sol_q )
+        self.sol_fx = np.asarray(self.sol_fx)
+        self.sol_fy = np.asarray(self.sol_fy)
+        self.sol_px = np.asarray(self.sol_px)
+        self.sol_py = np.asarray(self.sol_py)
+
         self.spline_ddrx = np.asarray(self.spline_ddrx)
         self.spline_ddry = np.asarray(self.spline_ddry)
+
+
+        ax1 = fig.add_subplot(311)
+        ax1.plot(self.time, (self.sol_fx**2 + self.sol_fy**2)**(1/2), 'ro', label='f')
+        ax1.plot(self.time_space, (self.spline_fx**2 + self.spline_fy**2)**(1/2), 'black')
+        
+        ax1.grid()
+        ax1.legend()
+
+        ax2 = fig.add_subplot(312)
+        # ax2.plot(self.time, (self.sol_rx**2 + self.sol_ry**2)**(1/2), 'bo', label='r')
+        # ax2.plot(self.time_space, (self.spline_rx**2 + self.spline_ry**2)**(1/2), 'black')
+
+        ax2.plot(self.time_space, (self.spline_ddrx**2 + self.spline_ddry**2)**(1/2), 'black',label='ddr')
+        ax2.grid()
+        ax2.legend()
+
+        ax3 = fig.add_subplot(313)
+        # ax3.plot(self.time, (np.array(self.sol_px)**2 + np.array(self.sol_py)**2)**(1/2), 'o', label='pe')
+        # ax3.plot(self.time_space, (np.array(self.spline_px)**2 + np.array(self.spline_py)**2)**(1/2), 'black')
+        ax3.plot(self.time_space, self.spline_py, 'black',label='pe_y')
+        # ax3.plot(self.time, self.sol_q2, 'o', label='q2')
+        # ax3.plot(self.time, self.sol_q3, 'o', label='q3')
+        ax3.grid()
+        ax3.legend()
 
         # ax1 = fig.add_subplot(521)
         # ax1.plot(self.time, self.sol_q1, label='q1')
@@ -255,10 +265,17 @@ class TrajOptSolve():
         base, = ax.plot([],[],'r', lw=5)
         terrain, = ax.plot([],[],'black')
         force, = ax.plot([],[],'c') 
+
+        box = plt.Rectangle((0, 0), 0, 0, fc='cyan',fill=None)
+        nominal, = ax.plot([],[],'r+') 
+
         ax.set_xlim([-4, 4])
         ax.set_ylim([-4, 4])
         
         def init():
+            # box.xy = (self.spline_rx[0]-self.formulation.model.nominal_pe[0] - self.formulation.model.b[0],
+            #                  self.spline_ry[0]-self.formulation.model.nominal_pe[1] - self.formulation.model.b[1])
+
             p1.set_data([], [])
             p2.set_data([], [])
             p3.set_data( [], [])
@@ -266,14 +283,23 @@ class TrajOptSolve():
             com.set_data([],[])
             base.set_data([],[])
             force.set_data([],[])
+            nominal.set_data([],[])
             terrain.set_data([],[])
-            return base, feet, com, force, terrain
+            ax.add_patch(box)
+            return base, feet, com, force, terrain, nominal, box,
 
         def animate(i):
+            box.set_width( np.asarray(self.formulation.model.b[0]))
+            box.set_height(np.asarray(self.formulation.model.b[1]))
+            box.set_xy([self.spline_rx[i] - np.asarray(self.formulation.model.nominal_pe[0]) - np.asarray(self.formulation.model.b[0])/2,
+                        self.spline_ry[i] - np.asarray(self.formulation.model.nominal_pe[1]) - np.asarray(self.formulation.model.b[1])/2])
 
             c3 = [self.spline_rx[i], self.spline_ry[i]]
             pe = [self.spline_px[i], self.spline_py[i]]
-            
+
+            n = [c3[0]-np.asarray(self.formulation.model.nominal_pe[0]), 
+                  c3[1]-np.asarray(self.formulation.model.nominal_pe[1])]    
+
             base_x = [c3[0] - l[0]*np.sin(self.spline_q[i])/2, l[0]*np.sin(self.spline_q[i])/2 + c3[0]]
             base_y = [c3[1] - l[0]*np.cos(self.spline_q[i])/2, l[0]*np.cos(self.spline_q[i])/2 + c3[1]]
 
@@ -301,10 +327,11 @@ class TrajOptSolve():
             # p2.set_data(link2_x, link2_y)
             # p3.set_data(link3_x, link3_y)
             base.set_data(base_x, base_y)
-            feet.set_data(pe[0], pe[1])
-            com.set_data(c3[0], c3[1])
+            feet.set_data(*pe)
+            com.set_data(*c3)
             force.set_data(force_x,force_y)
-            return base, feet, com, force, terrain
+            nominal.set_data(*n)
+            return base, feet, com, force, terrain, nominal, box,
 
         ani = animation.FuncAnimation(fig, animate, np.arange(0, len(self.time_space)), init_func=init,
                                interval=60, blit=True)
