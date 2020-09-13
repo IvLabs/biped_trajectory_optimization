@@ -34,8 +34,6 @@ class Hopper():
         self.pe    = ca.reshape(pe   , 2, 1)
         self.f     = ca.reshape(f    , 2, 1)
 
-        
-
         self.kinematic_constraint = self.kinematic_model(r=self.r, q=self.q, pe=self.pe)
 
         self.dynamic_constraints = self.dynamic_model(r=self.r, pe=self.pe, f=self.f)
@@ -81,7 +79,7 @@ class Hopper():
         # self.p_n =  (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
         
         # y = pe - R_q.T @ (r-self.nominal_pe)
-        y = R_q @ (pe-r) - self.nominal_pe
+        y = R_q @ (pe-r) - (r - self.nominal_pe)
 
         self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 
                                                   [R_q, y],
