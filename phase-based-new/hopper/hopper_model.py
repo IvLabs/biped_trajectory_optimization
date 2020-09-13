@@ -13,7 +13,7 @@ class Hopper():
         self.i_qcom  = np.zeros((1,1))
         self.f_qcom  = np.zeros((1,1))
 
-        self.inertia = self.mass * (self.length**2) /12
+        self.inertia = self.mass * (self.length**2) /2
         # print(self.inertia)
         self.gravity = 10
 
@@ -23,8 +23,8 @@ class Hopper():
         self.gravity_vector = ca.DM.zeros(2)
         self.gravity_vector[1,0] = self.gravity
 
-        self.b = ca.DM([2*ca.mmax(self.length),ca.mmax(self.length)])
-        self.nominal_pe = ca.DM([0, 2*ca.mmax(self.length)])
+        self.b = ca.DM([3*ca.mmax(self.length),2*ca.mmax(self.length)])
+        self.nominal_pe = ca.DM([0, 1.5*ca.mmax(self.length)])
         self.setKinematicsConstraint()
         self.setCenteroidalDynamics()
 
@@ -78,9 +78,9 @@ class Hopper():
         # # self.p_n = (self.R_q @ r) - 5*np.sum(self.length)*ca.DM.ones(2)/2 
         # self.p_n =  (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
         
-        # y = pe - R_q.T @ (r-self.nominal_pe)
-        y = R_q @ (pe-r) - (r - self.nominal_pe)
-
+        y = (R_q @ (pe-r) - (r - self.nominal_pe)) #- (r-self.nominal_pe)
+        # y = (R_q @ pe-((r - self.nominal_pe)))# - (r - self.nominal_pe)
+        # y = (pe) - (r-self.nominal_pe)
         self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 
                                                   [R_q, y],
                                                   ['r', 'q', 'pe'],
