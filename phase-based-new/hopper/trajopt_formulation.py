@@ -13,6 +13,11 @@ from terrain import Terrain
 
 # import helper_functions as hf 
 
+##############################################################
+#### we will review the time phases division and other stuff again
+#### we will review the time phases division and other stuff again
+##############################################################
+
 
 ##############################################################
 #### Go back to the old method of calculating, no params, only knot points
@@ -33,7 +38,7 @@ class NonlinearProgram():
         self.num_phases     = steps
         self.total_duration = total_duration
 
-        self.knot_points = 3
+        self.knot_points = 2
 
         self.phase_knot_points = int(total_duration/dt)
         

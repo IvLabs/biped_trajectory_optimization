@@ -24,7 +24,7 @@ class Hopper():
         self.gravity_vector[1,0] = self.gravity
 
         self.b = ca.DM([3*ca.mmax(self.length),2*ca.mmax(self.length)])
-        self.nominal_pe = ca.DM([0, 1.5*ca.mmax(self.length)])
+        self.nominal_pe = ca.DM([0, 2.5*ca.mmax(self.length)])
         self.setKinematicsConstraint()
         self.setCenteroidalDynamics()
 
@@ -78,7 +78,7 @@ class Hopper():
         # # self.p_n = (self.R_q @ r) - 5*np.sum(self.length)*ca.DM.ones(2)/2 
         # self.p_n =  (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
         
-        y = (R_q @ (pe-r) - (r - self.nominal_pe)) #- (r-self.nominal_pe)
+        y = (R_q.T @ (pe - r) - (r - self.nominal_pe)) #- (r-self.nominal_pe)
         # y = (R_q @ pe-((r - self.nominal_pe)))# - (r - self.nominal_pe)
         # y = (pe) - (r-self.nominal_pe)
         self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 
@@ -106,7 +106,7 @@ class Hopper():
 
         r_ddot = (f - mcom*g)/mcom
         # print(hf.crossProduct2D(self.r - self.pe, self.f))
-        q_ddot = hf.crossProduct2D(r - pe, f)/icom 
+        q_ddot = (hf.crossProduct2D(r - pe,f)/icom) 
 
         self.dynamic_model = ca.Function('CenteroidalDynamics', [r, pe, f], 
                                                 [r_ddot, q_ddot], 
