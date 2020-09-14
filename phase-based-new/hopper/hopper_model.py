@@ -8,7 +8,7 @@ class Hopper():
         super().__init__()
         self.num_ee  = 1
         self.name    = 'hopper'
-        self.length  = np.array([0.5,0.5,0.5])
+        self.length  = np.array([0.5,0.5,1.])
         self.mass    = np.array([0.5,0.5,2])
         self.i_qcom  = np.zeros((1,1))
         self.f_qcom  = np.zeros((1,1))
@@ -23,8 +23,8 @@ class Hopper():
         self.gravity_vector = ca.DM.zeros(2)
         self.gravity_vector[1,0] = self.gravity
 
-        self.b = ca.DM([3*ca.mmax(self.length),2*ca.mmax(self.length)])
-        self.nominal_pe = ca.DM([0, 2.5*ca.mmax(self.length)])
+        self.b = ca.DM([3*(self.length[0]),2*(self.length[0])])
+        self.nominal_pe = ca.DM([0, 2.5*(self.length[0])])
         self.setKinematicsConstraint()
         self.setCenteroidalDynamics()
 
@@ -78,7 +78,7 @@ class Hopper():
         # # self.p_n = (self.R_q @ r) - 5*np.sum(self.length)*ca.DM.ones(2)/2 
         # self.p_n =  (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
         
-        y = (R_q @ (pe - r) - (r - self.nominal_pe)) #- (r-self.nominal_pe)
+        y = (R_q.T @ (pe - r) - (r - self.nominal_pe)) #- (r-self.nominal_pe)
         # y = (R_q @ pe-((r - self.nominal_pe)))# - (r - self.nominal_pe)
         # y = (pe) - (r-self.nominal_pe)
         self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 

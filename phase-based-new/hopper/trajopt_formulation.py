@@ -310,8 +310,8 @@ class NonlinearProgram():
         self.ceq.append(self.r[-1] == ca.DM([ 1, 1.5*np.max(self.model.length)]))
         self.ceq.append(self.r[0]  == ca.DM([-1, 1.5*np.max(self.model.length)]))
         self.ceq.append(self.q[0] == 0)
-        angp = ca.DM([np.pi/2]*3)
-        angn = ca.DM([-np.pi/2]*3)
+        angp = ca.DM([np.pi]*3)
+        angn = ca.DM([-np.pi]*3)
         # jump_start = 0
 
         # for n in range(len(self.r)-1):
@@ -354,10 +354,10 @@ class NonlinearProgram():
             kin_constr = self.model.kinematic_model(r=self.r[n], q=self.q[n], pe=self.p[n])
             dyn_constr = self.model.dynamic_model(r=self.r[n], pe=self.p[n], f=self.f[n])
 
-            self.ciq.append(ca.fabs(kin_constr['constraint'])[0] < self.model.b[0])
-            self.ciq.append(ca.fabs(kin_constr['constraint'])[1] < self.model.b[1])
-            # self.ciq.append((self.r[n]-self.p[n])<self.model.nominal_pe+self.model.b)
-            # self.ciq.append((self.r[n]-self.p[n])>self.model.nominal_pe-self.model.b)
+            # self.ciq.append(ca.fabs(kin_constr['constraint'])[0] < self.model.b[0])
+            # self.ciq.append(ca.fabs(kin_constr['constraint'])[1] < self.model.b[1])
+            self.ciq.append((self.r[n]-self.p[n])<self.model.nominal_pe+self.model.b)
+            self.ciq.append((self.r[n]-self.p[n])>self.model.nominal_pe-self.model.b)
 
             # self.ciq.append((self.r[n][1]-self.p[n][1])>0)
 
@@ -384,7 +384,7 @@ class NonlinearProgram():
                 self.ceq.append(self.f[n] == 0) # foot force = 0
                 self.ceq.append(self.f_dot[n] == 0) # foot force = 0
                 # self.ciq.append( self.r[n][1,0]>self.terrain.heightMap(self.r[n][0,0])) # com above ground
-                # self.ciq.append( self.p[n][1,0]>=self.terrain.heightMap(self.p[n][0,0])) # com above ground
+                self.ciq.append( self.p[n][1,0]>self.terrain.heightMap(self.p[n][0,0])) # com above ground
                 # self.ciq.append( (self.p[n][1,0]**2)>0) 
             else: # contact
                 self.ciq.append(ca.sumsqr(self.f[n]) <= ca.sumsqr(np.sum(self.model.mass)*self.model.gravity_vector))
@@ -394,7 +394,7 @@ class NonlinearProgram():
                 self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
                 # self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
                 # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
-                self.ceq.append(self.p_dot[n]==0) # no slip
+                # self.ceq.append(self.p_dot[n]==0) # no slip
 
     def setConstraints(self):
         self.setModelConstraints()

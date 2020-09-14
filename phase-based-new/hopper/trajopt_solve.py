@@ -10,7 +10,7 @@ class TrajOptSolve():
         super().__init__()
         self.formulation = NonlinearProgram(dt=0.1, steps=3, total_duration=0.5, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 1000}
+        s_opts = {"max_iter": 500}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
@@ -300,8 +300,8 @@ class TrajOptSolve():
             n = [c3[0]-np.asarray(self.formulation.model.nominal_pe[0]), 
                   c3[1]-np.asarray(self.formulation.model.nominal_pe[1])]    
 
-            base_x = [c3[0] - l[0]*np.sin(self.spline_q[i])/2, l[0]*np.sin(self.spline_q[i])/2 + c3[0]]
-            base_y = [c3[1] - l[0]*np.cos(self.spline_q[i])/2, l[0]*np.cos(self.spline_q[i])/2 + c3[1]]
+            base_x = [c3[0] - l[-1]*np.sin(self.spline_q[i])/2, l[-1]*np.sin(self.spline_q[i])/2 + c3[0]]
+            base_y = [c3[1] - l[-1]*np.cos(self.spline_q[i])/2, l[-1]*np.cos(self.spline_q[i])/2 + c3[1]]
 
             # link2_x = [link1_x[1], link1_x[1] + l[1]*np.sin(self.sol_q2[i])]
             # link2_y = [link1_y[1], link1_y[1] + l[1]*np.cos(self.sol_q2[i])]
