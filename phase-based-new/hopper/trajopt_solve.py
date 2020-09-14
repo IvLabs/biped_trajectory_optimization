@@ -10,7 +10,7 @@ class TrajOptSolve():
         super().__init__()
         self.formulation = NonlinearProgram(dt=0.1, steps=3, total_duration=0.5, model='hopper')
         p_opts = {"expand":True}
-        s_opts = {"max_iter": 100}
+        s_opts = {"max_iter": 1000}
         self.formulation.opti.solver("ipopt",p_opts,s_opts)
 
     def solve(self):
