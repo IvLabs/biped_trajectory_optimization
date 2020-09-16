@@ -38,7 +38,7 @@ class NonlinearProgram():
         self.num_phases     = steps
         self.total_duration = total_duration
 
-        self.knot_points = 2
+        self.knot_points = int(total_duration/dt)
 
         self.phase_knot_points = int(total_duration/dt)
         
@@ -394,7 +394,7 @@ class NonlinearProgram():
                 self.ceq.append( self.p[n][1,0]==self.terrain.heightMap(self.p[n][0,0])) # foot not moving
                 # self.ceq.append( self.r[n][1,0]>=self.terrain.heightMap(self.r[n][0,0])) # com above ground
                 # self.ceq.append( self.model.pe[1,0]==0) # foot not moving
-                # self.ceq.append(self.p_dot[n]==0) # no slip
+                self.ceq.append(self.p_dot[n]==0) # no slip
 
     def setConstraints(self):
         self.setModelConstraints()
