@@ -1,114 +1,80 @@
+from casadi.casadi import sqrt
 import numpy as np
 import casadi as ca
 
-import biped_trajectory_optimization.phase_based_new.hopper.helper_functions as hf
+try:
+    import biped_trajectory_optimization.phase_based_new.hopper.helper_functions as hf
+except:
+    import helper_functions as hf
 
+"A centeroidal dynamics based model hopper"
 class Hopper():
     def __init__(self):
         super().__init__()
         self.num_ee  = 1
         self.name    = 'hopper'
-        self.length  = np.array([0.5,0.5,1.])
-        self.mass    = np.array([0.5,0.5,2])
-        self.i_qcom  = np.zeros((1,1))
-        self.f_qcom  = np.zeros((1,1))
+        self.length  = np.array([0.5,0.5,0.5])
+        self.mass    = np.array([1,1,20])
 
-        self.inertia = self.mass * (self.length**2) /2
-        # print(self.inertia)
+        # self.i_qcom  = np.zeros((1,1))
+        # self.f_qcom  = np.zeros((1,1))
+
+        self.inertia = self.mass * (self.length**2)/4
         self.gravity = 10
 
-        self.mcom = np.sum(self.mass).reshape(1,1)
-        self.icom = np.sum(self.inertia).reshape(1,1)
+        self.mcom = np.sum(self.mass)
+        print(self.mcom)
+        self.icom = self.mcom * (self.length[-1]**2 + 0.1**2)/12
+        print(self.icom)
 
         self.gravity_vector = ca.DM.zeros(2)
         self.gravity_vector[1,0] = self.gravity
 
         self.b = ca.DM([3*(self.length[0]),2*(self.length[0])])
         self.nominal_pe = ca.DM([0, 2.5*(self.length[0])])
+
         self.setKinematicsConstraint()
         self.setCenteroidalDynamics()
 
-    def setState(self, r, q, pe, f):
+    def setState(self, r, q, pe, fe):
         self.q     = ca.reshape(q    , 1, 1)
         self.r     = ca.reshape(r    , 2, 1)
         self.pe    = ca.reshape(pe   , 2, 1)
-        self.f     = ca.reshape(f    , 2, 1)
+        self.fe    = ca.reshape(fe   , 2, 1)
 
         self.kinematic_constraint = self.kinematic_model(r=self.r, q=self.q, pe=self.pe)
 
-        self.dynamic_constraints = self.dynamic_model(r=self.r, pe=self.pe, f=self.f)
-
-        # self.r_ddot, self.q_ddot = self.getCenteroidalDynamics()
-
-        # self.kinematic_model = ca.Function('Box', [r, r_dot, q, q_dot, pe], 
-        #                                           [self.kinematic_constraint],
-        #                                           ['r','r_dot','q','q_dot','pe'],
-        #                                           ['constraint'])
-
-        # self.dynamics_model = ca.Function('CD', [r, r_dot, q, q_dot, pe, f], 
-        #                                         [self.r_ddot, self.q_ddot], 
-        #                                         ['r','r_dot','q','q_dot','pe','f'],
-        #                                         ['r_ddot','q_ddot'])
+        self.dynamic_constraints = self.dynamic_model(r=self.r, pe=self.pe, f=self.fe)
 
     def setKinematicsConstraint(self):
-        # q     = self.q    
-        # q_dot = self.q_dot
-        # r     = self.r    
-        # r_dot = self.r_dot
-        # pe    = self.pe
-
         q     = ca.MX.sym(     'q', 1, 1)
-        # q_dot = ca.MX.sym('q_dot', 3, 1)
         r     = ca.MX.sym(     'r', 2, 1)
-        # r_dot = ca.MX.sym('r_dot', 2, 1)
         pe    = ca.MX.sym(    'pe', 2, 1)
         
-        # p02,p12 = -self.length[2]*ca.sin(q[2])/2 + r[0,0], -self.length[2]*ca.cos(q[2])/2 + r[1,0]
-        # p01,p11 = -self.length[1]*ca.sin(q[1])   + p02   , -self.length[1]*ca.cos(q[1])   + p12
-        
-        # pe_truth = ca.MX.zeros(2, 1)
-        # pe_truth[0, 0],pe_truth[1, 0] = -self.length[0]*ca.sin(q[0]) + p01   , -self.length[1]*ca.cos(q[0]) + p11
-
-        # pe_truth_dot = ca.jtimes(pe_truth, q, q_dot)
-
         R_q = ca.MX.zeros(2,2)
         R_q[0,0], R_q[0,1] = ca.cos(q), -ca.sin(q)
         R_q[1,0], R_q[1,1] = ca.sin(q),  ca.cos(q)
 
-        # # self.p_n = (self.R_q @ r) - 5*np.sum(self.length)*ca.DM.ones(2)/2 
-        # self.p_n =  (r - 5*np.sum(self.length)*ca.DM.ones(2)/2)
-        
-        y = (R_q.T @ (pe - r) - (r - self.nominal_pe)) #- (r-self.nominal_pe)
-        # y = (R_q @ pe-((r - self.nominal_pe)))# - (r - self.nominal_pe)
-        # y = (pe) - (r-self.nominal_pe)
+        y = ca.fabs(R_q @ (pe - r) - (R_q @ r - self.nominal_pe))
+
         self.kinematic_model = ca.Function('FullKinematics', [r, q, pe], 
                                                   [R_q, y],
                                                   ['r', 'q', 'pe'],
                                                   ['Rotation', 'constraint'])
-        # return y
 
     def setCenteroidalDynamics(self):
-        # q     = self.q    
-        # q_dot = self.q_dot
-        # r     = self.r    
-        # r_dot = self.r_dot 
-        # pe    = self.pe   
-        # f     = self.f   
-
         r     = ca.MX.sym(    'r', 2, 1)
-        # r_dot = ca.MX.sym('r_dot', 2, 1)
         pe    = ca.MX.sym(   'pe', 2, 1)
-        f     = ca.MX.sym(    'f', 2, 1)
+        fe    = ca.MX.sym(   'fe', 2, 1)
 
         mcom  = self.mcom
         g     = self.gravity_vector
         icom  = self.icom
 
-        r_ddot = (f - mcom*g)/mcom
-        # print(hf.crossProduct2D(self.r - self.pe, self.f))
-        q_ddot = (hf.crossProduct2D(r - pe,f)/icom) 
+        r_ddot = (fe - mcom*g)/mcom
+        q_ddot = (hf.crossProduct2D(fe,r - pe)/icom) 
 
-        self.dynamic_model = ca.Function('CenteroidalDynamics', [r, pe, f], 
+        self.dynamic_model = ca.Function('CenteroidalDynamics', [r, pe, fe], 
                                                 [r_ddot, q_ddot], 
                                                 ['r','pe','f'],
                                                 ['r_ddot','q_ddot'])
@@ -117,32 +83,32 @@ class Hopper():
         
 # test check for sanity
 
-# test_hopper = Hopper()
-# q     = ca.MX.sym(    'q', 1, 1)
-# # q_dot = ca.MX.sym('q_dot', 3, 1)
-# r     = ca.MX.sym(    'r', 2, 1)
-# # r_dot = ca.MX.sym('r_dot', 2, 1)
-# pe    = ca.MX.sym(   'pe', 2, 1)
-# f     = ca.MX.sym(    'f', 2, 1)
+test_hopper = Hopper()
+q     = ca.MX.sym(    'q', 1, 1)
+# q_dot = ca.MX.sym('q_dot', 3, 1)
+r     = ca.MX.sym(    'r', 2, 1)
+# r_dot = ca.MX.sym('r_dot', 2, 1)
+pe    = ca.MX.sym(   'pe', 2, 1)
+f     = ca.MX.sym(    'f', 2, 1)
 
-# test_hopper.setState(r, q, pe, f)
+test_hopper.setState(r, q, pe, f)
 
-# print('-----Symbolic Test-------')
-# print(test_hopper.kinematic_model(r, q, pe))
-# print(test_hopper.dynamic_model(r, pe, f))
+print('-----Symbolic Test-------')
+print(test_hopper.kinematic_model(r, q, pe))
+print(test_hopper.dynamic_model(r, pe, f))
 
-# q     = ca.DM([np.pi/3])
-# # q_dot = ca.DM([1.]*3)
-# r     = ca.DM([2, 1])
-# # r_dot = ca.DM([.2, .1])
-# pe    = ca.DM([2, 0])
-# f     = ca.DM([test_hopper.mcom*test_hopper.gravity/np.sqrt(2), test_hopper.mcom*test_hopper.gravity/np.sqrt(2)])
+q     = ca.DM([np.pi/3])
+# q_dot = ca.DM([1.]*3)
+r     = ca.DM([1.5, 1])
+# r_dot = ca.DM([.2, .1])
+pe    = ca.DM([2, 0])
+f     = ca.DM([test_hopper.mcom*test_hopper.gravity/sqrt(2), test_hopper.mcom*test_hopper.gravity/sqrt(2)])
 
-# test_hopper.setState(r, q, pe, f)
+test_hopper.setState(r, q, pe, f)
 
-# print('-----Numeric Test-------')
-# print(test_hopper.kinematic_model(r, q, pe))
-# print(test_hopper.dynamic_model(r, pe, f))
+print('-----Numeric Test-------')
+print(test_hopper.kinematic_model(r, q, pe))
+print(test_hopper.dynamic_model(r, pe, f))
 
 
 ###############################################
