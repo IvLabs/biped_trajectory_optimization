@@ -58,4 +58,5 @@
 ### [cartpole on C++](basic_tasks/cartpole_cpp)
 
 ## [Passive Walking of 2-link bipedal system](passive_walker)
-
+![](https://media.giphy.com/media/tcPd1yLBYWDxWxIqMs/giphy.gif)
+![](passive_walker/Graph_1.jpg) ![](passive_walker/Graph_2.jpg)
