@@ -1,7 +1,7 @@
 import numpy as np
 import casadi as ca
 
-import helper_functions as hf
+import biped_trajectory_optimization.phase_based_new.hopper.helper_functions as hf
 
 class Hopper():
     def __init__(self):

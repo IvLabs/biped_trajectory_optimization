@@ -7,8 +7,6 @@ from matplotlib import pyplot as plt
 
 from hopper_model import Hopper
 
-# from terrain import Terrain
-
 from terrain import Terrain
 
 # import helper_functions as hf 
