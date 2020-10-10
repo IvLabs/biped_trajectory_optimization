@@ -13,7 +13,7 @@ class Hopper():
         super().__init__()
         self.num_ee  = 1
         self.name    = 'hopper'
-        self.length  = np.array([0.5,0.5,0.5])
+        self.length  = np.array([0.75,0.75,0.75])
         self.mass    = np.array([1,1,20])
 
         # self.i_qcom  = np.zeros((1,1))
@@ -37,19 +37,19 @@ class Hopper():
         self.setCenteroidalDynamics()
 
     def setState(self, r, q, pe, fe):
-        self.q     = ca.reshape(q    , 1, 1)
-        self.r     = ca.reshape(r    , 2, 1)
-        self.pe    = ca.reshape(pe   , 2, 1)
-        self.fe    = ca.reshape(fe   , 2, 1)
+        self.q     = ca.reshape(q , 1, 1)
+        self.r     = ca.reshape(r , 2, 1)
+        self.pe    = ca.reshape(pe, 2, 1)
+        self.fe    = ca.reshape(fe, 2, 1)
 
         self.kinematic_constraint = self.kinematic_model(r=self.r, q=self.q, pe=self.pe)
 
         self.dynamic_constraints = self.dynamic_model(r=self.r, pe=self.pe, f=self.fe)
 
     def setKinematicsConstraint(self):
-        q     = ca.MX.sym(     'q', 1, 1)
-        r     = ca.MX.sym(     'r', 2, 1)
-        pe    = ca.MX.sym(    'pe', 2, 1)
+        q     = ca.MX.sym( 'q', 1, 1)
+        r     = ca.MX.sym( 'r', 2, 1)
+        pe    = ca.MX.sym('pe', 2, 1)
         
         R_q = ca.MX.zeros(2,2)
         R_q[0,0], R_q[0,1] = ca.cos(q), -ca.sin(q)
@@ -63,52 +63,51 @@ class Hopper():
                                                   ['Rotation', 'constraint'])
 
     def setCenteroidalDynamics(self):
-        r     = ca.MX.sym(    'r', 2, 1)
-        pe    = ca.MX.sym(   'pe', 2, 1)
-        fe    = ca.MX.sym(   'fe', 2, 1)
+        r     = ca.MX.sym( 'r', 2, 1)
+        pe    = ca.MX.sym('pe', 2, 1)
+        fe    = ca.MX.sym('fe', 2, 1)
 
         mcom  = self.mcom
         g     = self.gravity_vector
         icom  = self.icom
 
         r_ddot = (fe - mcom*g)/mcom
-        q_ddot = (hf.crossProduct2D(fe,r - pe)/icom) 
+        q_dot = (hf.crossProduct2D(fe,r - pe)/icom) 
 
         self.dynamic_model = ca.Function('CenteroidalDynamics', [r, pe, fe], 
-                                                [r_ddot, q_ddot], 
+                                                [r_ddot, q_dot], 
                                                 ['r','pe','f'],
-                                                ['r_ddot','q_ddot'])
-
-        # return r_ddot, q_ddot
+                                                ['r_ddot','q_dot'])
         
+
 # test check for sanity
 
-test_hopper = Hopper()
-q     = ca.MX.sym(    'q', 1, 1)
-# q_dot = ca.MX.sym('q_dot', 3, 1)
-r     = ca.MX.sym(    'r', 2, 1)
-# r_dot = ca.MX.sym('r_dot', 2, 1)
-pe    = ca.MX.sym(   'pe', 2, 1)
-f     = ca.MX.sym(    'f', 2, 1)
+# test_hopper = Hopper()
+# q     = ca.MX.sym(    'q', 1, 1)
+# # q_dot = ca.MX.sym('q_dot', 3, 1)
+# r     = ca.MX.sym(    'r', 2, 1)
+# # r_dot = ca.MX.sym('r_dot', 2, 1)
+# pe    = ca.MX.sym(   'pe', 2, 1)
+# f     = ca.MX.sym(    'f', 2, 1)
 
-test_hopper.setState(r, q, pe, f)
+# test_hopper.setState(r, q, pe, f)
 
-print('-----Symbolic Test-------')
-print(test_hopper.kinematic_model(r, q, pe))
-print(test_hopper.dynamic_model(r, pe, f))
+# print('-----Symbolic Test-------')
+# print(test_hopper.kinematic_model(r, q, pe))
+# print(test_hopper.dynamic_model(r, pe, f))
 
-q     = ca.DM([np.pi/3])
-# q_dot = ca.DM([1.]*3)
-r     = ca.DM([1.5, 1])
-# r_dot = ca.DM([.2, .1])
-pe    = ca.DM([2, 0])
-f     = ca.DM([test_hopper.mcom*test_hopper.gravity/sqrt(2), test_hopper.mcom*test_hopper.gravity/sqrt(2)])
+# q     = ca.DM([np.pi/3])
+# # q_dot = ca.DM([1.]*3)
+# r     = ca.DM([3, 1])
+# # r_dot = ca.DM([.2, .1])
+# pe    = ca.DM([2, 1])
+# f     = ca.DM([test_hopper.mcom*test_hopper.gravity/sqrt(2), test_hopper.mcom*test_hopper.gravity/sqrt(2)])
 
-test_hopper.setState(r, q, pe, f)
+# test_hopper.setState(r, q, pe, f)
 
-print('-----Numeric Test-------')
-print(test_hopper.kinematic_model(r, q, pe))
-print(test_hopper.dynamic_model(r, pe, f))
+# print('-----Numeric Test-------')
+# print(test_hopper.kinematic_model(r, q, pe))
+# print(test_hopper.dynamic_model(r, pe, f))
 
 
 ###############################################
