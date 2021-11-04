@@ -1,5 +1,5 @@
 # Biped Trajectory Optimization
-## NOTE : This project is still in developement
+## NOTE : This project is no longer maintained
 - [Biped Trajectory Optimization](#biped-trajectory-optimization)
   * [Dynamic Walking on sinusoidal terrain](#dynamic-walking-on-sinusoidal-terrain)
   * [Dynamic Walking on staired terrain](#dynamic-walking-on-staired-terrain)
